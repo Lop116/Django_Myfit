@@ -1,0 +1,552 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore sample MyFit fitness classes across Caudan Waterfront, Trianon Emerald Park and Riche Terre: strength, HIIT, yoga and Zumba.">
+  <meta name="theme-color" content="#121416">
+  <title>Fitness Classes | MyFit Mauritius</title>
+  <style>
+    /* MyFit public Classes page. Page-specific styling is self-contained. */
+    :root{--yellow:#ffc324;--yellow-soft:#ffda66;--pink:#d52375;--purple:#4839a5;--cyan:#08a5cb;--coral:#df6848;--ink:#121416;--ink2:#17191c;--panel:#202328;--muted:#adb2b9;--line:rgba(255,255,255,.12);--font:Inter,"Arial Narrow",Arial,Helvetica,sans-serif}
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:95px}
+    body{margin:0;font-family:var(--font);background:var(--ink);color:#f8f8f7;-webkit-font-smoothing:antialiased}
+    img{display:block;max-width:100%}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+    button,summary{cursor:pointer}
+    button,input,select,a,summary{outline-offset:4px}
+    :focus-visible{outline:3px solid var(--yellow)}
+    [hidden]{display:none!important}
+    .container{width:min(1350px,calc(100% - 88px));margin-inline:auto}
+    .icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+    .icon-sm{width:16px;height:16px}
+    .sprite{position:absolute;width:0;height:0;overflow:hidden}
+    .skip-link{position:fixed;left:14px;top:-70px;z-index:1000;background:var(--yellow);color:var(--ink);padding:10px 15px;font-weight:800}
+    .skip-link:focus{top:12px}
+
+    /* Original homepage's yellow hotbar and dark navigation */
+    .topbar{background:var(--yellow);color:#111;min-height:34px}
+    .topbar-inner{min-height:34px;display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:.75rem;font-weight:900;letter-spacing:.10em}
+    .topbar p{margin:0;display:flex;align-items:center;gap:12px}
+    .topbar-dot{width:7px;height:7px;background:#17191c;border-radius:50%;display:inline-block}
+    .topbar-divider{opacity:.45}
+    .topbar a{display:inline-flex;align-items:center;gap:9px}
+    .site-header{position:sticky;top:0;z-index:100;height:85px;background:rgba(14,16,18,.96);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+    .site-header::after{content:"";position:absolute;inset:auto 0 -1px;height:1px;background:linear-gradient(90deg,transparent,var(--yellow),var(--pink),transparent);opacity:.45}
+    .nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:28px}
+    .logo{position:relative;display:flex;align-items:center;gap:10px;min-width:163px;font-size:1.45rem;font-weight:1000;letter-spacing:-.09em;white-space:nowrap}
+    .logo-mark{width:42px;height:42px;object-fit:cover;border-radius:5px;background:var(--yellow)}
+    .logo-word span{color:var(--yellow)}
+    .logo small{position:absolute;left:54px;bottom:-9px;color:#aab1b8;font-size:.44rem;letter-spacing:.18em;font-weight:800}
+    .desktop-nav{display:flex;align-items:center;gap:25px;font-size:.88rem;font-weight:800}
+    .desktop-nav a{position:relative;transition:color .2s}
+    .desktop-nav a:hover,.desktop-nav .current{color:var(--yellow)}
+    .desktop-nav .current::after{content:"";position:absolute;left:0;right:0;bottom:-13px;height:2px;background:var(--yellow)}
+    .nav-actions{display:flex;align-items:center;gap:10px;font-size:.76rem;font-weight:900}
+    .login-btn,.join-btn{min-height:42px;padding:0 21px;display:inline-flex;align-items:center;justify-content:center;gap:12px;white-space:nowrap}
+    .login-btn{border:1px solid #8b9092}.login-btn:hover{border-color:var(--yellow);color:var(--yellow)}
+    .join-btn{background:var(--pink);border:1px solid var(--pink);color:white}.join-btn:hover{background:#ed3188}
+    .mobile-menu{display:none}.mobile-menu summary{list-style:none}.mobile-menu summary::-webkit-details-marker{display:none}
+    .mobile-menu nav{display:grid}
+
+    /* Cinematic gym hero */
+    .hero{position:relative;overflow:hidden;isolation:isolate;background:#111317;border-bottom:1px solid var(--line)}
+    .hero-photo{position:absolute;z-index:-2;right:0;top:0;width:69%;height:100%;object-fit:cover;object-position:60% center}
+    .hero::before{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,#111317 0%,#111317 27%,rgba(17,19,23,.92) 43%,rgba(17,19,23,.17) 81%),linear-gradient(0deg,rgba(17,19,23,.88),transparent 50%)}
+    .hero::after{content:"";position:absolute;right:-50px;bottom:-65px;width:370px;height:260px;background:radial-gradient(circle,rgba(255,195,36,.15),transparent 68%);pointer-events:none}
+    .hero-inner{min-height:535px;display:flex;align-items:center;padding:66px 0 80px}
+    .hero-copy{max-width:760px;position:relative;z-index:1}
+    .eyebrow{display:inline-flex;align-items:center;gap:11px;color:var(--yellow);font-size:.74rem;font-weight:950;letter-spacing:.18em;text-transform:uppercase}
+    .eyebrow::before{content:"";width:8px;height:8px;background:var(--yellow)}
+    .breadcrumb{font-size:.69rem;color:#aeb5bc;font-weight:850;letter-spacing:.16em;margin:0 0 42px}.breadcrumb a:hover{color:var(--yellow)}.breadcrumb span{color:var(--yellow)}
+    h1,h2,h3,p{overflow-wrap:break-word}
+    .hero h1,.section-title,.statement h2,.closing-cta h2{font-family:Impact,"Arial Narrow",Arial,sans-serif;font-stretch:condensed;font-weight:900;text-transform:uppercase}
+    .hero h1{margin:23px 0 27px;font-size:clamp(4.6rem,7.8vw,9rem);line-height:.97;letter-spacing:.012em}
+    .hero h1 span{color:var(--yellow)}
+    .hero-desc{max-width:545px;color:#c7cbd0;font-size:1.03rem;line-height:1.72;margin:0}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+    .btn{min-height:51px;display:inline-flex;align-items:center;justify-content:center;gap:13px;padding:0 22px;border:1px solid transparent;font-size:.76rem;font-weight:950;letter-spacing:.07em;text-transform:uppercase;transition:transform .2s,background .2s,border-color .2s}
+    .btn:hover{transform:translateY(-2px)}
+    .btn-pink{background:var(--pink);color:#fff}.btn-pink:hover{background:#ed3188}
+    .btn-outline{border-color:rgba(255,255,255,.5);background:rgba(15,17,19,.5)}.btn-outline:hover{border-color:var(--yellow);color:var(--yellow)}
+    .btn-yellow{background:var(--yellow);color:#121416}.btn-yellow:hover{background:var(--yellow-soft)}
+    .hero-bottom{border-top:1px solid var(--line);background:rgba(13,15,17,.75)}
+    .hero-highlights{display:grid;grid-template-columns:repeat(3,1fr);padding-block:23px}
+    .hero-highlights div{display:flex;align-items:center;gap:16px;padding:9px 32px;border-right:1px solid var(--line)}
+    .hero-highlights div:first-child{padding-left:0}.hero-highlights div:last-child{border-right:0}
+    .hero-highlights .icon{width:27px;height:27px;color:var(--yellow)}
+    .hero-highlights b{display:block;font-weight:900;font-size:.88rem;letter-spacing:.03em}
+    .hero-highlights small{display:block;margin-top:5px;color:#9da5ad;font-size:.77rem;line-height:1.4}
+
+    /* Coach directory and filters */
+    .directory{padding:92px 0 108px;background:#17191c}
+    .section-intro{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:36px}
+    .section-kicker{color:var(--cyan);font-size:.74rem;font-weight:950;letter-spacing:.16em;text-transform:uppercase;margin:0 0 16px}
+    .section-title{font-size:clamp(3.3rem,5.3vw,6.1rem);line-height:1.03;letter-spacing:.019em;margin:0 0 14px}
+    .section-intro p:not(.section-kicker){max-width:650px;margin:0;color:#aeb5bb;line-height:1.68}
+    .count-badge{border:1px solid #53595c;color:#e1e4e7;padding:12px 17px;font-weight:950;font-size:.7rem;white-space:nowrap;letter-spacing:.07em}
+    .count-badge span{color:var(--yellow)}
+    .filter-panel{background:#23262b;border:1px solid #383d44;padding:17px;display:grid;grid-template-columns:1.55fr 1fr 1fr auto;gap:13px;margin-bottom:29px}
+    .filter-field{display:flex;position:relative;align-items:center;min-width:0}
+    .filter-field>.icon{position:absolute;left:14px;color:#aeb4bb;pointer-events:none}
+    .filter-field input,.filter-field select{width:100%;min-width:0;height:49px;border:1px solid #52575e;border-radius:0;background:#171a1e;color:#f6f6f6;padding:0 16px;font-size:.86rem}
+    .filter-field input{padding-left:43px}.filter-field input::placeholder{color:#879096}
+    .filter-field select{appearance:none;padding-right:40px;cursor:pointer}
+    .filter-field .caret{position:absolute;right:15px;pointer-events:none;color:var(--yellow)}
+    .filter-reset{padding:0 18px;min-height:49px;border:1px solid #636970;background:transparent;color:#f3f4f5;font-size:.72rem;font-weight:950;letter-spacing:.05em;text-transform:uppercase}
+    .filter-reset:hover{border-color:var(--yellow);color:var(--yellow)}
+    .coach-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+    .coach-card{position:relative;overflow:hidden;background:#202328;border:1px solid #363b41;transition:transform .2s,border-color .2s,box-shadow .2s}
+    .coach-card:hover{transform:translateY(-5px);border-color:rgba(255,195,36,.8);box-shadow:0 22px 48px rgba(0,0,0,.26)}
+    .coach-image-wrap{height:207px;position:relative;overflow:hidden;background:#101215}
+    .coach-image{width:100%;height:100%;object-fit:cover;object-position:center 37%;transition:transform .35s}
+    .coach-card:hover .coach-image{transform:scale(1.04)}
+    .branch-label{position:absolute;left:14px;top:14px;background:rgba(11,13,15,.85);border:1px solid rgba(255,255,255,.2);font-size:.62rem;font-weight:850;letter-spacing:.08em;padding:8px 10px;color:#fff;text-transform:uppercase}
+    .coach-number{position:absolute;bottom:0;right:0;background:var(--yellow);color:#171717;padding:8px 13px;font:900 1rem Impact,Arial,sans-serif;letter-spacing:.1em}
+    .coach-body{padding:24px 20px 20px;display:flex;flex-direction:column;min-height:264px}
+    .coach-role{color:var(--cyan);font-size:.67rem;letter-spacing:.14em;font-weight:950;text-transform:uppercase}
+    .coach-body h3{font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:2.05rem;letter-spacing:.025em;line-height:1.06;margin:10px 0 9px}
+    .coach-description{color:#acb2b9;line-height:1.55;font-size:.84rem;margin:0 0 21px;min-height:54px}
+    .coach-tags{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 22px}
+    .coach-tags span{border:1px solid #454b51;padding:6px 8px;color:#d2d6da;font-size:.63rem;letter-spacing:.04em;font-weight:800}
+    .coach-actions{display:grid;grid-template-columns:1fr 45px;gap:8px;margin-top:auto}
+    .view-profile{border:1px solid var(--yellow);background:var(--yellow);color:#121416;min-height:43px;padding:0 10px;font-size:.71rem;font-weight:950;letter-spacing:.07em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+    .view-profile:hover{background:var(--yellow-soft)}
+    .contact-coach{min-height:43px;display:grid;place-items:center;border:1px solid #777e83;color:#fff}.contact-coach:hover{color:var(--yellow);border-color:var(--yellow)}
+    .no-results{padding:60px 20px;text-align:center;border:1px dashed #555c63;background:#202328}
+    .no-results .icon{color:var(--yellow);width:35px;height:35px;margin-bottom:15px}
+    .no-results h3{margin:0 0 8px;font-size:1.25rem}.no-results p{color:#aeb5bb;margin:0 0 20px}
+    .directory-note{margin:25px 0 0;font-size:.75rem;color:#8e969e;line-height:1.6}
+
+    /* Why coaching and CTA */
+    .statement{background:var(--purple);padding:82px 0}
+    .statement-grid{display:grid;grid-template-columns:1fr 1fr;gap:85px;align-items:center}
+    .statement .section-kicker{color:#e1d9ff}
+    .statement h2{font-size:clamp(3.5rem,5.2vw,6.3rem);line-height:1.04;margin:18px 0 20px}
+    .statement h2 span{color:var(--yellow)}
+    .statement-copy{color:#e2dcff;line-height:1.8;font-size:.95rem;max-width:540px}
+    .benefit-list{display:grid;gap:16px}
+    .benefit{display:flex;align-items:flex-start;gap:18px;background:rgba(9,5,35,.24);border:1px solid rgba(255,255,255,.14);padding:21px}
+    .benefit .icon{color:var(--yellow);width:26px;height:26px;margin-top:1px}
+    .benefit strong{font-size:.94rem;letter-spacing:.025em}.benefit p{color:#d6d0ec;margin:8px 0 0;line-height:1.65;font-size:.81rem}
+    .closing-cta{background:#111416;position:relative;overflow:hidden;padding:80px 0 88px;text-align:center}
+    .closing-cta::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 120%,rgba(255,195,36,.12),transparent 55%);pointer-events:none}
+    .closing-cta .container{position:relative}
+    .closing-cta h2{font-size:clamp(3.6rem,6.5vw,7.4rem);line-height:1.04;margin:17px 0 15px}.closing-cta h2 span{color:var(--yellow)}
+    .closing-cta p{color:#adb5bc;max-width:620px;margin:0 auto 27px;line-height:1.72}
+    .closing-cta .cta-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+
+    /* Footer copied in spirit from public homepage */
+    .footer{background:#0a0b0d;border-top:1px solid var(--line)}
+    .footer-main{padding:48px 0;display:flex;align-items:center;justify-content:space-between;gap:30px}
+    .footer-main>p{color:#a2a8ac;font-size:.73rem;font-weight:900;letter-spacing:.1em;line-height:1.65}
+    .footer-main nav{display:flex;flex-wrap:wrap;gap:19px;font-size:.77rem;font-weight:900;letter-spacing:.05em}
+    .footer-main nav a:hover{color:var(--yellow)}
+    .footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;min-height:65px;border-top:1px solid var(--line);color:#858d93;font-size:.63rem;letter-spacing:.06em;font-weight:800}
+    .footer-bottom b{color:var(--yellow)}
+    .footer-bottom a:hover{color:var(--yellow)}
+
+    /* Profile dialog, stays on this page rather than requiring another template */
+    .profile-dialog{position:fixed;inset:0;margin:auto;padding:0;border:1px solid #555b61;background:#1b1f23;color:#fff;width:min(790px,calc(100% - 30px));max-height:min(90vh,820px);box-shadow:0 26px 90px rgba(0,0,0,.66)}
+    .profile-dialog::backdrop{background:rgba(4,5,7,.83);backdrop-filter:blur(5px)}
+    .profile-layout{display:grid;grid-template-columns:.8fr 1fr}
+    .profile-photo{width:100%;height:100%;min-height:420px;object-fit:cover;object-position:center}
+    .profile-copy{padding:42px 35px;overflow:auto}
+    .profile-copy .section-kicker{margin-bottom:14px}
+    .profile-copy h2{font-family:Impact,"Arial Narrow",Arial,sans-serif;letter-spacing:.02em;font-size:3.4rem;line-height:1.05;margin:0 0 12px}
+    .profile-specialty{color:var(--yellow);font-weight:900;font-size:.89rem;letter-spacing:.04em}
+    .profile-copy p{color:#b9c0c6;line-height:1.8;font-size:.89rem}
+    .profile-details{border-block:1px solid #454b51;margin:24px 0;padding:20px 0;display:grid;gap:15px}
+    .profile-details div{display:flex;flex-direction:column;gap:6px}
+    .profile-details small{color:#88929b;font-size:.65rem;font-weight:900;letter-spacing:.15em;text-transform:uppercase}
+    .profile-details strong{font-size:.87rem;line-height:1.5}
+    .dialog-close{position:absolute;top:10px;right:10px;z-index:2;border:1px solid rgba(255,255,255,.42);background:rgba(8,9,11,.9);color:white;width:36px;height:36px;display:grid;place-items:center}
+    .dialog-close:hover{color:var(--yellow);border-color:var(--yellow)}
+
+    @media(max-width:1260px){
+      .container{width:min(1170px,calc(100% - 64px))}
+      .desktop-nav{gap:15px;font-size:.76rem}
+      .nav-inner{gap:12px}
+      .login-btn,.join-btn{padding:0 14px}
+      .coach-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media(max-width:1060px){
+      .desktop-nav,.nav-actions{display:none}
+      .mobile-menu{display:block;position:relative}
+      .mobile-menu summary{display:grid;place-items:center;color:var(--yellow);padding:9px;border:1px solid #575c60}
+      .mobile-menu nav{position:absolute;top:55px;right:0;z-index:20;width:min(310px,82vw);padding:12px;background:#212429;border:1px solid #494b50;box-shadow:0 18px 48px rgba(0,0,0,.5)}
+      .mobile-menu nav a{padding:12px 14px;border-bottom:1px solid #383b42;font-size:.88rem;font-weight:850}
+      .mobile-menu nav a:last-child{border-bottom:none}.mobile-menu nav a:hover{color:var(--yellow)}
+      .filter-panel{grid-template-columns:1fr 1fr}
+      .statement-grid{gap:40px}
+    }
+    @media(max-width:750px){
+      .container{width:calc(100% - 38px)}
+      .topbar-inner{font-size:.55rem;min-height:31px}
+      .topbar-inner a{display:none}
+      .site-header{height:72px}
+      .hero-photo{width:100%;opacity:.43;object-position:50%}
+      .hero::before{background:linear-gradient(90deg,rgba(13,15,17,.96),rgba(13,15,17,.52)),linear-gradient(0deg,#111317,transparent 70%)}
+      .hero-inner{min-height:490px;padding:45px 0 60px}
+      .breadcrumb{margin-bottom:35px}
+      .hero h1{font-size:clamp(4.4rem,12vw,7rem)}
+      .hero-desc{font-size:.93rem;max-width:480px}
+      .hero-highlights{grid-template-columns:1fr 1fr;gap:0}
+      .hero-highlights div{padding:16px 12px!important}
+      .hero-highlights div:nth-child(2){border-right:0}
+      .hero-highlights div:last-child{grid-column:1/-1;border-right:0;border-top:1px solid var(--line)}
+      .directory{padding:68px 0 80px}
+      .section-intro{align-items:flex-start;flex-direction:column;gap:14px}
+      .coach-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+      .coach-image-wrap{height:180px}
+      .coach-body{padding:19px 15px;min-height:280px}
+      .coach-body h3{font-size:1.75rem}
+      .statement-grid{grid-template-columns:1fr;gap:25px}
+      .statement{padding:68px 0}
+      .footer-main{flex-direction:column;align-items:flex-start}
+      .footer-bottom{padding-block:16px}
+    }
+    @media(max-width:525px){
+      .topbar p{gap:6px;letter-spacing:.04em}.topbar-divider{display:none}
+      .hero h1{font-size:clamp(4rem,16vw,5.6rem)}
+      .hero-actions{display:grid;grid-template-columns:1fr}.hero-actions .btn{justify-content:space-between}
+      .hero-highlights{grid-template-columns:1fr}.hero-highlights div{border-right:0;border-top:1px solid var(--line)}
+      .hero-highlights div:first-child{border-top:0}.hero-highlights div:last-child{grid-column:auto}
+      .filter-panel{grid-template-columns:1fr;gap:10px}
+      .coach-grid{grid-template-columns:1fr;gap:18px}
+      .coach-image-wrap{height:230px}
+      .coach-body{min-height:unset;padding:24px 21px}
+      .coach-body h3{font-size:2.15rem}
+      .coach-description{min-height:0}
+      .profile-layout{grid-template-columns:1fr}
+      .profile-photo{height:210px;min-height:0}
+      .profile-copy{padding:25px 23px}
+      .profile-copy h2{font-size:2.75rem}
+      .footer-main nav{gap:15px}
+    }
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
+  
+/* CLASSES — page-local extensions to the MyFit public design */
+.classes-page .hero-inner{min-height:555px}
+.classes-page .hero-photo{width:75%;object-position:50% 47%;filter:saturate(.83)}
+.classes-page .hero::before{background:linear-gradient(90deg,#111317 0%,#111317 27%,rgba(17,19,23,.94) 43%,rgba(17,19,23,.16) 90%),linear-gradient(0deg,rgba(17,19,23,.65),transparent 65%)}
+.classes-page .hero h1{font-size:clamp(5rem,8vw,9.2rem)}
+.classes-page .hero-highlights .icon{color:var(--yellow)}
+.classes-page .hero-highlights small{max-width:300px}
+.class-directory{background:#17191c;padding:96px 0 100px}
+.class-directory .section-title span{color:var(--yellow)}
+.class-filter-panel{display:grid;grid-template-columns:1.65fr repeat(3,1fr) auto;gap:10px;padding:17px;background:#23262b;border:1px solid #383d44;margin-bottom:18px}
+.class-filter-panel .filter-field{position:relative}
+.class-filter-panel input,.class-filter-panel select{height:49px;width:100%;min-width:0;border-radius:0;background:#171a1e;border:1px solid #52575e;color:#fff;padding:0 14px;font-size:.86rem}
+.class-filter-panel input{padding-left:43px}
+.class-filter-panel select{appearance:none;padding-right:28px;cursor:pointer}
+.class-filter-panel .filter-field>.icon{left:14px}
+.class-filter-panel .caret{right:12px}
+.class-filter-panel button{min-height:49px}
+.category-choices{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:30px}
+.category-choice{min-height:42px;padding:0 19px;background:transparent;border:1px solid #4b5159;color:#f4f5f6;font-size:.75rem;letter-spacing:.065em;font-weight:950;text-transform:uppercase;transition:background .15s,color .15s}
+.category-choice[aria-pressed="true"]{background:var(--yellow);color:#17191c;border-color:var(--yellow)}
+.category-choice:hover:not([aria-pressed="true"]){border-color:var(--yellow);color:var(--yellow)}
+.class-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.class-card{display:flex;flex-direction:column;min-width:0;background:#22252a;border:1px solid #363c42;transition:transform .2s,border-color .2s}
+.class-card:hover{transform:translateY(-5px);border-color:var(--yellow)}
+.class-card-photo{position:relative;height:219px;overflow:hidden;background:#17191c}
+.class-card-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 38%;transition:transform .35s}
+.class-card:hover .class-card-photo img{transform:scale(1.035)}
+.class-type-badge{position:absolute;left:15px;top:15px;font-size:.68rem;font-weight:950;letter-spacing:.11em;padding:9px 12px;background:var(--yellow);color:#161616;text-transform:uppercase}
+.class-type-badge.hiit{background:var(--pink);color:white}
+.class-type-badge.yoga{background:var(--purple);color:white}
+.class-type-badge.zumba{background:var(--cyan);color:#101214}
+.class-card-body{display:flex;flex-direction:column;flex:1;padding:23px 19px 20px}
+.class-card-body h3{font:900 1.78rem/1.06 Impact,"Arial Narrow",Arial,sans-serif;letter-spacing:.01em;overflow-wrap:normal;text-transform:uppercase;margin:10px 0 12px}
+.class-card-lead{font-size:.83rem;line-height:1.62;color:#b6bec3;margin:0 0 21px;min-height:67px}
+.class-card-label{color:var(--cyan);font-size:.66rem;font-weight:950;letter-spacing:.13em;text-transform:uppercase}
+.class-properties{display:grid;grid-template-columns:1fr 1fr;gap:9px 6px;padding:17px 0;border-top:1px solid var(--line);margin-top:auto}
+.class-properties span{display:flex;gap:6px;align-items:center;color:#c5c9ce;font-size:.69rem;font-weight:800}
+.class-properties svg{width:15px;height:15px;color:var(--yellow)}
+.class-card-actions{display:flex;gap:9px}
+.class-detail-btn{flex:1;min-height:46px;display:flex;justify-content:center;align-items:center;gap:10px;border:0;background:var(--yellow);color:#141414;font-weight:950;font-size:.73rem;letter-spacing:.045em;cursor:pointer}
+.class-detail-btn:hover{background:var(--yellow-soft)}
+.class-card-actions .class-book-link{display:grid;place-items:center;min-width:44px;border:1px solid #697078;color:#fff}
+.class-card-actions .class-book-link:hover{color:var(--yellow);border-color:var(--yellow)}
+.class-guide{margin-top:23px;font-size:.77rem;line-height:1.75;color:#a6aeb4}
+.class-membership-note{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 24px;background:#202328;border:1px solid rgba(255,195,36,.35);border-left:5px solid var(--yellow)}
+.class-membership-note strong{display:block;color:var(--yellow);font-size:.82rem;font-weight:950;letter-spacing:.075em;text-transform:uppercase;margin-bottom:7px}.class-membership-note p{margin:0;color:#c7cdd1;font-size:.85rem;line-height:1.65}.class-membership-note a{flex:none;color:#111;background:var(--yellow);font-size:.73rem;letter-spacing:.04em;font-weight:950;padding:13px 17px;text-transform:uppercase}.class-membership-note a:hover{background:var(--yellow-soft)}
+.class-empty{padding:45px;text-align:center;border:1px dashed #60656c;background:#22262b}
+.class-empty h3{margin:0 0 10px}.class-empty p{color:#b2b8bf;line-height:1.6}
+.class-empty button{border:0;background:var(--yellow);padding:12px 18px;font-weight:900;cursor:pointer}
+.schedule-section{padding:96px 0;background:#111417;border-top:1px solid var(--line)}
+.schedule-section .section-title span{color:var(--yellow)}
+.schedule-table-shell{overflow-x:auto;border:1px solid #41464a;background:#1e2226;margin-top:27px}
+.schedule-table{width:100%;border-collapse:collapse;min-width:800px}
+.schedule-table th{text-align:left;background:#292d32;padding:17px 16px;color:#cbd1d5;font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;white-space:nowrap}
+.schedule-table td{padding:16px;border-top:1px solid #393f45;font-size:.85rem;color:#d6dadd}
+.schedule-table td strong{font-weight:950;color:#fff}
+.schedule-table tr:hover td{background:#292d31}
+.schedule-type{display:inline-block;color:#161616;background:var(--yellow);font-size:.63rem;text-transform:uppercase;font-weight:950;letter-spacing:.07em;padding:7px 10px}
+.schedule-type.hiit{background:var(--pink);color:#fff}.schedule-type.yoga{background:#a9a1ff;color:#111}.schedule-type.zumba{background:#64dff4;color:#121212}
+.schedule-book{background:var(--pink);border:0;color:#fff;padding:10px 14px;font-size:.68rem;font-weight:950;letter-spacing:.045em;white-space:nowrap;display:inline-block}
+.schedule-book:hover{background:#ee3b8d}
+.schedule-empty{padding:25px;color:#bbc3c7;font-size:.9rem;border:1px dashed #555b61;margin-top:17px}
+.schedule-note{color:#a1a9af;line-height:1.7;font-size:.8rem;margin:22px 0 0}
+.schedule-head{display:flex;align-items:end;gap:24px;justify-content:space-between}
+.schedule-head a{font-size:.75rem;white-space:nowrap;color:var(--yellow);font-weight:900;border-bottom:1px solid rgba(255,195,36,.5);padding-bottom:6px}
+.class-steps{background:var(--purple);padding:95px 0}
+.class-steps h2{font:900 clamp(3.6rem,5.5vw,6rem)/1.04 Impact,Arial,sans-serif;text-transform:uppercase;letter-spacing:.012em;margin:15px 0 36px}
+.class-steps h2 span{color:var(--yellow)}
+.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.step{border:1px solid rgba(255,255,255,.22);background:rgba(22,13,66,.33);padding:28px}
+.step-num{color:var(--yellow);font:900 2.7rem/1 Impact,Arial,sans-serif}
+.step h3{font-size:1rem;text-transform:uppercase;margin:17px 0 10px;letter-spacing:.05em}
+.step p{color:#e3ddfa;line-height:1.7;font-size:.86rem;margin:0}
+.class-dialog{max-width:min(940px,calc(100vw - 30px));width:100%;padding:0;background:#202429;color:white;border:1px solid #525960;box-shadow:0 35px 90px rgba(0,0,0,.8)}
+.class-dialog::backdrop{background:rgba(0,0,0,.8);backdrop-filter:blur(6px)}
+.class-dialog-grid{display:grid;grid-template-columns:.88fr 1fr}
+.class-dialog-image{width:100%;height:100%;min-height:460px;object-fit:cover}
+.class-dialog-content{padding:42px 35px}
+.class-dialog-content h2{font:900 clamp(2.7rem,4.4vw,4.8rem)/1.04 Impact,Arial,sans-serif;text-transform:uppercase;margin:14px 0}
+.class-dialog-content p{color:#bdc5cb;font-size:.91rem;line-height:1.72}
+.class-dialog-content dl{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:23px 0}
+.class-dialog-content dt{font-size:.67rem;letter-spacing:.12em;color:#aab3b9;font-weight:900;text-transform:uppercase;margin-bottom:5px}
+.class-dialog-content dd{margin:0;font-weight:850;font-size:.83rem;line-height:1.5}
+.dialog-actions{display:flex;flex-wrap:wrap;gap:10px}
+.class-dialog-close{position:absolute;right:13px;top:13px;background:#111416;color:#fff;border:1px solid #899096;display:grid;place-items:center;padding:7px;cursor:pointer}
+.class-dialog-close:hover{color:var(--yellow)}
+@media(max-width:1230px){.class-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.class-filter-panel{grid-template-columns:repeat(2,minmax(0,1fr))}.class-filter-panel .filter-reset{grid-column:2}.class-card-photo{height:265px}.class-card-lead{min-height:unset}}
+@media(max-width:750px){.classes-page .hero-photo{width:100%;opacity:.45;object-position:center}.classes-page .hero::before{background:linear-gradient(90deg,rgba(13,15,17,.94),rgba(13,15,17,.54)),linear-gradient(0deg,#111317,transparent 65%)}.classes-page .hero h1{font-size:clamp(4.3rem,12vw,7rem)}.class-directory,.schedule-section,.class-steps{padding:70px 0}.class-grid{gap:14px}.class-card-photo{height:205px}.class-dialog-grid{grid-template-columns:1fr}.class-dialog-image{height:225px;min-height:0}.class-dialog-content{padding:27px 23px}.steps-grid{grid-template-columns:1fr}.schedule-head{flex-direction:column;align-items:start}.class-steps h2{font-size:4rem}}
+@media(max-width:525px){.class-membership-note{flex-direction:column;align-items:flex-start}.class-membership-note a{width:100%;text-align:center}.class-filter-panel{grid-template-columns:1fr}.class-filter-panel .filter-reset{grid-column:auto}.class-grid{grid-template-columns:1fr}.class-card-photo{height:248px}.class-card-body{padding:23px}.class-card-body h3{font-size:2.4rem}.category-choice{flex:1;padding:0 12px}.class-dialog-content dl{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="classes-page">
+  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m3-13a3 3 0 0 1 0 6m1 7v-2a5 5 0 0 0-3-4.6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <p><span class="topbar-dot"></span> MADE FOR MAURITIUS <span class="topbar-divider">/</span> TRAIN · TRACK · TRANSFORM</p>
+      <a href="/branches/">THREE ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container nav-inner">
+      <a href="/" class="logo" aria-label="MyFit home">
+        <img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42">
+        <span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small>
+      </a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="/coaches/">Coaches</a>
+        <a href="/branches/">Branches</a>
+        <a href="/plans/">Membership</a>
+        <a class="current" href="/classes/" aria-current="page">Classes</a>
+        <a href="/contact/">Support</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="login-btn" href="/login/">Log in</a>
+        <a class="join-btn" href="/register/">JOIN MYFIT <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+      </div>
+      <details class="mobile-menu">
+        <summary aria-label="Open navigation"><svg class="icon"><use href="#i-menu"/></svg></summary>
+        <nav aria-label="Mobile navigation">
+          <a href="/">Home</a><a href="/coaches/">Coaches</a><a href="/branches/">Branches</a>
+          <a href="/plans/">Membership</a><a href="/classes/" aria-current="page">Classes</a><a href="/contact/">Support</a><a href="/login/">Log in</a>
+        </nav>
+      </details>
+    </div>
+  </header>
+
+
+  <main id="main-content">
+    <section class="hero" aria-labelledby="classes-title">
+      <img class="hero-photo" src="{% static 'images/classes/classes-hero.webp' %}" alt="Illustrative group fitness session at a gym" fetchpriority="high">
+      <div class="container hero-inner"><div class="hero-copy">
+        <p class="breadcrumb"><a href="/">HOME</a> &nbsp;/&nbsp; <span>OUR CLASSES</span></p>
+        <p class="eyebrow">YOUR ENERGY / YOUR WAY</p>
+        <h1 id="classes-title">MOVE.<br>GROW.<br><span>REPEAT.</span></h1>
+        <p class="hero-desc">Find a workout that moves you. Explore strength, HIIT, yoga and Zumba sessions with guidance from the MyFit coaching team.</p>
+        <div class="hero-actions"><a class="btn btn-pink" href="#class-directory">EXPLORE CLASSES <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="#weekly-schedule">SAMPLE TIMETABLE <svg class="icon"><use href="#i-arrow"/></svg></a></div>
+      </div></div>
+      <div class="hero-bottom"><div class="container hero-highlights">
+        <div><svg class="icon"><use href="#i-users"/></svg><span><b>EXPERT COACHES</b><small>Meet the instructors behind your training</small></span></div>
+        <div><svg class="icon"><use href="#i-activity"/></svg><span><b>4 TRAINING STYLES</b><small>Strength, HIIT, mobility and dance</small></span></div>
+        <div><svg class="icon"><use href="#i-pin"/></svg><span><b>3 ACTIVE CLUBS</b><small>Caudan, Trianon and Riche Terre</small></span></div>
+      </div></div>
+    </section>
+
+    <section class="class-directory" id="class-directory" aria-labelledby="directory-title">
+      <div class="container">
+        <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR ENERGY</p><h2 class="section-title" id="directory-title">CLASSES FOR <span>EVERY GOAL</span></h2><p>Find a session you would enjoy. Search by class or coach, choose your preferred location, and explore what a typical week could look like.</p></div><span class="count-badge" aria-live="polite">SHOWING <span id="class-count">4</span> PROGRAMMES</span></div>
+        <div class="class-filter-panel" role="group" aria-label="Filter class programmes and sample timetable">
+          <label class="filter-field"><svg class="icon"><use href="#i-search"/></svg><input id="class-search" type="search" placeholder="Search classes or coaches" aria-label="Search classes or coaches" autocomplete="off"></label>
+          <label class="filter-field"><select id="type-filter" aria-label="Filter by class type"><option value="all">All class types</option><option value="strength">Strength</option><option value="hiit">HIIT</option><option value="yoga">Yoga / Recovery</option><option value="zumba">Zumba</option></select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg></label>
+          <label class="filter-field"><select id="location-filter" aria-label="Filter by branch"><option value="all">All branches</option><option value="caudan">Caudan Waterfront</option><option value="trianon">Emerald Park · Trianon</option><option value="riche-terre">Riche Terre</option></select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg></label>
+          <label class="filter-field"><select id="day-filter" aria-label="Filter by day"><option value="all">All days</option><option value="monday">Monday</option><option value="tuesday">Tuesday</option><option value="wednesday">Wednesday</option><option value="thursday">Thursday</option><option value="friday">Friday</option><option value="saturday">Saturday</option></select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg></label>
+          <button type="button" class="filter-reset" id="reset-class-filters">RESET</button>
+        </div>
+        <div class="category-choices" aria-label="Quick class category selection"><button type="button" class="category-choice" data-choice="all" aria-pressed="true">ALL CLASSES</button><button type="button" class="category-choice" data-choice="strength" aria-pressed="false">STRENGTH</button><button type="button" class="category-choice" data-choice="hiit" aria-pressed="false">HIIT</button><button type="button" class="category-choice" data-choice="yoga" aria-pressed="false">YOGA</button><button type="button" class="category-choice" data-choice="zumba" aria-pressed="false">ZUMBA</button></div>
+        <div class="class-grid" id="class-grid"><article class="class-card" data-category="strength" data-name="Strength Fundamentals" data-about="A practical, accessible strength session focused on movement quality, safe progress and a solid training foundation. Adaptable for first-time lifters and experienced members." data-focus="Technique, full-body strength, progressive overload" data-coaches="Adrian Morel &amp; Daniel Chen" data-duration="60 minutes" data-level="All levels" data-group="Up to 20">
+    <div class="class-card-photo"><img src="{% static 'images/classes/class-strength.webp' %}" alt="Illustrative Strength Fundamentals group session" loading="lazy"><span class="class-type-badge strength">STRENGTH</span></div>
+    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / STRENGTH</p><h3>STRENGTH FUNDAMENTALS</h3><p class="class-card-lead">Learn the basics of resistance training, build confidence and strengthen your technique with expert guidance.</p>
+      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 60 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> ALL LEVELS</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 20</span></div>
+      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for Strength Fundamentals"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
+    </div>
+  </article><article class="class-card" data-category="hiit" data-name="HIIT Training" data-about="Short bursts of movement balanced with active recovery. Expect dynamic conditioning and adaptable options, with encouragement from your instructor." data-focus="Cardio, functional training, endurance" data-coaches="Ryan Patel" data-duration="45 minutes" data-level="Moderate" data-group="Up to 24">
+    <div class="class-card-photo"><img src="{% static 'images/classes/class-hiit.webp' %}" alt="Illustrative HIIT Training group session" loading="lazy"><span class="class-type-badge hiit">HIIT</span></div>
+    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / HIIT</p><h3>HIIT TRAINING</h3><p class="class-card-lead">High-energy intervals and functional movements that challenge your conditioning at a pace you can adapt.</p>
+      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 45 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> MODERATE</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 24</span></div>
+      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for HIIT Training"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
+    </div>
+  </article><article class="class-card" data-category="yoga" data-name="Yoga &amp; Recovery" data-about="Unwind, breathe and improve your range of movement. This session focuses on flexibility, controlled movement and relaxed recovery." data-focus="Mobility, balance, stretching, recovery" data-coaches="Amina Rahman" data-duration="55 minutes" data-level="All levels" data-group="Up to 18">
+    <div class="class-card-photo"><img src="{% static 'images/classes/class-yoga.webp' %}" alt="Illustrative Yoga &amp; Recovery group session" loading="lazy"><span class="class-type-badge yoga">MOBILITY</span></div>
+    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / YOGA</p><h3>YOGA &AMP; RECOVERY</h3><p class="class-card-lead">Move more freely with mindful stretches, breathwork and gentle mobility exercises designed for recovery.</p>
+      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 55 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> ALL LEVELS</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 18</span></div>
+      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for Yoga &amp; Recovery"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
+    </div>
+  </article><article class="class-card" data-category="zumba" data-name="Zumba Fitness" data-about="Move with rhythm in a lively group workout. Easy-to-follow sequences create an energetic cardio session for a range of fitness backgrounds." data-focus="Dance fitness, coordination, aerobic exercise" data-coaches="Maya Naidoo" data-duration="55 minutes" data-level="All levels" data-group="Up to 26">
+    <div class="class-card-photo"><img src="{% static 'images/classes/class-zumba.webp' %}" alt="Illustrative Zumba Fitness group session" loading="lazy"><span class="class-type-badge zumba">GROUP FITNESS</span></div>
+    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / ZUMBA</p><h3>ZUMBA FITNESS</h3><p class="class-card-lead">Music-driven dance movement that makes cardio feel fun, social and full of positive energy.</p>
+      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 55 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> ALL LEVELS</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 26</span></div>
+      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for Zumba Fitness"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
+    </div>
+  </article></div>
+        <div class="class-empty" id="class-empty" hidden><h3>NO MATCHING CLASSES</h3><p>Try another class type, branch or day in this sample timetable.</p><button type="button" id="empty-reset">CLEAR FILTERS</button></div>
+        <p class="class-guide">These programme descriptions, coach assignments and session times are <strong>illustrative frontend content</strong>. Real schedules, capacities and availability will be connected through Django later.</p>
+        <aside class="class-membership-note" aria-label="Group fitness membership information"><div><strong>Group classes and your membership</strong><p>Unlimited group classes are included with <b>My Access XL</b> and <b>My Access Premium</b>. View the membership options to compare their listed benefits.</p></div><a href="/plans/">Compare memberships →</a></aside>
+      </div>
+    </section>
+
+    <section class="schedule-section" id="weekly-schedule" aria-labelledby="schedule-title"><div class="container">
+      <div class="schedule-head"><div><p class="section-kicker">02 / PLAN YOUR WEEK</p><h2 class="section-title" id="schedule-title">SAMPLE <span>TIMETABLE</span></h2><p style="color:#b6bdc3;line-height:1.7;max-width:670px;margin:0">Preview a typical week using the class filters above. Timings here are demonstration data, not confirmed live sessions.</p></div><a href="/contact/">QUESTIONS ABOUT THE CLASSES? <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
+      <div class="schedule-table-shell"><table class="schedule-table"><thead><tr><th scope="col">DAY</th><th scope="col">TIME</th><th scope="col">CLASS</th><th scope="col">COACH</th><th scope="col">BRANCH</th><th scope="col">TYPE</th><th scope="col">ACTION</th></tr></thead><tbody id="schedule-rows"><tr class="schedule-row" data-day="monday" data-category="strength" data-branch="caudan" data-search="strength fundamentals adrian morel caudan waterfront"><td><strong>Monday</strong></td><td>07:00</td><td><strong>Strength Fundamentals</strong></td><td>Adrian Morel</td><td>Caudan Waterfront</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="monday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Monday</strong></td><td>09:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Tuesday</strong></td><td>18:00</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Tuesday</strong></td><td>18:30</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="wednesday" data-category="strength" data-branch="trianon" data-search="strength fundamentals daniel chen emerald park · trianon"><td><strong>Wednesday</strong></td><td>17:30</td><td><strong>Strength Fundamentals</strong></td><td>Daniel Chen</td><td>Emerald Park · Trianon</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="thursday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Thursday</strong></td><td>07:30</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="friday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Friday</strong></td><td>17:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="saturday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Saturday</strong></td><td>10:00</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr></tbody></table></div>
+      <div class="schedule-empty" id="schedule-empty" hidden>No sample sessions match the selected filters.</div>
+    </div></section>
+
+    <section class="class-steps" aria-labelledby="steps-title"><div class="container"><p class="eyebrow">03 / HOW IT WORKS</p><h2 id="steps-title">YOUR NEXT CLASS<br><span>STARTS HERE.</span></h2><div class="steps-grid">
+      <div class="step"><span class="step-num">01</span><h3>FIND YOUR FIT</h3><p>Browse the programme styles, review their focus and find a class that suits your goals.</p></div>
+      <div class="step"><span class="step-num">02</span><h3>SIGN IN TO BOOK</h3><p>When online bookings are implemented, log in to select and manage your training sessions.</p></div>
+      <div class="step"><span class="step-num">03</span><h3>SHOW UP AND MOVE</h3><p>Bring your motivation to your selected branch and let the MyFit community support your progress.</p></div>
+    </div></div></section>
+
+    <section class="closing-cta" aria-labelledby="cta-title"><div class="container"><p class="eyebrow">ONE MORE REASON TO GET MOVING</p><h2 id="cta-title">FIND YOUR <span>MOMENTUM.</span></h2><p>Ready to train your way? Explore membership options, meet our coaches and get started with MyFit.</p><div class="cta-actions"><a class="btn btn-pink" href="/plans/">VIEW MEMBERSHIPS <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="/coaches/">MEET THE COACHES <svg class="icon"><use href="#i-arrow"/></svg></a></div></div></section>
+  </main>
+  <footer class="footer">
+    <div class="container footer-main">
+      <a href="/" class="logo" aria-label="MyFit home"><img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42"><span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small></a>
+      <p>TRAIN HARD. TRACK SMARTER.<br>BUILD SOMETHING BETTER</p>
+      <nav aria-label="Footer links"><a href="/">HOME</a><a href="/coaches/">COACHES</a><a href="/classes/">CLASSES</a><a href="/plans/">MEMBERSHIP</a><a href="/branches/">BRANCHES</a><a href="/contact/">SUPPORT</a></nav>
+    </div>
+    <div class="container footer-bottom"><span>© {% now "Y" %} MYFIT MAURITIUS</span><a href="#main-content">BACK TO TOP ↑</a><span>MADE TO MOVE. <b>BUILT TO LAST.</b></span></div>
+  </footer>
+
+
+  <dialog class="class-dialog" id="class-dialog" aria-labelledby="dialog-class-name">
+    <button type="button" class="class-dialog-close" id="class-dialog-close" aria-label="Close class details"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="class-dialog-grid">
+      <img class="class-dialog-image" id="dialog-class-photo" src="{% static 'images/classes/class-strength.webp' %}" alt="Illustrative fitness class">
+      <div class="class-dialog-content">
+        <p class="section-kicker" id="dialog-class-label">TRAINING PROGRAMME</p><h2 id="dialog-class-name">STRENGTH FUNDAMENTALS</h2>
+        <p id="dialog-class-about"></p>
+        <dl><div><dt>Duration</dt><dd id="dialog-class-duration"></dd></div><div><dt>Suggested level</dt><dd id="dialog-class-level"></dd></div><div><dt>Example coach</dt><dd id="dialog-class-coach"></dd></div><div><dt>Illustrative group size</dt><dd id="dialog-class-group"></dd></div><div style="grid-column:1/-1"><dt>Training focus</dt><dd id="dialog-class-focus"></dd></div></dl>
+        <div class="dialog-actions"><a class="btn btn-yellow" href="#weekly-schedule" id="dialog-view-schedule">VIEW TIMETABLE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="/contact/">ASK A QUESTION</a></div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+  (() => {
+    'use strict';
+    const search=document.getElementById('class-search');
+    const category=document.getElementById('type-filter');
+    const branch=document.getElementById('location-filter');
+    const day=document.getElementById('day-filter');
+    const classCards=[...document.querySelectorAll('.class-card')];
+    const scheduleRows=[...document.querySelectorAll('.schedule-row')];
+    const categories=[...document.querySelectorAll('.category-choice')];
+    const cardsEmpty=document.getElementById('class-empty');
+    const tableEmpty=document.getElementById('schedule-empty');
+    const count=document.getElementById('class-count');
+    const normalize=value=>value.trim().toLocaleLowerCase();
+    function updateFilters(){
+      const q=normalize(search.value);
+      let visibleRows=0;
+      scheduleRows.forEach(row=>{
+        const shown=(category.value==='all'||category.value===row.dataset.category)&&
+          (branch.value==='all'||branch.value===row.dataset.branch)&&
+          (day.value==='all'||day.value===row.dataset.day)&&
+          row.dataset.search.includes(q);
+        row.hidden=!shown;
+        if(shown) visibleRows++;
+      });
+      const matchingProgrammes=new Set(scheduleRows.filter(row=>!row.hidden).map(row=>row.dataset.category));
+      let visibleCards=0;
+      classCards.forEach(card=>{
+        const shown=matchingProgrammes.has(card.dataset.category);
+        card.hidden=!shown;
+        if(shown) visibleCards++;
+      });
+      count.textContent=String(visibleCards);
+      cardsEmpty.hidden=visibleCards!==0;
+      tableEmpty.hidden=visibleRows!==0;
+      categories.forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.choice===category.value)));
+    }
+    function reset(){search.value='';category.value='all';branch.value='all';day.value='all';updateFilters();}
+    [category,branch,day].forEach(input=>input.addEventListener('change',updateFilters));
+    search.addEventListener('input',updateFilters);
+    document.getElementById('reset-class-filters').addEventListener('click',reset);
+    document.getElementById('empty-reset').addEventListener('click',reset);
+    categories.forEach(btn=>btn.addEventListener('click',()=>{category.value=btn.dataset.choice;updateFilters();}));
+    updateFilters();
+    // The timetable shortcut on each card filters sessions for that programme.
+    classCards.forEach(card=>{
+      const shortcut=card.querySelector('.class-book-link');
+      if(!shortcut)return;
+      shortcut.setAttribute('title','Show '+card.dataset.name+' sessions');
+      shortcut.addEventListener('click',()=>{
+        search.value='';
+        category.value=card.dataset.category;
+        branch.value='all';
+        day.value='all';
+        updateFilters();
+      });
+    });
+    // Close the mobile dropdown after choosing another page.
+    const mobileMenu=document.querySelector('.mobile-menu');
+    if(mobileMenu){mobileMenu.querySelectorAll('nav a').forEach(link=>link.addEventListener('click',()=>{mobileMenu.open=false;}));}
+    const dialog=document.getElementById('class-dialog');
+    classCards.forEach(card=>card.querySelector('.class-detail-btn').addEventListener('click',()=>{
+      document.getElementById('dialog-class-photo').src=card.querySelector('.class-card-photo img').src;
+      document.getElementById('dialog-class-photo').alt=card.querySelector('.class-card-photo img').alt;
+      document.getElementById('dialog-class-name').textContent=card.dataset.name.toUpperCase();
+      document.getElementById('dialog-class-label').textContent='MYFIT CLASS / '+card.dataset.category.toUpperCase();
+      document.getElementById('dialog-class-about').textContent=card.dataset.about;
+      document.getElementById('dialog-class-duration').textContent=card.dataset.duration;
+      document.getElementById('dialog-class-level').textContent=card.dataset.level;
+      document.getElementById('dialog-class-coach').textContent=card.dataset.coaches;
+      document.getElementById('dialog-class-group').textContent=card.dataset.group;
+      document.getElementById('dialog-class-focus').textContent=card.dataset.focus;
+      dialog.showModal();
+    }));
+    document.getElementById('class-dialog-close').addEventListener('click',()=>dialog.close());
+    document.getElementById('dialog-view-schedule').addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+  })();
+  </script>
+</body>
+</html>

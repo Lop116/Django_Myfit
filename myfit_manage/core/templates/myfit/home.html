@@ -149,6 +149,9 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
 .class-card h3{margin:13px 0 15px;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:2rem;line-height:1.05;letter-spacing:.015em}
 .class-card p{font-size:.92rem;line-height:1.65;color:#abb0b6;margin:0 0 25px}
 .class-card a{margin-top:auto;display:flex;align-items:center;gap:8px;color:var(--yellow);font-size:.78rem;letter-spacing:.07em;font-weight:950}
+/* Keep the class-card design but make the entire card open the Classes page. */
+.class-card a::after{content:"";position:absolute;inset:0;cursor:pointer}
+.class-card:focus-within{outline:3px solid var(--yellow);outline-offset:3px}
 .section-note{color:#777d83;margin:23px 0 0;font-size:.76rem}
 
 
@@ -167,10 +170,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
 .plan-featured-ribbon{position:absolute;top:0;right:0;padding:7px 12px;background:var(--pink);color:#fff;font-size:.63rem;letter-spacing:.07em;font-weight:950}
 .plan-featured .plan-upper{padding-top:19px}
 .plan-card h3{font-size:1.65rem;font-weight:1000;letter-spacing:-.05em;margin:27px 0 10px}
-.plan-price{font-family:Impact,Arial,sans-serif;font-size:3.4rem;letter-spacing:-.03em}
-.plan-price span{font-family:Arial,sans-serif;font-size:1rem;vertical-align:top;position:relative;top:7px;margin-right:8px;font-weight:900}
-.plan-price small{font:800 .65rem Arial,sans-serif;letter-spacing:.08em;color:#777}
-.plan-featured .plan-price small{color:#bdc1c4}
+/* Give the currency, amount and billing period independent spacing. */
+.plan-price{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:12px;row-gap:4px;font-family:Impact,Arial,sans-serif;line-height:1.12;letter-spacing:normal}
+.plan-price .price-currency{font-family:Arial,sans-serif;font-size:1.1rem;position:static;margin:0;font-weight:900}
+.plan-price .price-amount{font-size:3.4rem;font-weight:900;letter-spacing:.018em;white-space:nowrap}
+.plan-price .price-period{font:800 .68rem Arial,sans-serif;letter-spacing:.09em;color:#777;margin:0 0 5px 2px;white-space:nowrap}
+.plan-featured .plan-price .price-period{color:#bdc1c4}
 .plan-description{color:#6b6e72;font-size:.81rem;line-height:1.6;min-height:48px}
 .plan-featured .plan-description{color:#c2c4c7}
 .plan-card ul{list-style:none;padding:0;margin:15px 0 24px}
@@ -271,7 +276,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
 .about-grid{grid-template-columns:1.1fr .9fr}
 .plan-grid{gap:12px}
 .plan-card{padding:28px 20px}
-.plan-price{font-size:2.9rem}
+.plan-price .price-amount{font-size:2.9rem}
 .coach-layout{gap:6%}
 .coach-visual{height:485px}
 .branch-img{height:240px}
@@ -424,12 +429,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
 
     <section class="classes-section section-pad" id="classes">
       <div class="container">
-        <div class="section-heading dark-heading"><div><p class="overline cyan-text">02 / FIND YOUR ENERGY</p><h2>MOVE YOUR WAY</h2><p>Different goals. One place to show up, push yourself and enjoy the process.</p></div><a href="/plans/" class="link-arrow">SEE MEMBERSHIPS <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
+        <div class="section-heading dark-heading"><div><p class="overline cyan-text">02 / FIND YOUR ENERGY</p><h2>MOVE YOUR WAY</h2><p>Different goals. One place to show up, push yourself and enjoy the process.</p></div><a href="/classes/" class="link-arrow">VIEW ALL CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
         <div class="classes-grid">
-          <article class="class-card"><div class="class-card-number">01</div><div class="class-illustration class-illustration-strength"><svg class="icon"><use href="#i-dumbbell"/></svg></div><span class="class-tag">STRENGTH</span><h3>STRENGTH<br>FUNDAMENTALS</h3><p>Build a foundation with technique, control and consistency.</p><a href="/plans/">GET STARTED <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
-          <article class="class-card"><div class="class-card-number">02</div><div class="class-illustration class-illustration-hiit"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">CONDITIONING</span><h3>HIIT<br>TRAINING</h3><p>Challenge your endurance with energising interval sessions.</p><a href="/plans/">GET STARTED <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
-          <article class="class-card"><div class="class-card-number">03</div><div class="class-illustration class-illustration-yoga"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">MOBILITY</span><h3>YOGA &amp;<br>RECOVERY</h3><p>Improve flexibility, mobility and the way you feel.</p><a href="/plans/">GET STARTED <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
-          <article class="class-card"><div class="class-card-number">04</div><div class="class-illustration class-illustration-zumba"><svg class="icon"><use href="#i-dance"/></svg></div><span class="class-tag">GROUP FITNESS</span><h3>ZUMBA<br>FITNESS</h3><p>Music, movement and good energy in every session.</p><a href="/plans/">GET STARTED <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">01</div><div class="class-illustration class-illustration-strength"><svg class="icon"><use href="#i-dumbbell"/></svg></div><span class="class-tag">STRENGTH</span><h3>STRENGTH<br>FUNDAMENTALS</h3><p>Build a foundation with technique, control and consistency.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">02</div><div class="class-illustration class-illustration-hiit"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">CONDITIONING</span><h3>HIIT<br>TRAINING</h3><p>Challenge your endurance with energising interval sessions.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">03</div><div class="class-illustration class-illustration-yoga"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">MOBILITY</span><h3>YOGA &amp;<br>RECOVERY</h3><p>Improve flexibility, mobility and the way you feel.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">04</div><div class="class-illustration class-illustration-zumba"><svg class="icon"><use href="#i-dance"/></svg></div><span class="class-tag">GROUP FITNESS</span><h3>ZUMBA<br>FITNESS</h3><p>Music, movement and good energy in every session.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
         </div>
         
       </div>
@@ -445,7 +450,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
           <article class="plan-card">
             <div class="plan-upper"><span>THE ESSENTIALS</span><span>01</span></div>
             <h3>MY ACCESS</h3>
-            <div class="plan-price"><span>Rs</span>1,249 <small>/ MONTH</small></div>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,249</strong><small class="price-period">/ MONTH</small></div>
             <p class="plan-description">My Access membership benefits</p>
             <ul>
               <li>Unlimited gym access</li>
@@ -457,7 +462,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
             <div class="plan-featured-ribbon">POPULAR CHOICE</div>
             <div class="plan-upper"><span>MORE MOMENTUM</span><span>02</span></div>
             <h3>MY ACCESS XL</h3>
-            <div class="plan-price"><span>Rs</span>1,399 <small>/ MONTH</small></div>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,399</strong><small class="price-period">/ MONTH</small></div>
             <p class="plan-description">Includes My Access benefits</p>
             <ul>
               <li>My Access benefits</li>
@@ -470,7 +475,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
           <article class="plan-card">
             <div class="plan-upper"><span>GO ALL IN</span><span>03</span></div>
             <h3>MY ACCESS PREMIUM</h3>
-            <div class="plan-price"><span>Rs</span>1,549 <small>/ MONTH</small></div>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,549</strong><small class="price-period">/ MONTH</small></div>
             <p class="plan-description">Includes My Access XL benefits</p>
             <ul>
               <li>My Access XL benefits</li>
@@ -480,7 +485,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
             <a href="/register/?plan=premium" class="plan-button">CHOOSE PREMIUM <svg class="icon sm"><use href="#i-arrow"/></svg></a>
           </article>
         </div>
-        <p class="membership-footnote">Membership pricing shown is sample project data.</p>
+    
       </div>
     </section>
 
