@@ -1,20 +1,44 @@
 from io import BytesIO
+from functools import wraps
+from urllib.parse import parse_qs, urlsplit
 
 import qrcode
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login
+from django.core.exceptions import PermissionDenied
 from django.core import signing
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import urlencode
 
-from .forms import RegistrationForm
+from .forms import MembershipVerificationForm, RegistrationForm
 from .membership_tokens import (
     create_membership_verification_token,
     get_membership_from_verification_token,
 )
 from .models import MembershipPass
+
+
+def authorized_membership_staff_required(view_func):
+    @login_required(login_url='myfit:login')
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        if (
+            not request.user.is_staff
+            or not request.user.has_perm('core.view_membershippass')
+        ):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return wrapped_view
+
+
+def extract_membership_token(value):
+    parsed = urlsplit(value)
+    if parsed.scheme or parsed.netloc:
+        return parse_qs(parsed.query).get('token', [''])[0]
+    return value
 
 
 # Create your views here.
@@ -108,6 +132,37 @@ def membership_verify(request):
         request,
         'myfit/membership_verify.html',
         {'verification_status': verification_status},
+    )
+
+
+@authorized_membership_staff_required
+def membership_scanner(request):
+    form = MembershipVerificationForm(request.POST or None)
+    verification_status = None
+
+    if request.method == 'POST' and form.is_valid():
+        token = extract_membership_token(form.cleaned_data['verification_input'].strip())
+        try:
+            member_pass = get_membership_from_verification_token(token)
+        except signing.SignatureExpired:
+            verification_status = 'expired_qr_token'
+        except signing.BadSignature:
+            verification_status = 'invalid_token'
+        else:
+            if member_pass is None:
+                verification_status = 'invalid_token'
+            elif member_pass.current_status == MembershipPass.Status.ACTIVE:
+                verification_status = 'valid'
+            elif member_pass.current_status == MembershipPass.Status.EXPIRED:
+                verification_status = 'expired_membership'
+            else:
+                verification_status = 'inactive_membership'
+
+    return render(
+        request,
+        'myfit/membership_scanner.html',
+        {'form': form, 'verification_status': verification_status},
+        status=400 if verification_status in ('invalid_token', 'expired_qr_token') else 200,
     )
 
 

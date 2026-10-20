@@ -4,10 +4,13 @@ from time import time
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core import signing
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 
 from .membership_tokens import (
     MEMBERSHIP_QR_MAX_AGE,
@@ -207,3 +210,131 @@ class MembershipPassTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+
+class MembershipScannerTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='scanner-member',
+            first_name='Amina',
+            last_name='Rahman',
+            email='scanner-member@example.com',
+            password='MemberPassword!42',
+        )
+        self.pass_record = MembershipPass.objects.create(
+            user=self.user,
+            plan=MembershipPass.Plan.ACCESS,
+        )
+        self.scanner_url = reverse('myfit:membership_scanner')
+
+    def authorize_staff(self):
+        staff_user = get_user_model().objects.create_user(
+            username='authorized-staff',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        permission = Permission.objects.get(
+            content_type__app_label='core',
+            codename='view_membershippass',
+        )
+        staff_user.user_permissions.add(permission)
+        self.client.force_login(staff_user)
+
+    def test_scanner_requires_login_and_staff_permission(self):
+        response = self.client.get(self.scanner_url)
+        self.assertRedirects(
+            response,
+            f'{reverse("myfit:login")}?next={self.scanner_url}',
+        )
+
+        member_user = get_user_model().objects.create_user(
+            username='ordinary-member',
+            password='MemberPassword!42',
+        )
+        self.client.force_login(member_user)
+        self.assertEqual(self.client.get(self.scanner_url).status_code, 403)
+
+        staff_without_permission = get_user_model().objects.create_user(
+            username='staff-without-permission',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        self.client.force_login(staff_without_permission)
+        self.assertEqual(self.client.get(self.scanner_url).status_code, 403)
+
+    def test_authorized_staff_can_open_scanner(self):
+        self.authorize_staff()
+
+        response = self.client.get(self.scanner_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'START CAMERA SCANNER')
+        self.assertContains(response, 'MANUAL VERIFICATION')
+        self.assertContains(response, '/static/js/jsQR.js')
+        self.assertContains(response, 'getUserMedia')
+        self.assertContains(response, 'window.jsQR')
+        self.assertContains(response, 'qr-frame-canvas')
+        self.assertNotContains(response, 'BarcodeDetector')
+
+    def verify_token(self, token):
+        return self.client.post(
+            self.scanner_url,
+            {'verification_input': token},
+        )
+
+    def test_scanner_shows_valid_expired_and_inactive_memberships(self):
+        self.authorize_staff()
+        token = create_membership_verification_token(self.pass_record)
+
+        self.pass_record.status = MembershipPass.Status.ACTIVE
+        self.pass_record.expiry_date = timezone.localdate() + timedelta(days=1)
+        self.pass_record.save()
+        self.assertContains(self.verify_token(token), 'VALID MEMBERSHIP')
+
+        self.pass_record.expiry_date = timezone.localdate() - timedelta(days=1)
+        self.pass_record.save()
+        self.assertContains(self.verify_token(token), 'EXPIRED MEMBERSHIP')
+
+        self.pass_record.status = MembershipPass.Status.PENDING
+        self.pass_record.expiry_date = None
+        self.pass_record.save()
+        self.assertContains(self.verify_token(token), 'INACTIVE MEMBERSHIP')
+
+    def test_scanner_accepts_qr_verification_url(self):
+        self.authorize_staff()
+        token = create_membership_verification_token(self.pass_record)
+        verification_url = (
+            f'https://myfit.example{reverse("myfit:membership_verify")}?token={token}'
+        )
+
+        response = self.client.post(
+            self.scanner_url,
+            {'verification_input': verification_url},
+        )
+
+        self.assertContains(response, 'INACTIVE MEMBERSHIP')
+
+    def test_scanner_distinguishes_invalid_and_expired_qr_tokens(self):
+        self.authorize_staff()
+        invalid_response = self.verify_token('not-a-valid-token')
+        self.assertEqual(invalid_response.status_code, 400)
+        self.assertContains(invalid_response, 'INVALID TOKEN', status_code=400)
+
+        token = create_membership_verification_token(self.pass_record)
+        with patch(
+            'django.core.signing.time.time',
+            return_value=time() + MEMBERSHIP_QR_MAX_AGE + 1,
+        ):
+            expired_response = self.verify_token(token)
+        self.assertEqual(expired_response.status_code, 400)
+        self.assertContains(expired_response, 'EXPIRED QR TOKEN', status_code=400)
+
+    def test_scanner_results_do_not_reveal_member_information(self):
+        self.authorize_staff()
+        token = create_membership_verification_token(self.pass_record)
+
+        response = self.verify_token(token)
+
+        self.assertNotContains(response, self.user.email)
+        self.assertNotContains(response, self.user.first_name)
+        self.assertNotContains(response, str(self.pass_record.membership_id))

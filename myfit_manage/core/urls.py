@@ -45,6 +45,7 @@ urlpatterns = [
     path('membership/pass/', views.membership_pass, name='membership_pass'),
     path('membership/qr/', views.membership_qr, name='membership_qr'),
     path('membership/verify/', views.membership_verify, name='membership_verify'),
+    path('staff/membership-scanner/', views.membership_scanner, name='membership_scanner'),
     path('branches/', views.branches, name='branches'),
     path('coaches/', views.coaches, name='coaches'),
     path('classes/', views.classes, name='classes'),

@@ -43,3 +43,14 @@ class RegistrationForm(UserCreationForm):
         if users.exists():
             raise forms.ValidationError('An account with this email address already exists.')
         return email
+
+
+class MembershipVerificationForm(forms.Form):
+    verification_input = forms.CharField(
+        label='Membership QR link or token',
+        max_length=4096,
+        widget=forms.TextInput(attrs={
+            'autocomplete': 'off',
+            'placeholder': 'Paste the membership verification link or token',
+        }),
+    )
