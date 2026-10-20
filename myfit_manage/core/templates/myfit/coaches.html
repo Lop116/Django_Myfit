@@ -46,6 +46,11 @@
     .desktop-nav a:hover,.desktop-nav .current{color:var(--yellow)}
     .desktop-nav .current::after{content:"";position:absolute;left:0;right:0;bottom:-13px;height:2px;background:var(--yellow)}
     .nav-actions{display:flex;align-items:center;gap:10px;font-size:.76rem;font-weight:900}
+    .account-label{color:#f2f2f2;font-size:.7rem;font-weight:850;white-space:nowrap}
+    .logout-form{margin:0}
+    .logout-button{font:inherit;cursor:pointer}
+    .mobile-menu nav .logout-button{width:100%;min-height:44px;padding:12px 14px;text-align:left;border:0;background:transparent;color:inherit;font-weight:850}
+    .mobile-menu nav .logout-button:hover{color:var(--yellow);background:rgba(255,195,36,.06)}
     .login-btn,.join-btn{min-height:42px;padding:0 21px;display:inline-flex;align-items:center;justify-content:center;gap:12px;white-space:nowrap}
     .login-btn{border:1px solid #8b9092}.login-btn:hover{border-color:var(--yellow);color:var(--yellow)}
     .join-btn{background:var(--pink);border:1px solid var(--pink);color:white}.join-btn:hover{background:#ed3188}
@@ -269,14 +274,26 @@
         <a href="/contact/">Support</a>
       </nav>
       <div class="nav-actions">
-        <a class="login-btn" href="/login/">Log in</a>
-        <a class="join-btn" href="/register/">JOIN MYFIT <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+        {% if user.is_authenticated %}
+          <span class="account-label">Hi, {{ user.first_name|default:user.username }}</span>
+          <a class="join-btn" href="{% url 'myfit:membership_pass' %}">MYFIT PASS</a>
+          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="login-btn logout-button" type="submit">Log out</button></form>
+        {% else %}
+          <a class="login-btn" href="{% url 'myfit:login' %}">Log in</a>
+          <a class="join-btn" href="{% url 'myfit:register' %}">JOIN MYFIT <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+        {% endif %}
       </div>
       <details class="mobile-menu">
         <summary aria-label="Open navigation"><svg class="icon"><use href="#i-menu"/></svg></summary>
         <nav aria-label="Mobile navigation">
           <a href="/">Home</a><a href="/coaches/" aria-current="page">Coaches</a><a href="/branches/">Branches</a>
-          <a href="/plans/">Membership</a><a href="/classes/">Classes</a><a href="/contact/">Support</a><a href="/login/">Log in</a>
+          <a href="/plans/">Membership</a><a href="/classes/">Classes</a><a href="/contact/">Support</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'myfit:membership_pass' %}">MYFIT PASS · {{ user.first_name|default:user.username }}</a>
+            <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+          {% else %}
+            <a href="{% url 'myfit:login' %}">Log in</a>
+          {% endif %}
         </nav>
       </details>
     </div>

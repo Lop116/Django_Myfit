@@ -1,5 +1,5 @@
 import re
-from datetime import date, timedelta
+from datetime import timedelta
 from time import time
 from unittest.mock import patch
 
@@ -10,7 +10,6 @@ from django.core import signing
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from datetime import timedelta
 
 from .membership_tokens import (
     MEMBERSHIP_QR_MAX_AGE,
@@ -136,10 +135,10 @@ class MembershipPassTests(TestCase):
         self.assertEqual(self.pass_record.current_status, MembershipPass.Status.PENDING)
 
         self.pass_record.status = MembershipPass.Status.ACTIVE
-        self.pass_record.expiry_date = date.today() + timedelta(days=1)
+        self.pass_record.expiry_date = timezone.localdate() + timedelta(days=1)
         self.assertEqual(self.pass_record.current_status, MembershipPass.Status.ACTIVE)
 
-        self.pass_record.expiry_date = date.today() - timedelta(days=1)
+        self.pass_record.expiry_date = timezone.localdate() - timedelta(days=1)
         self.assertEqual(self.pass_record.current_status, MembershipPass.Status.EXPIRED)
 
     def test_qr_contains_only_opaque_signed_verification_data(self):
@@ -338,3 +337,101 @@ class MembershipScannerTests(TestCase):
         self.assertNotContains(response, self.user.email)
         self.assertNotContains(response, self.user.first_name)
         self.assertNotContains(response, str(self.pass_record.membership_id))
+
+
+class AuthenticationPresentationTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='amina-fit',
+            first_name='Amina',
+            last_name='Rahman',
+            email='amina-fit@example.com',
+            password='StrongFitPassword!8462',
+        )
+
+    def assert_authenticated_navigation(self, response):
+        self.assertContains(response, 'Amina')
+        self.assertContains(response, reverse('myfit:membership_pass'))
+        self.assertGreaterEqual(
+            response.content.count(reverse('myfit:logout').encode()),
+            2,
+        )
+        self.assertGreaterEqual(response.content.count(b'Log out'), 2)
+
+    def test_login_establishes_session_and_public_navigation_shows_member(self):
+        response = self.client.post(
+            reverse('myfit:login'),
+            {
+                'username': 'amina-fit',
+                'password': 'StrongFitPassword!8462',
+            },
+        )
+
+        self.assertRedirects(response, reverse('myfit:home'))
+        self.assertEqual(
+            self.client.session['_auth_user_id'],
+            str(self.user.pk),
+        )
+
+        public_pages = (
+            'home',
+            'branches',
+            'coaches',
+            'contact',
+            'plans',
+            'login',
+            'register',
+        )
+        for page_name in public_pages:
+            with self.subTest(page=page_name):
+                page_response = self.client.get(reverse(f'myfit:{page_name}'))
+                self.assert_authenticated_navigation(page_response)
+
+    def test_registration_logs_member_in_and_home_shows_account(self):
+        response = self.client.post(
+            reverse('myfit:register'),
+            {
+                'first_name': 'Maya',
+                'last_name': 'Noor',
+                'email': 'maya-noor@example.com',
+                'username': 'maya-noor',
+                'password1': 'AnotherStrongPassword!732',
+                'password2': 'AnotherStrongPassword!732',
+            },
+        )
+
+        self.assertRedirects(response, reverse('myfit:home'))
+        registered_user = get_user_model().objects.get(username='maya-noor')
+        self.assertEqual(
+            self.client.session['_auth_user_id'],
+            str(registered_user.pk),
+        )
+        self.assertContains(
+            self.client.get(reverse('myfit:home')),
+            'Hi, Maya',
+        )
+
+    def test_guest_navigation_has_login_and_registration_links(self):
+        response = self.client.get(reverse('myfit:home'))
+
+        self.assertContains(response, reverse('myfit:login'))
+        self.assertContains(response, reverse('myfit:register'))
+        login_response = self.client.get(reverse('myfit:login'))
+        self.assertContains(login_response, 'Register for an account')
+        self.assertContains(login_response, reverse('myfit:register'))
+
+    def test_logout_uses_post_clears_session_and_redirects_home(self):
+        self.client.force_login(self.user)
+
+        get_response = self.client.get(reverse('myfit:logout'))
+        self.assertEqual(get_response.status_code, 405)
+        self.assertIn('_auth_user_id', self.client.session)
+
+        response = self.client.post(reverse('myfit:logout'))
+
+        self.assertRedirects(response, reverse('myfit:home'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+        home_response = self.client.get(reverse('myfit:home'))
+        self.assertContains(home_response, 'Log in')
+        self.assertContains(home_response, 'JOIN MYFIT')
+        self.assertNotContains(home_response, 'MYFIT PASS ·')

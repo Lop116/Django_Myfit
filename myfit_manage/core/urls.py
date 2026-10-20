@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth.views import (
     LoginView,
+    LogoutView,
     PasswordResetCompleteView,
     PasswordResetConfirmView,
     PasswordResetDoneView,
@@ -13,6 +14,7 @@ app_name = 'myfit' # namespace for named URLs
 urlpatterns = [
     path('', views.home, name='home'),
     path('login/', LoginView.as_view(template_name='myfit/login.html', next_page='myfit:home'), name='login'),
+    path('logout/', LogoutView.as_view(next_page=reverse_lazy('myfit:home')), name='logout'),
     path(
         'password-reset/',
         PasswordResetView.as_view(

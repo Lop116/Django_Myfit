@@ -46,6 +46,9 @@
     .desktop-nav a:hover, .desktop-nav a[aria-current="page"] { color: var(--yellow); }
     .desktop-nav a[aria-current="page"]::after { content: ""; position: absolute; right: 0; bottom: -13px; left: 0; height: 2px; background: var(--yellow); }
     .nav-cta { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 0 18px; background: var(--pink); border: 1px solid var(--pink); font-size: .72rem; font-weight: 950; letter-spacing: .06em; white-space: nowrap; }
+    .logout-form { margin: 0; }
+    .logout-button { min-height: 42px; padding: 0 18px; border: 1px solid #8b9092; background: transparent; color: #fff; font: inherit; font-size: .72rem; font-weight: 950; letter-spacing: .06em; cursor: pointer; }
+    .logout-button:hover { border-color: var(--yellow); color: var(--yellow); }
     .nav-cta:hover { background: #e73788; }
     .mobile-menu { display: none; }
     main { min-height: calc(100vh - 180px); }
@@ -146,17 +149,32 @@
         <a href="{% url 'myfit:plans' %}">Membership</a>
         <a href="{% url 'myfit:classes' %}">Classes</a>
         <a href="{% url 'myfit:contact' %}">Support</a>
-        <a href="{% url 'myfit:login' %}">Log in</a>
-        <a href="{% url 'myfit:register' %}" aria-current="page">Join</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'myfit:membership_pass' %}">MYFIT PASS · {{ user.first_name|default:user.username }}</a>
+          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+        {% else %}
+          <a href="{% url 'myfit:login' %}">Log in</a>
+          <a href="{% url 'myfit:register' %}" aria-current="page">Join</a>
+        {% endif %}
       </nav>
-      <a class="nav-cta" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
+      {% if user.is_authenticated %}
+        <a class="nav-cta" href="{% url 'myfit:membership_pass' %}">MYFIT PASS</a>
+        <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+      {% else %}
+        <a class="nav-cta" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
+      {% endif %}
       <details class="mobile-menu">
         <summary aria-label="Open navigation menu"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
         <nav aria-label="Mobile navigation">
           <a href="{% url 'myfit:home' %}">Home</a><a href="{% url 'myfit:coaches' %}">Coaches</a>
           <a href="{% url 'myfit:branches' %}">Branches</a><a href="{% url 'myfit:plans' %}">Membership</a>
           <a href="{% url 'myfit:classes' %}">Classes</a><a href="{% url 'myfit:contact' %}">Support</a>
-          <a href="{% url 'myfit:login' %}">Log in</a><a href="{% url 'myfit:register' %}" aria-current="page">Join</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'myfit:membership_pass' %}">MYFIT PASS · {{ user.first_name|default:user.username }}</a>
+            <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+          {% else %}
+            <a href="{% url 'myfit:login' %}">Log in</a><a href="{% url 'myfit:register' %}" aria-current="page">Join</a>
+          {% endif %}
         </nav>
       </details>
     </div>
