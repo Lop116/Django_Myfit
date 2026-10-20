@@ -1,9 +1,12 @@
 from django.urls import path
+from django.contrib.auth.views import LoginView
 from . import views
 app_name = 'myfit' # namespace for named URLs
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('login/', LoginView.as_view(template_name='myfit/login.html', next_page='myfit:home'), name='login'),
+    path('register/', views.register, name='register'),
     path('branches/', views.branches, name='branches'),
     path('coaches/', views.coaches, name='coaches'),
     path('classes/', views.classes, name='classes'),
