@@ -13,7 +13,8 @@ def plans(request):
     return render(request, 'myfit/plans.html')
 def contact(request):
     return render(request, 'myfit/contact.html')
-
+def workouts(request):
+    return render(request, 'myfit/workouts.html')
 
 @login_required
 def client_dashboard(request):
