@@ -1,0 +1,91 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121416">
+  <title>Digital Membership Pass | MyFit Mauritius</title>
+  <style>
+    :root{--yellow:#ffc324;--pink:#d52375;--ink:#121416;--panel:#202328;--muted:#aeb4bb;--line:rgba(255,255,255,.13);--font:Inter,"Arial Narrow",Arial,Helvetica,sans-serif}
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;background:var(--ink);color:#f8f8f7;font-family:var(--font);-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}a:focus-visible{outline:3px solid var(--yellow);outline-offset:4px}
+    .container{width:min(1160px,calc(100% - 48px));margin-inline:auto}
+    .topbar{min-height:34px;display:flex;align-items:center;background:var(--yellow);color:#111;font-size:.72rem;font-weight:900;letter-spacing:.1em}
+    .site-header{height:80px;background:#0e1012;border-bottom:1px solid var(--line)}
+    .nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px;font-size:1.4rem;font-weight:1000;letter-spacing:-.09em}
+    .logo img{width:42px;height:42px;object-fit:cover;border-radius:5px}
+    .logo span span{color:var(--yellow)}
+    .nav-link{font-size:.75rem;font-weight:900;letter-spacing:.06em;color:var(--yellow)}
+    main{min-height:calc(100vh - 170px);padding:62px 0 80px;background:radial-gradient(ellipse at 15% 5%,rgba(72,57,165,.18),transparent 38%),var(--ink)}
+    .eyebrow{margin:0 0 12px;color:var(--yellow);font-size:.72rem;font-weight:950;letter-spacing:.18em}
+    h1{margin:0;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:clamp(2.8rem,6vw,5rem);line-height:1;text-transform:uppercase}
+    .intro{margin:14px 0 30px;color:var(--muted);line-height:1.7}
+    .pass-card{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:30px;align-items:center;max-width:850px;padding:clamp(24px,5vw,48px);border:1px solid var(--line);border-top:4px solid var(--yellow);background:var(--panel);box-shadow:0 24px 70px rgba(0,0,0,.28)}
+    .pass-name{margin:0 0 22px;font-size:clamp(1.6rem,4vw,2.3rem);font-weight:900}
+    .pass-details{display:grid;gap:16px;margin:0}
+    .pass-details div{padding-bottom:12px;border-bottom:1px solid var(--line)}
+    .pass-details dt{margin-bottom:5px;color:var(--muted);font-size:.68rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+    .pass-details dd{margin:0;font-size:1rem;font-weight:800;overflow-wrap:anywhere}
+    .membership-id{font-family:ui-monospace,Consolas,monospace;font-size:.8rem!important}
+    .status{display:inline-flex;padding:6px 10px;background:rgba(255,195,36,.13);color:var(--yellow);font-size:.72rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+    .status-active{background:rgba(65,190,120,.14);color:#78e0a3}
+    .status-expired{background:rgba(213,35,117,.14);color:#ff9ac5}
+    .qr-panel{display:grid;justify-items:center;gap:12px;padding:18px;background:#fff;color:#181a1c;text-align:center}
+    .qr-panel img{display:block;width:min(100%,200px);height:auto;image-rendering:pixelated}
+    .qr-panel p{margin:0;font-size:.68rem;font-weight:800;line-height:1.5}
+    .empty-state{max-width:760px;padding:28px;border:1px solid var(--line);border-left:4px solid var(--pink);background:var(--panel);color:var(--muted);line-height:1.7}
+    .empty-state strong{display:block;margin-bottom:8px;color:#fff;font-size:1.1rem}
+    .back-link{display:inline-flex;margin-top:24px;color:var(--yellow);font-size:.78rem;font-weight:900;letter-spacing:.06em}
+    footer{padding:20px 0;border-top:1px solid var(--line);background:#0c0e10;color:var(--muted);font-size:.68rem;font-weight:850;letter-spacing:.1em}
+    @media(max-width:650px){.container{width:calc(100% - 36px)}main{padding:42px 0 56px}.pass-card{grid-template-columns:1fr;gap:24px}.qr-panel img{width:180px}}
+  </style>
+</head>
+<body>
+  <div class="topbar"><div class="container">MADE FOR MAURITIUS / TRAIN · TRACK · TRANSFORM</div></div>
+  <header class="site-header"><div class="container nav-inner">
+    <a class="logo" href="{% url 'myfit:home' %}" aria-label="MyFit home">
+      <img src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42">
+      <span>MY<span>FIT</span></span>
+    </a>
+    <a class="nav-link" href="{% url 'myfit:home' %}">BACK TO MYFIT</a>
+  </div></header>
+  <main>
+    <div class="container">
+      <p class="eyebrow">MEMBER ACCESS / DIGITAL PASS</p>
+      <h1>YOUR MYFIT PASS</h1>
+      {% if member_pass %}
+        <p class="intro">Your membership details and verification QR code.</p>
+        <section class="pass-card" aria-label="Digital membership pass">
+          <div>
+            <p class="pass-name">{{ request.user.get_full_name|default:request.user.username }}</p>
+            <dl class="pass-details">
+              <div><dt>Membership ID</dt><dd class="membership-id">{{ member_pass.membership_id }}</dd></div>
+              <div><dt>Plan</dt><dd>{{ member_pass.get_plan_display }}</dd></div>
+              <div>
+                <dt>Status</dt>
+                <dd><span class="status status-{{ member_pass.current_status }}">{{ member_pass.current_status_label }}</span></dd>
+              </div>
+              <div><dt>Expiry date</dt><dd>{% if member_pass.expiry_date %}{{ member_pass.expiry_date|date:"j F Y" }}{% else %}Not set{% endif %}</dd></div>
+            </dl>
+          </div>
+          <div class="qr-panel">
+            <img src="{{ qr_image_url }}" alt="Time-limited QR code for membership verification">
+            <p>SCAN TO VERIFY<br>QR CODE EXPIRES AFTER 5 MINUTES</p>
+          </div>
+        </section>
+      {% else %}
+        <p class="intro">Your pass appears here when a membership has been assigned to your account.</p>
+        <div class="empty-state">
+          <strong>No membership pass is linked to your account</strong>
+          Membership plans shown on this site are informational. Contact MyFit or speak with staff to have an actual membership recorded.
+        </div>
+      {% endif %}
+      <a class="back-link" href="{% url 'myfit:home' %}">← BACK TO MYFIT</a>
+    </div>
+  </main>
+  <footer><div class="container">© {% now "Y" %} MYFIT MAURITIUS</div></footer>
+</body>
+</html>

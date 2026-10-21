@@ -1,0 +1,58 @@
+<style>
+  .notification-menu{position:relative;display:inline-flex;align-items:center}
+  .notification-menu>summary{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:42px;padding:8px;border:1px solid #575c60;color:#f2f2f2;cursor:pointer;list-style:none}
+  .notification-menu>summary::-webkit-details-marker{display:none}
+  .notification-menu>summary:hover,.notification-menu[open]>summary{color:var(--yellow);border-color:var(--yellow)}
+  .notification-bell{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .notification-count{position:absolute;top:-7px;right:-7px;min-width:19px;height:19px;padding:0 4px;border-radius:10px;background:var(--pink);color:#fff;font-size:.68rem;font-weight:900;line-height:19px;text-align:center}
+  .notification-dropdown{position:absolute;top:calc(100% + 9px);right:0;z-index:120;width:min(340px,86vw);max-height:min(440px,75vh);overflow:auto;padding:14px;background:#212429;border:1px solid #494b50;box-shadow:0 18px 48px rgba(0,0,0,.5);color:#f2f2f2}
+  .notification-dropdown header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid #383b42}
+  .notification-dropdown h2{margin:0;font-size:.95rem}
+  .notification-dropdown form{margin:0}
+  .notification-action{border:0;padding:5px 0;background:transparent;color:var(--yellow);font:inherit;font-size:.72rem;font-weight:800;cursor:pointer}
+  .notification-item{padding:12px 0;border-bottom:1px solid #383b42}
+  .notification-item:last-child{border-bottom:0}
+  .notification-item.unread{border-left:2px solid var(--pink);padding-left:10px}
+  .notification-item h3{margin:0 0 4px;font-size:.82rem}
+  .notification-item p,.notification-empty{margin:0;color:#c4c8cc;font-size:.78rem;line-height:1.5}
+  .notification-item a{display:inline-block;margin-top:7px;color:var(--yellow);font-size:.74rem;font-weight:800}
+  .notification-item .notification-action{display:block}
+  .mobile-menu .notification-menu{display:block;margin:8px 0}
+  .mobile-menu .notification-menu>summary{width:100%;justify-content:flex-start;gap:10px;padding:10px 14px;border:1px solid #494b50}
+  .mobile-menu .notification-dropdown{position:static;width:100%;max-height:340px;margin-top:7px;box-shadow:none}
+</style>
+<details class="notification-menu">
+  <summary aria-label="Notifications, {{ unread_notification_count }} unread">
+    <svg class="notification-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+    <span>Notifications</span>
+    {% if unread_notification_count %}<span class="notification-count">{{ unread_notification_count }}</span>{% endif %}
+  </summary>
+  <section class="notification-dropdown" aria-label="Recent notifications">
+    <header>
+      <h2>Notifications</h2>
+      {% if unread_notification_count %}
+        <form method="post" action="{% url 'myfit:notifications_read_all' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="notification-action" type="submit">Mark all as read</button>
+        </form>
+      {% endif %}
+    </header>
+    {% for notification in latest_notifications %}
+      <article class="notification-item{% if not notification.is_read %} unread{% endif %}">
+        <h3>{{ notification.title }}</h3>
+        <p>{{ notification.message }}</p>
+        {% if notification.link %}<a href="{{ notification.link }}">View</a>{% endif %}
+        {% if not notification.is_read %}
+          <form method="post" action="{% url 'myfit:notification_read' notification.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="notification-action" type="submit">Mark as read</button>
+          </form>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="notification-empty">You have no notifications yet.</p>
+    {% endfor %}
+  </section>
+</details>
