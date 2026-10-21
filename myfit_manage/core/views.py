@@ -8,16 +8,18 @@ from django.contrib.auth import login as auth_login
 from django.core.exceptions import PermissionDenied
 from django.core import signing
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.http import urlencode
+from django.utils import timezone
+from django.utils.http import urlencode, url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
 from .forms import MembershipVerificationForm, RegistrationForm
 from .membership_tokens import (
     create_membership_verification_token,
     get_membership_from_verification_token,
 )
-from .models import MembershipPass
+from .models import MembershipPass, Notification
 
 
 def authorized_membership_staff_required(view_func):
@@ -168,3 +170,39 @@ def membership_scanner(request):
 
 def contact(request):
     return render(request, 'myfit/contact.html')
+
+
+def _notification_redirect(request):
+    next_url = request.POST.get('next', '')
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
+    return redirect('myfit:home')
+
+
+@login_required(login_url='myfit:login')
+@require_POST
+def mark_notification_read(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        pk=notification_id,
+        user=request.user,
+    )
+    if not notification.is_read or notification.read_at is None:
+        notification.is_read = True
+        notification.read_at = timezone.now()
+        notification.save(update_fields=('is_read', 'read_at'))
+    return _notification_redirect(request)
+
+
+@login_required(login_url='myfit:login')
+@require_POST
+def mark_all_notifications_read(request):
+    request.user.notifications.filter(is_read=False).update(
+        is_read=True,
+        read_at=timezone.now(),
+    )
+    return _notification_redirect(request)

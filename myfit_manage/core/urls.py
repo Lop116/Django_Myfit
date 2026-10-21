@@ -48,6 +48,16 @@ urlpatterns = [
     path('membership/qr/', views.membership_qr, name='membership_qr'),
     path('membership/verify/', views.membership_verify, name='membership_verify'),
     path('staff/membership-scanner/', views.membership_scanner, name='membership_scanner'),
+    path(
+        'notifications/<int:notification_id>/read/',
+        views.mark_notification_read,
+        name='notification_read',
+    ),
+    path(
+        'notifications/read-all/',
+        views.mark_all_notifications_read,
+        name='notifications_read_all',
+    ),
     path('branches/', views.branches, name='branches'),
     path('coaches/', views.coaches, name='coaches'),
     path('classes/', views.classes, name='classes'),

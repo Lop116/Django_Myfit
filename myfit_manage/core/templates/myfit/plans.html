@@ -94,6 +94,7 @@
   <div class="nav-actions">
     {% if user.is_authenticated %}
       <span class="account-label">Hi, {{ user.first_name|default:user.username }}</span>
+      {% include 'myfit/partials/notification_dropdown.html' %}
       <a class="join-btn" href="{% url 'myfit:membership_pass' %}">MYFIT PASS</a>
       <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="login-btn logout-button" type="submit">Log out</button></form>
     {% else %}
@@ -101,7 +102,7 @@
       <a class="join-btn" href="{% url 'myfit:register' %}">JOIN MYFIT <svg class="icon sm"><use href="#i-arrow"/></svg></a>
     {% endif %}
   </div>
-  <details class="mobile-menu"><summary aria-label="Open navigation"><svg class="icon"><use href="#i-menu"/></svg></summary><nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/coaches/">Coaches</a><a href="/branches/">Branches</a><a href="/plans/" aria-current="page">Membership</a><a href="/classes/">Classes</a><a href="/contact/">Support</a>{% if user.is_authenticated %}<a href="{% url 'myfit:membership_pass' %}">MYFIT PASS · {{ user.first_name|default:user.username }}</a><form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>{% else %}<a href="{% url 'myfit:login' %}">Log in</a>{% endif %}</nav></details>
+  <details class="mobile-menu"><summary aria-label="Open navigation"><svg class="icon"><use href="#i-menu"/></svg></summary><nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/coaches/">Coaches</a><a href="/branches/">Branches</a><a href="/plans/" aria-current="page">Membership</a><a href="/classes/">Classes</a><a href="/contact/">Support</a>{% if user.is_authenticated %}{% include 'myfit/partials/notification_dropdown.html' %}<a href="{% url 'myfit:membership_pass' %}">MYFIT PASS · {{ user.first_name|default:user.username }}</a><form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>{% else %}<a href="{% url 'myfit:login' %}">Log in</a>{% endif %}</nav></details>
 </div></header>
 <main id="main-content">
   <section class="hero" aria-labelledby="page-title">

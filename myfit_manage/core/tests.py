@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core import signing
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -16,7 +16,7 @@ from .membership_tokens import (
     MEMBERSHIP_QR_SALT,
     create_membership_verification_token,
 )
-from .models import MembershipPass
+from .models import MembershipPass, Notification
 
 
 class PasswordResetFlowTests(TestCase):
@@ -435,3 +435,175 @@ class AuthenticationPresentationTests(TestCase):
         self.assertContains(home_response, 'Log in')
         self.assertContains(home_response, 'JOIN MYFIT')
         self.assertNotContains(home_response, 'MYFIT PASS ·')
+
+
+class NotificationTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='notification-member',
+            email='notification-member@example.com',
+            password='NotificationPassword!42',
+        )
+        self.other_user = get_user_model().objects.create_user(
+            username='other-notification-member',
+            email='other-notification-member@example.com',
+            password='OtherNotificationPassword!42',
+        )
+        self.read_all_url = reverse('myfit:notifications_read_all')
+
+    def create_notification(self, user, title, **kwargs):
+        return Notification.objects.create(
+            user=user,
+            title=title,
+            message=f'Message for {title}',
+            **kwargs,
+        )
+
+    def test_notification_actions_require_authentication_and_post(self):
+        notification = self.create_notification(self.user, 'Private update')
+        read_url = reverse(
+            'myfit:notification_read',
+            kwargs={'notification_id': notification.pk},
+        )
+
+        self.assertEqual(self.client.post(read_url).status_code, 302)
+        self.assertEqual(self.client.post(self.read_all_url).status_code, 302)
+        self.client.force_login(self.user)
+        self.assertEqual(self.client.get(read_url).status_code, 405)
+        self.assertEqual(self.client.get(self.read_all_url).status_code, 405)
+
+        notification.refresh_from_db()
+        self.assertFalse(notification.is_read)
+        self.assertIsNone(notification.read_at)
+
+    def test_members_can_only_mark_their_own_notification_as_read(self):
+        notification = self.create_notification(self.user, 'My update')
+        self.client.force_login(self.other_user)
+
+        response = self.client.post(
+            reverse(
+                'myfit:notification_read',
+                kwargs={'notification_id': notification.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+        notification.refresh_from_db()
+        self.assertFalse(notification.is_read)
+        self.assertIsNone(notification.read_at)
+
+    def test_marking_notification_read_sets_read_timestamp_and_redirects(self):
+        notification = self.create_notification(self.user, 'My update')
+        self.client.force_login(self.user)
+        destination = reverse('myfit:plans')
+
+        response = self.client.post(
+            reverse(
+                'myfit:notification_read',
+                kwargs={'notification_id': notification.pk},
+            ),
+            {'next': destination},
+        )
+
+        self.assertRedirects(response, destination)
+        notification.refresh_from_db()
+        self.assertTrue(notification.is_read)
+        self.assertIsNotNone(notification.read_at)
+
+    def test_mark_read_action_enforces_csrf(self):
+        notification = self.create_notification(self.user, 'CSRF protected')
+        read_url = reverse(
+            'myfit:notification_read',
+            kwargs={'notification_id': notification.pk},
+        )
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.user)
+
+        self.assertEqual(csrf_client.post(read_url).status_code, 403)
+        notification.refresh_from_db()
+        self.assertFalse(notification.is_read)
+
+        csrf_client.get(reverse('myfit:home'))
+        csrf_token = csrf_client.cookies['csrftoken'].value
+        response = csrf_client.post(
+            read_url,
+            {'csrfmiddlewaretoken': csrf_token},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        notification.refresh_from_db()
+        self.assertTrue(notification.is_read)
+        self.assertIsNotNone(notification.read_at)
+
+    def test_mark_all_read_is_scoped_to_current_user(self):
+        own_unread = self.create_notification(self.user, 'My unread')
+        own_read = self.create_notification(
+            self.user,
+            'Already read',
+            is_read=True,
+            read_at=timezone.now(),
+        )
+        other_unread = self.create_notification(self.other_user, 'Other unread')
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            self.read_all_url,
+            {'next': reverse('myfit:plans')},
+        )
+
+        self.assertRedirects(response, reverse('myfit:plans'))
+        own_unread.refresh_from_db()
+        own_read.refresh_from_db()
+        other_unread.refresh_from_db()
+        self.assertTrue(own_unread.is_read)
+        self.assertIsNotNone(own_unread.read_at)
+        self.assertTrue(own_read.is_read)
+        self.assertFalse(other_unread.is_read)
+        self.assertIsNone(other_unread.read_at)
+
+    def test_context_and_dropdown_show_unread_count_and_latest_ten_only(self):
+        for number in range(12):
+            self.create_notification(
+                self.user,
+                f'Member notice {number}',
+                is_read=number < 2,
+                read_at=timezone.now() if number < 2 else None,
+            )
+        self.create_notification(self.other_user, 'Another member secret')
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('myfit:home'))
+
+        self.assertEqual(response.context['unread_notification_count'], 10)
+        self.assertEqual(len(response.context['latest_notifications']), 10)
+        self.assertContains(response, '10 unread')
+        self.assertContains(response, 'Member notice 11')
+        self.assertContains(response, 'Mark all as read')
+        self.assertNotContains(response, 'Member notice 0')
+        self.assertNotContains(response, 'Another member secret')
+        self.assertEqual(response.content.count(b'class="notification-menu"'), 2)
+
+    def test_dropdown_renders_on_all_public_and_auth_pages_for_members(self):
+        self.client.force_login(self.user)
+        for page_name in (
+            'home',
+            'branches',
+            'coaches',
+            'contact',
+            'plans',
+            'login',
+            'register',
+        ):
+            with self.subTest(page=page_name):
+                response = self.client.get(reverse(f'myfit:{page_name}'))
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response.content.count(b'class="notification-menu"'),
+                    2,
+                )
+
+    def test_guest_does_not_see_notification_dropdown(self):
+        response = self.client.get(reverse('myfit:home'))
+
+        self.assertNotContains(response, 'notification-menu')
+        self.assertEqual(response.context['unread_notification_count'], 0)
