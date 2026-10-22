@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Membership Requests</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .btn-success { background-color: #28a745; }
+        .btn-danger { background-color: #dc3545; }
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.85em; color: white; }
+        .badge-pending { background-color: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Membership Requests</h1>
+        <table>
+            <tr><th>Request ID</th><th>Applicant Name</th><th>Plan Requested</th><th>Status</th><th>Controls</th></tr>
+            <tr>
+                <td>#R045</td>
+                <td>Jane Smith</td>
+                <td>Standard Access</td>
+                <td><span class="badge badge-pending">Pending</span></td>
+                <td>
+                    <button class="btn btn-success">Approve</button>
+                    <button class="btn btn-danger">Reject</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

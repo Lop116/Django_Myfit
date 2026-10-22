@@ -67,4 +67,11 @@ urlpatterns = [
     path('workouts/', views.workouts, name='workouts'),
     path('progress/', views.progress, name='progress'),
     path('client-bookings/', views.client_bookings, name='client_bookings'),
+
+    path('membership/', views.client_membership, name='client_membership'),
+    path('manage-bookings/', views.manage_bookings, name='manage_bookings'),
+    path('manage-payments/', views.manage_payments, name='manage_payments'),
+    path('membership-requests/', views.membership_requests, name='membership_requests'),
+    path('manage-plans/', views.manage_plans, name='manage_plans'),
+
 ]

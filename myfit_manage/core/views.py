@@ -305,3 +305,19 @@ def mark_all_notifications_read(request):
         read_at=timezone.now(),
     )
     return _notification_redirect(request)
+
+
+def client_membership(request):
+    return render(request, 'myfit/client_membership.html')
+
+def manage_bookings(request):
+    return render(request, 'myfit/manage_bookings.html')
+
+def manage_payments(request):
+    return render(request, 'myfit/manage_payments.html')
+
+def membership_requests(request):
+    return render(request, 'myfit/membership_requests.html')
+
+def manage_plans(request):
+    return render(request, 'myfit/manage_plans.html')
