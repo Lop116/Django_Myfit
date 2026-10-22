@@ -321,3 +321,51 @@ def membership_requests(request):
 
 def manage_plans(request):
     return render(request, 'myfit/manage_plans.html')
+
+def coach_dashboard(request):
+    context = {
+        "active_client_count": 6,
+        "sessions_this_week": 12,
+        "avg_visits_per_week": 3,
+        "classes_this_month": 8,
+        "clients": [
+            {"name": "Ava Mitchell", "email": "ava.m@example.com", "membership": "Weight Loss", "visits_this_week": 3},
+            {"name": "Liam Carter", "email": "liam.c@example.com", "membership": "Strength", "visits_this_week": 2},
+            {"name": "Sofia Patel", "email": "sofia.p@example.com", "membership": "Endurance", "visits_this_week": 4},
+            {"name": "Noah Johnson", "email": "noah.j@example.com", "membership": "General Fitness", "visits_this_week": 0},
+            {"name": "Ella Chen", "email": "ella.c@example.com", "membership": "Strength", "visits_this_week": 1},
+            {"name": "Oliver Brown", "email": "oliver.b@example.com", "membership": "Weight Loss", "visits_this_week": 2},
+        ]
+    }
+    return render(request, "myfit/coach_dashboard.html", context)
+
+def coach_clients(request):
+    context = {
+        "total_clients": 12,
+        "active_this_week": 8,
+        "active_percent": 67,
+        "need_attention": 3,
+        "goals_achieved": 5,
+        "clients": [
+            {"name": "Ava Mitchell", "email": "ava.m@example.com", "plan": "Weight Loss", "last_session": "Today, 9:00 AM", "status": "On track"},
+            {"name": "Liam Carter", "email": "liam.c@example.com", "plan": "Strength", "last_session": "Yesterday", "status": "In progress"},
+            {"name": "Sofia Patel", "email": "sofia.p@example.com", "plan": "Endurance", "last_session": "Today, 8:15 AM", "status": "On track"},
+            {"name": "Noah Johnson", "email": "noah.j@example.com", "plan": "General Fitness", "last_session": "12 days ago", "status": "Needs attention"},
+            {"name": "Ella Chen", "email": "ella.c@example.com", "plan": "Strength", "last_session": "3 days ago", "status": "In progress"},
+            {"name": "Oliver Brown", "email": "oliver.b@example.com", "plan": "Weight Loss", "last_session": "Yesterday", "status": "On track"},
+            {"name": "Mia Lopez", "email": "mia.l@example.com", "plan": "Yoga", "last_session": "5 days ago", "status": "Needs attention"},
+            {"name": "Ethan Wright", "email": "ethan.w@example.com", "plan": "CrossFit", "last_session": "Today, 7:30 AM", "status": "On track"},
+            {"name": "Grace Kim", "email": "grace.k@example.com", "plan": "Pilates", "last_session": "2 days ago", "status": "In progress"},
+            {"name": "Daniel Smith", "email": "daniel.s@example.com", "plan": "Cardio", "last_session": "Yesterday", "status": "On track"},
+            {"name": "Isabella Rossi", "email": "isabella.r@example.com", "plan": "Strength", "last_session": "10 days ago", "status": "Needs attention"},
+            {"name": "James Okafor", "email": "james.o@example.com", "plan": "General Fitness", "last_session": "Today, 6:45 AM", "status": "On track"},
+        ]
+    }
+    return render(request, "myfit/coach_clients.html", context)
+
+def manage_branches(request):
+    return render(request, "myfit/manage_branches.html")
+
+def manage_coaches(request):
+    return render(request, "myfit/manage_coaches.html")
+
