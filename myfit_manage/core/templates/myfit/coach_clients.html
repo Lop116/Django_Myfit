@@ -1,0 +1,99 @@
+
+{% extends "myfit/base.html" %}
+{% block title %}My Clients | MyFit Coach{% endblock %}
+{% block body_class %}coach-dashboard-body{% endblock %}
+{% load static %}
+
+{% block content %}
+<section class="coach-dashboard-shell">
+    <div class="coach-dashboard-container">
+        <aside class="coach-sidebar" aria-label="Coach navigation">
+            <a class="app-shell-brand" href="{% url 'myfit:coach_dashboard' %}" aria-label="MyFit home">
+                <span class="app-shell-brand-mark">
+                    <img src="{% static 'images/coach_clients/logo.png' %}" alt="MyFit Logo">
+                </span><span class="app-shell-brand-word">MY<span>FIT</span></span>
+            </a>
+            <div class="coach-sidebar-profile">
+                <span class="coach-avatar">C</span>
+                <div><small>MYFIT COACH</small><strong>Coach workspace</strong></div>
+            </div>
+            <nav class="coach-sidebar-nav">
+                <a href="{% url 'myfit:coach_dashboard' %}"><span>01</span> Overview</a>
+                <a class="active" href="{% url 'myfit:coach_clients' %}"><span>02</span> My Clients</a>
+                <a href="{% url 'myfit:coach_dashboard' %}#coach-activity"><span>03</span> Client activity</a>
+                <a href="{% url 'myfit:manage_coaches' %}"><span>04</span> Manage Coaches</a>
+            </nav>
+            <div class="coach-sidebar-profile-card">
+                <span>CLIENT OVERVIEW</span>
+                <p>Review membership plans, recent sessions and the current status of each client.</p>
+                <div class="coach-sidebar-tags"><small>Members</small><small>Progress</small></div>
+            </div>
+            <div class="coach-sidebar-help">
+                <span>NEED A QUICK LINK?</span><p>Return to the dashboard for a summary of weekly activity.</p>
+                <a href="{% url 'myfit:coach_dashboard' %}">Back to dashboard →</a>
+            </div>
+        </aside>
+
+        <main class="coach-dashboard-main coach-clients-page-main">
+            <header class="coach-list-page-header">
+                <div>
+                    <p class="coach-dashboard-kicker">MY CLIENTS</p>
+                    <h1>Client directory<br><span>and progress.</span></h1>
+                    <p>Browse your client list, review membership details and check recent training activity.</p>
+                </div>
+                <div class="coach-client-total-card">
+                    <small>TOTAL CLIENTS</small><strong>{{ total_clients|stringformat:"02d" }}</strong><span>in your directory</span>
+                </div>
+            </header>
+
+            <section class="coach-stat-grid client-stat-grid" aria-label="Client summary">
+                <article><span>ACTIVE THIS WEEK</span><strong>{{ active_this_week }}</strong><p>clients with activity</p></article>
+                <article><span>WEEKLY ACTIVITY</span><strong>{{ active_percent }}%</strong><p>of all clients</p></article>
+                <article><span>NEED ATTENTION</span><strong>{{ need_attention }}</strong><p>may need a follow-up</p></article>
+                <article class="coach-stat-accent"><span>GOALS ACHIEVED</span><strong>{{ goals_achieved }}</strong><p>milestones reached</p></article>
+            </section>
+
+            <section class="coach-panel directory-panel">
+                <div class="coach-panel-heading">
+                    <div><span class="coach-label">ALL MEMBERS</span><h2>Client list</h2><p>Use the search box to find a client by name or email.</p></div>
+                    <span class="coach-panel-count">{{ total_clients }}</span>
+                </div>
+                <form class="coach-client-filterbar" method="get" role="search">
+                    <label><span>SEARCH CLIENTS</span><input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search by name or email" aria-label="Search clients"></label>
+                    <button type="submit">Search clients</button>
+                    {% if request.GET.q %}<a class="coach-reset-link" href="{% url 'myfit:coach_clients' %}">Clear search</a>{% endif %}
+                </form>
+
+                {% if clients %}
+                <div class="coach-client-directory">
+                    {% for client in clients %}
+                    {% if not request.GET.q or request.GET.q|lower in client.name|lower or request.GET.q|lower in client.email|lower %}
+                    <article class="coach-client-card">
+                        <div class="coach-client-card-top">
+                        <img
+                            class="coach-client-card-image"
+                            src="{% static 'images/coach_clients/client1.png' %}"
+                            alt="{{ client.name }}">
+                        <span class="coach-client-card-arrow">↗</span>
+                    </div>
+                        <small>MYFIT CLIENT</small>
+                        <h2>{{ client.name }}</h2>
+                        <p>{{ client.email }}</p>
+                        <div class="coach-client-card-tags"><span>{{ client.plan|default:client.plan }}</span></div>
+                        <div class="coach-client-card-stats">
+                            <div><small>LAST SESSION</small><strong>{{ client.last_session|default:"Not recorded" }}</strong></div>
+                            <div><small>WEEKLY VISITS</small><strong>{{ client.visits_this_week|default:"—" }}</strong></div>
+                        </div>
+                        <div class="coach-client-card-footer"><span>Client profile</span><strong>{{ client.status|default:"View overview" }}</strong></div>
+                    </article>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="coach-client-directory-empty"><span>C</span><h2>No clients to show yet.</h2><p>Once clients are added to your view, their details will appear here.</p></div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</section>
+{% endblock %}
