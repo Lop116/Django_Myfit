@@ -106,11 +106,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+#Loick--> TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+#Loick--> USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -124,3 +124,21 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+#Loick--#################################################-----22/10/26 6.08>
+TIME_ZONE = "Indian/Mauritius" #tells Django that our application's default local timezone is Mauritius.
+USE_TZ = True #use timezone-aware datetimes.
+LOGIN_URL = "myfit:login" #where to send someone who tries to access a page that requires login.
+
+LOGIN_REDIRECT_URL = "myfit:home" #default destination after a successful login             <------------------------------
+                        #^ to be change
+                        # Role	    Desired destination
+                        # Client	/client/dashboard/
+                        # Coach	    /coach/
+                        # Admin	    /admin-home/                  
+
+LOGOUT_REDIRECT_URL = "myfit:home" #When a user logs out, this setting determines the default page they are sent to afterward.
+
+DEFAULT_FROM_EMAIL = "noreply@myfit.local" #default sender address
+#<--
