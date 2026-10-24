@@ -67,4 +67,18 @@ urlpatterns = [
     path('workouts/', views.workouts, name='workouts'),
     path('progress/', views.progress, name='progress'),
     path('client-bookings/', views.client_bookings, name='client_bookings'),
+
+    path('membership/', views.client_membership, name='client_membership'),
+    path('manage-bookings/', views.manage_bookings, name='manage_bookings'),
+    path('manage-payments/', views.manage_payments, name='manage_payments'),
+    path('membership-requests/', views.membership_requests, name='membership_requests'),
+    path('manage-plans/', views.manage_plans, name='manage_plans'),
+    
+    #path for the coaches pages
+    path("coach/dashboard/", views.coach_dashboard, name="coach_dashboard"),
+    path("coach/clients/", views.coach_clients, name="coach_clients"),
+    path("coach/branches/", views.manage_branches, name="manage_branches"),
+    path("coach/coaches/", views.manage_coaches, name="manage_coaches"),
+
+
 ]
