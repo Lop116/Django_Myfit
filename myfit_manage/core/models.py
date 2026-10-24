@@ -135,6 +135,7 @@ class Branch(models.Model): #allows Django to map this class to a database table
     updated_at = models.DateTimeField(auto_now=True)#Stores when the branch record was updated.
 
     class Meta:
+        verbose_name_plural = "Branches"
         ordering = ["name"] #This tells Django to sort query results by name in ascending alphabetical order by default.
 
         def __str__(self):

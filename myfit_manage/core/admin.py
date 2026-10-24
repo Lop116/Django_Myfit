@@ -17,3 +17,32 @@ class NotificationAdmin(admin.ModelAdmin):
     list_filter = ('is_read', 'created_at')
     search_fields = ('title', 'message', 'user__username', 'user__email')
     readonly_fields = ('created_at',)
+
+
+#Loick >----------------------------
+from .models import Branch, ClientProfile, CoachProfile, CoachSpecialty
+@admin.register(Branch) #Display name in admin panel
+class BranchAdmin(admin.ModelAdmin):
+    list_display = ("name", "phone", "is_active", "created_at")#which columns to display when viewing the Branch records.
+    search_fields = ("name", "address")#which fields administrators can search through using the search box.
+    list_filter = ("is_active",)
+
+@admin.register(CoachSpecialty)
+class CoachSpecialtyAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_active")
+    search_fields = ("name",)
+    list_filter = ("is_active",)
+
+@admin.register(ClientProfile)
+class ClientProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "phone", "created_at")
+    search_fields = ("user__username", "user__email", "phone")
+
+@admin.register(CoachProfile)
+class CoachProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "branch", "created_at")
+    search_fields = ("user__username", "user__email")
+    list_filter = ("branch",)
+    filter_horizontal = ("specialties",)
+
+ #>-------------------------------
