@@ -233,19 +233,48 @@ class MembershipScannerTests(TestCase):
             plan=MembershipPass.Plan.ACCESS,
         )
         self.scanner_url = reverse('myfit:membership_scanner')
+        self.check_in_url = reverse('myfit:membership_qr_check_in')
 
-    def authorize_staff(self):
+    def authorize_staff(self, can_check_in=False):
         staff_user = get_user_model().objects.create_user(
             username='authorized-staff',
             password='StaffPassword!42',
             is_staff=True,
         )
-        permission = Permission.objects.get(
+        permissions = Permission.objects.filter(
             content_type__app_label='core',
-            codename='view_membershippass',
+            codename__in=(
+                ('view_membershippass', 'add_attendancevisit')
+                if can_check_in else ('view_membershippass',)
+            ),
         )
-        staff_user.user_permissions.add(permission)
+        staff_user.user_permissions.add(*permissions)
         self.client.force_login(staff_user)
+        return staff_user
+
+    def create_active_pass(self):
+        self.pass_record.status = MembershipPass.Status.ACTIVE
+        self.pass_record.expiry_date = timezone.localdate() + timedelta(days=1)
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
+        return create_membership_verification_token(self.pass_record)
+
+    def create_client_membership(self, **overrides):
+        today = timezone.localdate()
+        plan = MembershipPlan.objects.create(
+            name=f'Scanner Plan {ClientMembership.objects.count()}',
+            price='50.00',
+            duration_days=30,
+        )
+        values = {
+            'user': self.user,
+            'plan': plan,
+            'start_date': today - timedelta(days=1),
+            'end_date': today + timedelta(days=10),
+            'agreed_price': '50.00',
+            'status': 'active',
+        }
+        values.update(overrides)
+        return ClientMembership.objects.create(**values)
 
     def test_scanner_requires_login_and_staff_permission(self):
         response = self.client.get(self.scanner_url)
@@ -345,6 +374,262 @@ class MembershipScannerTests(TestCase):
         self.assertNotContains(response, self.user.email)
         self.assertNotContains(response, self.user.first_name)
         self.assertNotContains(response, str(self.pass_record.membership_id))
+
+    def test_qr_scan_offers_explicit_check_in_but_does_not_create_visit(self):
+        token = self.create_active_pass()
+        self.create_client_membership()
+        self.authorize_staff(can_check_in=True)
+
+        response = self.verify_token(token)
+
+        self.assertContains(response, 'VALID MEMBERSHIP')
+        self.assertContains(response, 'CHECK IN CLIENT')
+        self.assertContains(response, 'csrfmiddlewaretoken')
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_scanner_does_not_offer_check_in_without_add_permission(self):
+        token = self.create_active_pass()
+        self.create_client_membership()
+        self.authorize_staff()
+
+        response = self.verify_token(token)
+
+        self.assertContains(response, 'VALID MEMBERSHIP')
+        self.assertNotContains(response, 'CHECK IN CLIENT')
+        self.assertContains(response, 'not permitted to check in clients')
+
+    def test_successful_qr_check_in_uses_pass_owner_and_generic_confirmation(self):
+        token = self.create_active_pass()
+        membership = self.create_client_membership()
+        self.authorize_staff(can_check_in=True)
+
+        scan_response = self.verify_token(token)
+        self.assertContains(scan_response, 'CHECK IN CLIENT')
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+        response = self.client.post(
+            self.check_in_url,
+            {'token': token},
+            follow=True,
+        )
+
+        self.assertEqual(response.redirect_chain[0][0], self.scanner_url)
+        visit = AttendanceVisit.objects.get()
+        self.assertEqual(visit.membership, membership)
+        self.assertIsNone(visit.check_out)
+        self.assertContains(response, 'Client check-in recorded successfully.')
+        self.assertNotContains(response, self.user.username)
+
+    def test_duplicate_qr_check_in_creates_only_one_open_visit(self):
+        token = self.create_active_pass()
+        self.create_client_membership()
+        self.authorize_staff(can_check_in=True)
+
+        self.client.post(self.check_in_url, {'token': token})
+        response = self.client.post(
+            self.check_in_url,
+            {'token': token},
+            follow=True,
+        )
+
+        self.assertEqual(response.redirect_chain[0][0], self.scanner_url)
+        self.assertEqual(AttendanceVisit.objects.count(), 1)
+        self.assertContains(response, 'already checked in')
+
+    def test_invalid_and_expired_qr_tokens_cannot_check_in(self):
+        self.create_client_membership()
+        token = self.create_active_pass()
+        self.authorize_staff(can_check_in=True)
+
+        invalid_response = self.client.post(
+            self.check_in_url,
+            {'token': 'not-a-valid-token'},
+            follow=True,
+        )
+        self.assertEqual(invalid_response.redirect_chain[0][0], self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+        self.assertContains(
+            invalid_response,
+            'QR token is invalid',
+        )
+
+        with patch(
+            'django.core.signing.time.time',
+            return_value=time() + MEMBERSHIP_QR_MAX_AGE + 1,
+        ):
+            expired_response = self.client.post(
+                self.check_in_url,
+                {'token': token},
+                follow=True,
+            )
+        self.assertEqual(expired_response.redirect_chain[0][0], self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_inactive_or_expired_pass_cannot_check_in(self):
+        membership = self.create_client_membership()
+        self.authorize_staff(can_check_in=True)
+
+        pending_token = create_membership_verification_token(self.pass_record)
+        pending_response = self.client.post(
+            self.check_in_url,
+            {'token': pending_token},
+        )
+        self.assertRedirects(pending_response, self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+        self.pass_record.status = MembershipPass.Status.ACTIVE
+        self.pass_record.expiry_date = timezone.localdate() - timedelta(days=1)
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
+        expired_token = create_membership_verification_token(self.pass_record)
+        expired_response = self.client.post(
+            self.check_in_url,
+            {'token': expired_token},
+        )
+        self.assertRedirects(expired_response, self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.filter(membership=membership).exists())
+
+    def test_missing_client_membership_cannot_check_in(self):
+        token = self.create_active_pass()
+        self.authorize_staff(can_check_in=True)
+
+        response = self.client.post(
+            self.check_in_url,
+            {'token': token},
+            follow=True,
+        )
+
+        self.assertEqual(response.redirect_chain[0][0], self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+        self.assertContains(
+            response,
+            'No currently valid client membership',
+        )
+
+    def test_expired_or_suspended_client_membership_cannot_check_in(self):
+        token = self.create_active_pass()
+        today = timezone.localdate()
+        self.create_client_membership(
+            start_date=today - timedelta(days=10),
+            end_date=today - timedelta(days=1),
+            status='active',
+        )
+        self.create_client_membership(status='suspended')
+        self.authorize_staff(can_check_in=True)
+
+        response = self.client.post(self.check_in_url, {'token': token})
+
+        self.assertRedirects(response, self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_future_scheduled_membership_cannot_check_in(self):
+        token = self.create_active_pass()
+        today = timezone.localdate()
+        self.create_client_membership(
+            start_date=today + timedelta(days=1),
+            end_date=today + timedelta(days=30),
+            status='scheduled',
+        )
+        self.authorize_staff(can_check_in=True)
+
+        response = self.client.post(self.check_in_url, {'token': token})
+
+        self.assertRedirects(response, self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_scheduled_membership_is_eligible_on_its_start_date(self):
+        token = self.create_active_pass()
+        today = timezone.localdate()
+        membership = self.create_client_membership(
+            start_date=today,
+            end_date=today + timedelta(days=10),
+            status='scheduled',
+        )
+        self.authorize_staff(can_check_in=True)
+
+        scan_response = self.verify_token(token)
+        check_in_response = self.client.post(
+            self.check_in_url,
+            {'token': token},
+        )
+
+        self.assertContains(scan_response, 'CHECK IN CLIENT')
+        self.assertRedirects(check_in_response, self.scanner_url)
+        self.assertEqual(AttendanceVisit.objects.get().membership, membership)
+
+    def test_multiple_eligible_memberships_fail_closed(self):
+        token = self.create_active_pass()
+        self.create_client_membership()
+        self.create_client_membership()
+        self.authorize_staff(can_check_in=True)
+
+        scan_response = self.verify_token(token)
+        check_in_response = self.client.post(
+            self.check_in_url,
+            {'token': token},
+        )
+
+        self.assertContains(scan_response, 'Multiple valid memberships were found')
+        self.assertNotContains(scan_response, 'CHECK IN CLIENT')
+        self.assertRedirects(check_in_response, self.scanner_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_check_in_requires_staff_and_add_attendance_permission(self):
+        token = self.create_active_pass()
+        self.create_client_membership()
+
+        ordinary_user = get_user_model().objects.create_user(
+            username='ordinary-checkin-user',
+            password='MemberPassword!42',
+        )
+        self.client.force_login(ordinary_user)
+        self.assertEqual(
+            self.client.post(self.check_in_url, {'token': token}).status_code,
+            403,
+        )
+
+        staff_user = get_user_model().objects.create_user(
+            username='scanner-without-attendance-permission',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        staff_user.user_permissions.add(
+            Permission.objects.get(
+                content_type__app_label='core',
+                codename='view_membershippass',
+            )
+        )
+        self.client.force_login(staff_user)
+        self.assertEqual(
+            self.client.post(self.check_in_url, {'token': token}).status_code,
+            403,
+        )
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_check_in_route_rejects_get_and_enforces_csrf(self):
+        token = self.create_active_pass()
+        self.create_client_membership()
+        staff_user = self.authorize_staff(can_check_in=True)
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(staff_user)
+
+        self.assertEqual(self.client.get(self.check_in_url).status_code, 405)
+        self.assertEqual(
+            csrf_client.post(self.check_in_url, {'token': token}).status_code,
+            403,
+        )
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_public_verification_remains_read_only_for_attendance(self):
+        token = self.create_active_pass()
+        self.create_client_membership()
+
+        response = self.client.get(
+            reverse('myfit:membership_verify'),
+            {'token': token},
+        )
+
+        self.assertContains(response, 'Membership status: Active')
+        self.assertFalse(AttendanceVisit.objects.exists())
 
 
 # Developer: Deshrao Saccaram

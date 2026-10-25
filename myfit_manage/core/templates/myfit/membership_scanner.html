@@ -45,6 +45,8 @@
     .result{margin-top:22px;padding:20px;border:1px solid var(--line);border-left:5px solid var(--yellow);background:#17191c}
     .result h2{margin:0;font-size:1rem;font-weight:950;letter-spacing:.08em}
     .result p{margin:7px 0 0;color:var(--muted);font-size:.86rem;line-height:1.55}
+    .feedback{margin:0 0 18px;padding:12px 15px;border:1px solid var(--line);background:#17191c;color:#f8f8f7;font-size:.86rem;line-height:1.55}
+    .check-in-action{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
     .result-valid{border-left-color:#55c983}.result-valid h2{color:#78e0a3}
     .result-expired,.result-invalid{border-left-color:var(--pink)}.result-expired h2,.result-invalid h2{color:#ff9ac5}
     .result-inactive{border-left-color:var(--yellow)}.result-inactive h2{color:var(--yellow)}
@@ -66,6 +68,12 @@
       <p class="eyebrow">MEMBERSHIP OPERATIONS</p>
       <h1>QR SCANNER</h1>
       <p class="intro">Scan a member’s current MyFit pass or enter its verification link below. Results show membership status only.</p>
+      <!-- Developer: Deshrao Saccaram -->
+      {% if messages %}
+        {% for message in messages %}
+          <p class="feedback" role="status">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
       <section class="scanner-card" aria-label="Membership QR scanner">
         <div class="camera-controls">
           <button class="button" type="button" id="start-camera">START CAMERA SCANNER</button>
@@ -95,6 +103,16 @@
             {% else %}result-inactive{% endif %}" aria-live="polite">
             {% if verification_status == 'valid' %}
               <h2>VALID MEMBERSHIP</h2><p>This membership is active and valid.</p>
+              {% if attendance_membership and verified_token %}
+                <p>One currently valid client membership is eligible for attendance check-in.</p>
+                <form class="check-in-action" method="post" action="{% url 'myfit:membership_qr_check_in' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="token" value="{{ verified_token }}">
+                  <button class="button" type="submit">CHECK IN CLIENT</button>
+                </form>
+              {% elif attendance_message %}
+                <p>{{ attendance_message }}</p>
+              {% endif %}
             {% elif verification_status == 'expired_membership' %}
               <h2>EXPIRED MEMBERSHIP</h2><p>This membership has expired.</p>
             {% elif verification_status == 'inactive_membership' %}

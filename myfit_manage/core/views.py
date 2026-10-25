@@ -82,6 +82,31 @@ def extract_membership_token(value):
     return value
 
 
+# Developer: Deshrao Saccaram
+def get_attendance_membership_for_user(user):
+    today = timezone.localdate()
+    eligible_memberships = [
+        membership
+        for membership in (
+            ClientMembership.objects
+            .filter(
+                user=user,
+                status__in=('active', 'scheduled'),
+                start_date__lte=today,
+                end_date__gte=today,
+            )
+            .select_related('plan')
+            .order_by('pk')
+        )
+        if membership.current_status == 'active'
+    ]
+    if not eligible_memberships:
+        return None, 'No currently valid client membership is available for check-in.'
+    if len(eligible_memberships) > 1:
+        return None, 'Multiple valid memberships were found. Ask an administrator to resolve this before check-in.'
+    return eligible_memberships[0], None
+
+
 # Create your views here.
 def home(request):
     return render(request, 'myfit/home.html')
@@ -180,6 +205,9 @@ def membership_verify(request):
 def membership_scanner(request):
     form = MembershipVerificationForm(request.POST or None)
     verification_status = None
+    attendance_membership = None
+    attendance_message = None
+    verified_token = None
 
     if request.method == 'POST' and form.is_valid():
         token = extract_membership_token(form.cleaned_data['verification_input'].strip())
@@ -194,6 +222,16 @@ def membership_scanner(request):
                 verification_status = 'invalid_token'
             elif member_pass.current_status == MembershipPass.Status.ACTIVE:
                 verification_status = 'valid'
+                attendance_membership, attendance_message = (
+                    get_attendance_membership_for_user(member_pass.user)
+                )
+                if attendance_membership is not None:
+                    if request.user.has_perm('core.add_attendancevisit'):
+                        verified_token = token
+                    else:
+                        attendance_message = (
+                            'This staff account is not permitted to check in clients.'
+                        )
             elif member_pass.current_status == MembershipPass.Status.EXPIRED:
                 verification_status = 'expired_membership'
             else:
@@ -202,9 +240,76 @@ def membership_scanner(request):
     return render(
         request,
         'myfit/membership_scanner.html',
-        {'form': form, 'verification_status': verification_status},
+        {
+            'form': form,
+            'verification_status': verification_status,
+            'attendance_membership': attendance_membership,
+            'attendance_message': attendance_message,
+            'verified_token': verified_token,
+        },
         status=400 if verification_status in ('invalid_token', 'expired_qr_token') else 200,
     )
+
+
+# ==========================================================
+# TASK 2 - QR SCANNER AND ATTENDANCE INTEGRATION
+# Developer: Deshrao Saccaram
+
+
+@login_required(login_url='myfit:login')
+@require_POST
+def membership_qr_check_in(request):
+    if (
+        not request.user.is_staff
+        or not request.user.has_perm('core.add_attendancevisit')
+    ):
+        raise PermissionDenied
+
+    token = extract_membership_token(request.POST.get('token', '').strip())
+    try:
+        member_pass = get_membership_from_verification_token(token)
+    except signing.SignatureExpired:
+        messages.error(request, 'This QR token has expired. Scan the member’s current pass again.')
+        return redirect('myfit:membership_scanner')
+    except signing.BadSignature:
+        messages.error(request, 'This QR token is invalid. Scan a valid membership pass.')
+        return redirect('myfit:membership_scanner')
+
+    if member_pass is None:
+        messages.error(request, 'This QR token does not identify a membership pass.')
+        return redirect('myfit:membership_scanner')
+    if member_pass.current_status != MembershipPass.Status.ACTIVE:
+        messages.error(request, 'The membership pass is not active; check-in was not recorded.')
+        return redirect('myfit:membership_scanner')
+
+    membership, eligibility_error = get_attendance_membership_for_user(
+        member_pass.user
+    )
+    if membership is None:
+        messages.error(request, eligibility_error)
+        return redirect('myfit:membership_scanner')
+
+    try:
+        check_in_membership(membership.pk)
+    except ClientMembership.DoesNotExist as error:
+        raise Http404 from error
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    except IntegrityError:
+        if AttendanceVisit.objects.filter(
+            membership=membership,
+            check_out__isnull=True,
+        ).exists():
+            messages.error(request, 'This client is already checked in.')
+        else:
+            raise
+    else:
+        messages.success(request, 'Client check-in recorded successfully.')
+
+    return redirect('myfit:membership_scanner')
+
+
+# END TASK 2 - QR SCANNER AND ATTENDANCE INTEGRATION
 
 
 def contact(request):

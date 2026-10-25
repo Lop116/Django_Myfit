@@ -48,6 +48,12 @@ urlpatterns = [
     path('membership/qr/', views.membership_qr, name='membership_qr'),
     path('membership/verify/', views.membership_verify, name='membership_verify'),
     path('staff/membership-scanner/', views.membership_scanner, name='membership_scanner'),
+    # Developer: Deshrao Saccaram
+    path(
+        'staff/membership-scanner/check-in/',
+        views.membership_qr_check_in,
+        name='membership_qr_check_in',
+    ),
     path(
         'notifications/<int:notification_id>/read/',
         views.mark_notification_read,
