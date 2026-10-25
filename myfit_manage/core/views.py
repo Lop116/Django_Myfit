@@ -18,8 +18,16 @@ from django.utils import timezone
 from django.utils.http import urlencode, url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
-from .forms import ClientMembershipAssignmentForm, MembershipChangeRequestForm
-from .membership_services import assign_membership
+from .forms import (
+    AttendanceCheckInForm,
+    ClientMembershipAssignmentForm,
+    MembershipChangeRequestForm,
+)
+from .membership_services import (
+    assign_membership,
+    check_in_membership,
+    check_out_visit,
+)
 
 
 from .forms import MembershipVerificationForm, RegistrationForm, MembershipPlanForm
@@ -28,6 +36,7 @@ from .membership_tokens import (
     get_membership_from_verification_token,
 )
 from .models import (
+    AttendanceVisit,
     ClientBooking,
     ClientMembership,
     MembershipChangeRequest,
@@ -366,7 +375,6 @@ def client_membership(request):
         .select_related('membership__plan', 'requested_plan', 'reviewed_by')
         .order_by('-requested_at')
     )
-
     # Calculate remaining membership days.
     days_remaining = None
 
@@ -400,6 +408,122 @@ def manage_bookings(request):
 
 def manage_payments(request):
     return render(request, 'myfit/manage_payments.html')
+
+
+# ==========================================================
+# TASK 2 - ATTENDANCE MANAGEMENT
+# Developer: Deshrao Saccaram
+# ==========================================================
+
+@login_required(login_url='myfit:login')
+def attendance_dashboard(request):
+    if (
+        not request.user.is_staff
+        or not request.user.has_perm('core.view_attendancevisit')
+    ):
+        raise PermissionDenied
+
+    open_visits = (
+        AttendanceVisit.objects
+        .filter(check_out__isnull=True)
+        .select_related('membership__user', 'membership__plan')
+        .order_by('check_in')
+    )
+    recent_visits = (
+        AttendanceVisit.objects
+        .select_related('membership__user', 'membership__plan')
+        .order_by('-check_in')[:50]
+    )
+    context = {
+        'open_visits': open_visits,
+        'recent_visits': recent_visits,
+        'check_in_form': (
+            AttendanceCheckInForm()
+            if request.user.has_perm('core.add_attendancevisit')
+            else None
+        ),
+        'can_check_out': request.user.has_perm('core.change_attendancevisit'),
+    }
+    return render(request, 'myfit/attendance_dashboard.html', context)
+
+
+@login_required(login_url='myfit:login')
+@require_POST
+def attendance_check_in(request):
+    if (
+        not request.user.is_staff
+        or not request.user.has_perm('core.add_attendancevisit')
+    ):
+        raise PermissionDenied
+
+    form = AttendanceCheckInForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, 'Select a currently valid client membership.')
+        return redirect('myfit:attendance_dashboard')
+
+    try:
+        visit = check_in_membership(form.cleaned_data['membership'].pk)
+    except ClientMembership.DoesNotExist:
+        messages.error(request, 'The selected membership is no longer available.')
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    except IntegrityError:
+        if AttendanceVisit.objects.filter(
+            membership=form.cleaned_data['membership'],
+            check_out__isnull=True,
+        ).exists():
+            messages.error(
+                request,
+                'This client is already checked in for this membership.',
+            )
+        else:
+            raise
+    else:
+        messages.success(
+            request,
+            f'{visit.membership.user.get_full_name() or visit.membership.user.username} '
+            'was checked in successfully.',
+        )
+    return redirect('myfit:attendance_dashboard')
+
+
+@login_required(login_url='myfit:login')
+@require_POST
+def attendance_check_out(request, visit_id):
+    if (
+        not request.user.is_staff
+        or not request.user.has_perm('core.change_attendancevisit')
+    ):
+        raise PermissionDenied
+
+    try:
+        visit = check_out_visit(visit_id)
+    except AttendanceVisit.DoesNotExist as error:
+        raise Http404 from error
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    else:
+        messages.success(
+            request,
+            f'{visit.membership.user.get_full_name() or visit.membership.user.username} '
+            'was checked out successfully.',
+        )
+    return redirect('myfit:attendance_dashboard')
+
+
+@login_required(login_url='myfit:login')
+def client_attendance_history(request):
+    attendance_history = (
+        AttendanceVisit.objects
+        .filter(membership__user=request.user)
+        .select_related('membership__plan')
+        .order_by('-check_in')[:100]
+    )
+    return render(
+        request,
+        'myfit/client_attendance_history.html',
+        {'attendance_history': attendance_history},
+    )
 
 
 # ==========================================================

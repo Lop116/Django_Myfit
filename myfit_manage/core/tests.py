@@ -18,6 +18,7 @@ from .membership_tokens import (
     create_membership_verification_token,
 )
 from .models import (
+    AttendanceVisit,
     ClientMembership,
     MembershipChangeRequest,
     MembershipPass,
@@ -949,3 +950,256 @@ class NotificationTests(TestCase):
 
         self.assertNotContains(response, 'notification-menu')
         self.assertEqual(response.context['unread_notification_count'], 0)
+
+
+# ==========================================================
+# TASK 2 - ATTENDANCE MANAGEMENT TESTS
+# Developer: Deshrao Saccaram
+
+
+class AttendanceManagementTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.member = user_model.objects.create_user(
+            username='attendance-member',
+            first_name='Jamie',
+            last_name='Member',
+            password='MemberPassword!42',
+        )
+        self.other_member = user_model.objects.create_user(
+            username='private-attendance-member',
+            password='OtherPassword!42',
+        )
+        self.staff = user_model.objects.create_user(
+            username='attendance-staff',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        self.staff.user_permissions.add(
+            *Permission.objects.filter(
+                content_type__app_label='core',
+                codename__in=(
+                    'view_attendancevisit',
+                    'add_attendancevisit',
+                    'change_attendancevisit',
+                ),
+            )
+        )
+        self.plan = MembershipPlan.objects.create(
+            name='Attendance Plan',
+            price='55.00',
+            duration_days=30,
+        )
+        self.other_plan = MembershipPlan.objects.create(
+            name='Private Attendance Plan',
+            price='65.00',
+            duration_days=30,
+        )
+        today = timezone.localdate()
+        self.membership = ClientMembership.objects.create(
+            user=self.member,
+            plan=self.plan,
+            start_date=today - timedelta(days=3),
+            end_date=today + timedelta(days=3),
+            agreed_price='55.00',
+            status='active',
+        )
+        self.other_membership = ClientMembership.objects.create(
+            user=self.other_member,
+            plan=self.other_plan,
+            start_date=today - timedelta(days=3),
+            end_date=today + timedelta(days=3),
+            agreed_price='65.00',
+            status='active',
+        )
+        self.dashboard_url = reverse('myfit:attendance_dashboard')
+        self.check_in_url = reverse('myfit:attendance_check_in')
+        self.history_url = reverse('myfit:client_attendance_history')
+
+    def authorize_staff(self):
+        self.client.force_login(self.staff)
+
+    def post_check_in(self, membership=None):
+        return self.client.post(
+            self.check_in_url,
+            {'membership': (membership or self.membership).pk},
+        )
+
+    def post_check_out(self, visit):
+        return self.client.post(
+            reverse(
+                'myfit:attendance_check_out',
+                kwargs={'visit_id': visit.pk},
+            )
+        )
+
+    def test_attendance_management_requires_staff_permissions(self):
+        self.assertRedirects(
+            self.client.get(self.dashboard_url),
+            f'{reverse("myfit:login")}?next={self.dashboard_url}',
+        )
+
+        self.client.force_login(self.member)
+        self.assertEqual(self.client.get(self.dashboard_url).status_code, 403)
+        self.assertEqual(self.post_check_in().status_code, 403)
+        visit = AttendanceVisit.objects.create(membership=self.membership)
+        self.assertEqual(self.post_check_out(visit).status_code, 403)
+
+        unprivileged_staff = get_user_model().objects.create_user(
+            username='unprivileged-attendance-staff',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        self.client.force_login(unprivileged_staff)
+        self.assertEqual(self.client.get(self.dashboard_url).status_code, 403)
+        self.assertEqual(self.post_check_in().status_code, 403)
+        self.assertEqual(self.post_check_out(visit).status_code, 403)
+
+    def test_staff_can_check_in_with_valid_membership(self):
+        self.authorize_staff()
+
+        response = self.post_check_in()
+
+        self.assertRedirects(response, self.dashboard_url)
+        visit = AttendanceVisit.objects.get(membership=self.membership)
+        self.assertIsNone(visit.check_out)
+        self.assertTrue(timezone.is_aware(visit.check_in))
+        self.assertContains(
+            self.client.get(self.dashboard_url),
+            'Currently Checked In',
+        )
+
+    def test_duplicate_check_in_is_prevented(self):
+        self.authorize_staff()
+        self.post_check_in()
+
+        response = self.post_check_in()
+
+        self.assertRedirects(response, self.dashboard_url)
+        self.assertEqual(
+            AttendanceVisit.objects.filter(
+                membership=self.membership,
+                check_out__isnull=True,
+            ).count(),
+            1,
+        )
+
+    def test_staff_can_check_out_an_open_visit(self):
+        visit = AttendanceVisit.objects.create(membership=self.membership)
+        self.authorize_staff()
+
+        response = self.post_check_out(visit)
+
+        self.assertRedirects(response, self.dashboard_url)
+        visit.refresh_from_db()
+        self.assertIsNotNone(visit.check_out)
+        self.assertTrue(timezone.is_aware(visit.check_out))
+        self.assertGreaterEqual(visit.check_out, visit.check_in)
+
+    def test_repeated_checkout_does_not_change_existing_checkout(self):
+        visit = AttendanceVisit.objects.create(membership=self.membership)
+        self.authorize_staff()
+        self.post_check_out(visit)
+        visit.refresh_from_db()
+        original_checkout = visit.check_out
+
+        response = self.post_check_out(visit)
+
+        self.assertRedirects(response, self.dashboard_url)
+        visit.refresh_from_db()
+        self.assertEqual(visit.check_out, original_checkout)
+
+    def test_checkout_before_checkin_time_is_rejected(self):
+        visit = AttendanceVisit.objects.create(membership=self.membership)
+        self.authorize_staff()
+        with patch(
+            'core.membership_services.timezone.now',
+            return_value=visit.check_in - timedelta(seconds=1),
+        ):
+            response = self.post_check_out(visit)
+
+        self.assertRedirects(response, self.dashboard_url)
+        visit.refresh_from_db()
+        self.assertIsNone(visit.check_out)
+
+    def test_expired_membership_cannot_check_in(self):
+        self.membership.end_date = timezone.localdate() - timedelta(days=1)
+        self.membership.save(update_fields=('end_date',))
+        self.authorize_staff()
+
+        response = self.post_check_in()
+
+        self.assertRedirects(response, self.dashboard_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_suspended_membership_cannot_check_in(self):
+        self.membership.status = 'suspended'
+        self.membership.save(update_fields=('status',))
+        self.authorize_staff()
+
+        response = self.post_check_in()
+
+        self.assertRedirects(response, self.dashboard_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_future_scheduled_membership_cannot_check_in(self):
+        self.membership.status = 'scheduled'
+        self.membership.start_date = timezone.localdate() + timedelta(days=1)
+        self.membership.end_date = timezone.localdate() + timedelta(days=30)
+        self.membership.save(update_fields=('status', 'start_date', 'end_date'))
+        self.authorize_staff()
+
+        response = self.post_check_in()
+
+        self.assertRedirects(response, self.dashboard_url)
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_scheduled_membership_is_valid_on_its_start_date(self):
+        today = timezone.localdate()
+        self.membership.status = 'scheduled'
+        self.membership.start_date = today
+        self.membership.end_date = today + timedelta(days=5)
+        self.membership.save(update_fields=('status', 'start_date', 'end_date'))
+        self.assertEqual(self.membership.current_status, 'active')
+        self.authorize_staff()
+
+        response = self.post_check_in()
+
+        self.assertRedirects(response, self.dashboard_url)
+        self.assertTrue(
+            AttendanceVisit.objects.filter(
+                membership=self.membership,
+            ).exists()
+        )
+
+    def test_client_attendance_history_is_scoped_to_the_logged_in_user(self):
+        AttendanceVisit.objects.create(membership=self.membership)
+        AttendanceVisit.objects.create(membership=self.other_membership)
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.history_url)
+
+        self.assertContains(response, self.plan.name)
+        self.assertNotContains(response, self.other_plan.name)
+        self.assertEqual(
+            list(response.context['attendance_history']),
+            list(AttendanceVisit.objects.filter(membership=self.membership)),
+        )
+
+    def test_attendance_mutations_are_post_only_and_csrf_protected(self):
+        visit = AttendanceVisit.objects.create(membership=self.membership)
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.staff)
+        checkout_url = reverse(
+            'myfit:attendance_check_out',
+            kwargs={'visit_id': visit.pk},
+        )
+
+        self.assertEqual(csrf_client.get(self.check_in_url).status_code, 405)
+        self.assertEqual(csrf_client.get(checkout_url).status_code, 405)
+        self.assertEqual(csrf_client.post(self.check_in_url).status_code, 403)
+        self.assertEqual(csrf_client.post(checkout_url).status_code, 403)
+        self.assertEqual(AttendanceVisit.objects.count(), 1)
+
+
+# END TASK 2 - ATTENDANCE MANAGEMENT TESTS

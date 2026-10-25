@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Attendance History</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <!-- Developer: Deshrao Saccaram -->
+    <div class="container">
+        <h1>My Attendance History</h1>
+        <p><a href="{% url 'myfit:client_membership' %}">Back to My Membership</a></p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Membership</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visit in attendance_history %}
+                    <tr>
+                        <td>{{ visit.membership.plan.name }}</td>
+                        <td>{{ visit.check_in|date:"d M Y H:i" }}</td>
+                        <td>{{ visit.check_out|date:"d M Y H:i"|default:"Still checked in" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3">No attendance history is available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

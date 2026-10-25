@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .btn-primary { background-color: #007bff; }
+        .btn-success { background-color: #28a745; }
+    </style>
+</head>
+<body>
+    <!-- Developer: Deshrao Saccaram -->
+    <div class="container">
+        <h1>Attendance Management</h1>
+
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if check_in_form %}
+            <section>
+                <h2>Check In a Client</h2>
+                <form method="post" action="{% url 'myfit:attendance_check_in' %}">
+                    {% csrf_token %}
+                    {{ check_in_form.membership.label_tag }}
+                    {{ check_in_form.membership }}
+                    {{ check_in_form.membership.errors }}
+                    <button class="btn btn-primary" type="submit">Check In</button>
+                </form>
+            </section>
+        {% endif %}
+
+        <h2>Currently Checked In</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Membership</th>
+                    <th>Check In</th>
+                    {% if can_check_out %}<th>Action</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for visit in open_visits %}
+                    <tr>
+                        <td>{{ visit.membership.user.get_full_name|default:visit.membership.user.username }}</td>
+                        <td>{{ visit.membership.plan.name }}</td>
+                        <td>{{ visit.check_in|date:"d M Y H:i" }}</td>
+                        {% if can_check_out %}
+                            <td>
+                                <form method="post" action="{% url 'myfit:attendance_check_out' visit_id=visit.pk %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-success" type="submit">Check Out</button>
+                                </form>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="{% if can_check_out %}4{% else %}3{% endif %}">No clients are currently checked in.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Attendance</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Membership</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visit in recent_visits %}
+                    <tr>
+                        <td>{{ visit.membership.user.get_full_name|default:visit.membership.user.username }}</td>
+                        <td>{{ visit.membership.plan.name }}</td>
+                        <td>{{ visit.check_in|date:"d M Y H:i" }}</td>
+                        <td>{{ visit.check_out|date:"d M Y H:i"|default:"Still checked in" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4">No attendance history is available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

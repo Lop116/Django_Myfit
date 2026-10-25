@@ -1,8 +1,12 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from .models import MembershipPlan,MembershipChangeRequest
 from django.utils import timezone
+from .models import (
+    ClientMembership,
+    MembershipChangeRequest,
+    MembershipPlan,
+)
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(
@@ -200,3 +204,52 @@ class MembershipChangeRequestForm(forms.ModelForm):
         )
 
 # END TASK 2 - MEMBERSHIP CHANGE REQUEST FORM
+
+
+# ==========================================================
+# TASK 2 - ATTENDANCE MANAGEMENT
+# Developer: Deshrao Saccaram
+
+
+# Developer: Deshrao Saccaram
+class AttendanceMembershipChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, membership):
+        return (
+            f'{membership.user.get_full_name() or membership.user.username} '
+            f'- {membership.plan.name} '
+            f'({membership.start_date:%d %b %Y} - {membership.end_date:%d %b %Y})'
+        )
+
+
+class AttendanceCheckInForm(forms.Form):
+    membership = AttendanceMembershipChoiceField(
+        queryset=ClientMembership.objects.none(),
+        label='Client Membership',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        today = timezone.localdate()
+        self.fields['membership'].queryset = (
+            ClientMembership.objects
+            .filter(
+                user__is_active=True,
+                user__is_staff=False,
+                user__is_superuser=False,
+                status__in=('active', 'scheduled'),
+                start_date__lte=today,
+                end_date__gte=today,
+            )
+            .select_related('user', 'plan')
+            .order_by('user__username', 'plan__name')
+        )
+
+    def clean_membership(self):
+        membership = self.cleaned_data['membership']
+        if membership.current_status != 'active':
+            raise forms.ValidationError(
+                'This membership is not currently valid for check-in.'
+            )
+        return membership
+
+# END TASK 2 - ATTENDANCE MANAGEMENT

@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import ClientMembership, MembershipPlan
+from .models import AttendanceVisit, ClientMembership, MembershipPlan
 
 
 @transaction.atomic
@@ -69,6 +69,61 @@ def assign_membership(user, plan, start_date):
     )
 
     return membership
+
+
+# ==========================================================
+# TASK 2 - ATTENDANCE MANAGEMENT
+# Developer: Deshrao Saccaram
+
+
+@transaction.atomic
+def check_in_membership(membership_id):
+    membership = (
+        ClientMembership.objects
+        .select_for_update()
+        .select_related('user', 'plan')
+        .get(pk=membership_id)
+    )
+    if membership.current_status != 'active':
+        raise ValidationError(
+            'This membership is not currently valid for check-in.'
+        )
+    if AttendanceVisit.objects.filter(
+        membership=membership,
+        check_out__isnull=True,
+    ).exists():
+        raise ValidationError(
+            'This client is already checked in for this membership.'
+        )
+
+    return AttendanceVisit.objects.create(
+        membership=membership,
+        check_in=timezone.now(),
+    )
+
+
+@transaction.atomic
+def check_out_visit(visit_id):
+    visit = (
+        AttendanceVisit.objects
+        .select_for_update()
+        .get(pk=visit_id)
+    )
+    if visit.check_out is not None:
+        raise ValidationError('This attendance visit has already been checked out.')
+
+    check_out = timezone.now()
+    if check_out < visit.check_in:
+        raise ValidationError(
+            'Checkout time cannot be earlier than check-in time.'
+        )
+
+    visit.check_out = check_out
+    visit.save(update_fields=('check_out',))
+    return visit
+
+
+# END TASK 2 - ATTENDANCE MANAGEMENT
 
 
 # END TASK 2 - MEMBERSHIP ASSIGNMENT SERVICE

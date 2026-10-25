@@ -71,6 +71,12 @@ urlpatterns = [
     path('membership/', views.client_membership, name='client_membership'),
     # Developer: Deshrao Saccaram
     path(
+        'attendance/history/',
+        views.client_attendance_history,
+        name='client_attendance_history',
+    ),
+    # Developer: Deshrao Saccaram
+    path(
         'membership/change-request/',
         views.submit_membership_change_request,
         name='submit_membership_change_request',
@@ -85,6 +91,22 @@ urlpatterns = [
         name='review_membership_change_request',
     ),
     path('manage-plans/', views.manage_plans, name='manage_plans'),
+    # Developer: Deshrao Saccaram
+    path(
+        'staff/attendance/',
+        views.attendance_dashboard,
+        name='attendance_dashboard',
+    ),
+    path(
+        'staff/attendance/check-in/',
+        views.attendance_check_in,
+        name='attendance_check_in',
+    ),
+    path(
+        'staff/attendance/<int:visit_id>/check-out/',
+        views.attendance_check_out,
+        name='attendance_check_out',
+    ),
 
 # ==========================================================
 # TASK 2 - CLIENT MEMBERSHIP ASSIGNMENT
