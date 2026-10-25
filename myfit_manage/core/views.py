@@ -347,6 +347,35 @@ def manage_plans(request):
         'form': form,
     })
 
+@permission_required('core.change_membershipplan', raise_exception=True)
+def edit_membership_plan(request, plan_id):
+    # Find the membership plan using its database ID.
+    # If it does not exist, Django returns a 404 error.
+    plan = get_object_or_404(MembershipPlan, pk=plan_id)
+
+    if request.method == 'POST':
+        # Load submitted data into the EXISTING plan.
+        form = MembershipPlanForm(request.POST, instance=plan)
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                'Membership plan updated successfully.'
+            )
+
+            return redirect('myfit:manage_plans')
+
+    else:
+        # Display the current details of the plan.
+        form = MembershipPlanForm(instance=plan)
+
+    return render(request, 'myfit/edit_membership_plan.html', {
+        'form': form,
+        'plan': plan,
+    })
+
 # END TASK 2 - MEMBERSHIP PLAN MANAGEMENT
 
 

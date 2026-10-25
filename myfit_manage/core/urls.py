@@ -73,7 +73,14 @@ urlpatterns = [
     path('manage-payments/', views.manage_payments, name='manage_payments'),
     path('membership-requests/', views.membership_requests, name='membership_requests'),
     path('manage-plans/', views.manage_plans, name='manage_plans'),
-    
+    # START TASK 2 - Edit Membership Plan
+    # deshrao
+path(
+    'manage-plans/<int:plan_id>/edit/',
+    views.edit_membership_plan,
+    name='edit_membership_plan',
+),
+# END TASK 2
     #path for the coaches pages
     path("coach/dashboard/", views.coach_dashboard, name="coach_dashboard"),
     path("coach/clients/", views.coach_clients, name="coach_clients"),

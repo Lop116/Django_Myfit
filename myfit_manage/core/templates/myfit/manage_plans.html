@@ -48,6 +48,7 @@
         <th>Duration</th>
         <th>Benefits</th>
         <th>Status</th>
+        <th>Controls</th>
     </tr>
 
     {% for plan in plans %}
@@ -63,10 +64,21 @@
                 Inactive
             {% endif %}
         </td>
+
+<!-- START TASK 2 - Edit membership plan/deshrao -->
+<td>
+    <a href="{% url 'myfit:edit_membership_plan' plan.id %}"
+       class="btn btn-primary"
+       style="text-decoration: none;">
+        Edit
+    </a>
+</td>
+<!-- END TASK 2 -->
+
     </tr>
     {% empty %}
     <tr>
-        <td colspan="5">No membership plans have been created yet.</td>
+        <td colspan="6">No membership plans have been created yet.</td>
     </tr>
     {% endfor %}
 </table>
