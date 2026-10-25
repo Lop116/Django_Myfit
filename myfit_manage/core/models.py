@@ -121,3 +121,158 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'{self.title} for {self.user}'
+
+
+# ==========================================================
+# START TASK 2 - MEMBERSHIPS AND ATTENDANCE
+# Developer: Deshrao Saccaram
+
+
+
+class MembershipPlan(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_days = models.PositiveIntegerField()
+    benefits = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class ClientMembership(models.Model):
+
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('expired', 'Expired'),
+        ('suspended', 'Suspended'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='client_memberships'
+    )
+
+    plan = models.ForeignKey(
+        MembershipPlan,
+        on_delete=models.PROTECT,
+        related_name='client_memberships'
+    )
+
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    agreed_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='active'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.plan.name}"
+
+    @property
+    def current_status(self):
+        if (
+            self.status == 'active'
+            and self.end_date < timezone.localdate()
+        ):
+            return 'expired'
+        return self.status
+
+
+class MembershipChangeRequest(models.Model):
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    membership = models.ForeignKey(
+        ClientMembership,
+        on_delete=models.CASCADE,
+        related_name='change_requests'
+    )
+
+    requested_plan = models.ForeignKey(
+        MembershipPlan,
+        on_delete=models.PROTECT,
+        related_name='change_requests'
+    )
+
+    reason = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+
+    requested_at = models.DateTimeField(auto_now_add=True)
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_membership_requests'
+    )
+
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return (
+            f"{self.membership.user.username}: "
+            f"{self.requested_plan.name} ({self.status})"
+        )
+
+
+class AttendanceVisit(models.Model):
+
+    # TASK 2 - Gym attendance tracking
+
+    membership = models.ForeignKey(
+        ClientMembership,
+        on_delete=models.PROTECT,
+        related_name='attendance_visits'
+    )
+
+    check_in = models.DateTimeField(default=timezone.now)
+
+    check_out = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return (
+            f"{self.membership.user.username} - "
+            f"{self.check_in}"
+        )
+
+    @property
+    def is_checked_in(self):
+        return self.check_out is None
+
+    class Meta:
+        ordering = ['-check_in']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['membership'],
+                condition=models.Q(check_out__isnull=True),
+                name='unique_open_visit_per_membership'
+            )
+        ]
+
+# END TASK 2 - MEMBERSHIPS AND ATTENDANCE
+# ==========================================================
