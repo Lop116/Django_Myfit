@@ -145,6 +145,7 @@ class ClientMembership(models.Model):
 
     STATUS_CHOICES = [
         ('active', 'Active'),
+        ('scheduled', 'Scheduled'),
         ('expired', 'Expired'),
         ('suspended', 'Suspended'),
     ]
@@ -182,14 +183,17 @@ class ClientMembership(models.Model):
 
     @property
     def current_status(self):
-        if (
-            self.status == 'active'
-            and self.end_date < timezone.localdate()
-        ):
-            return 'expired'
+        if self.status in ('active', 'scheduled'):
+            today = timezone.localdate()
+            if self.end_date < today:
+                return 'expired'
+            if self.start_date > today:
+                return 'scheduled'
+            return 'active'
         return self.status
 
 
+# Developer: Deshrao Saccaram
 class MembershipChangeRequest(models.Model):
 
     STATUS_CHOICES = [
@@ -229,6 +233,15 @@ class MembershipChangeRequest(models.Model):
     )
 
     reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['membership'],
+                condition=models.Q(status='pending'),
+                name='unique_pending_change_request_per_membership',
+            ),
+        ]
 
     def __str__(self):
         return (

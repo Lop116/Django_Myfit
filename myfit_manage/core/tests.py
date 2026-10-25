@@ -1,5 +1,6 @@
 import re
 from datetime import timedelta
+from decimal import Decimal
 from time import time
 from unittest.mock import patch
 
@@ -16,7 +17,13 @@ from .membership_tokens import (
     MEMBERSHIP_QR_SALT,
     create_membership_verification_token,
 )
-from .models import MembershipPass, Notification
+from .models import (
+    ClientMembership,
+    MembershipChangeRequest,
+    MembershipPass,
+    MembershipPlan,
+    Notification,
+)
 
 
 class PasswordResetFlowTests(TestCase):
@@ -337,6 +344,341 @@ class MembershipScannerTests(TestCase):
         self.assertNotContains(response, self.user.email)
         self.assertNotContains(response, self.user.first_name)
         self.assertNotContains(response, str(self.pass_record.membership_id))
+
+
+# Developer: Deshrao Saccaram
+class MembershipChangeRequestTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.member = user_model.objects.create_user(
+            username='change-request-member',
+            password='MemberPassword!42',
+        )
+        self.other_member = user_model.objects.create_user(
+            username='other-change-member',
+            password='OtherPassword!42',
+        )
+        self.staff = user_model.objects.create_user(
+            username='change-request-staff',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        permission = Permission.objects.get(
+            content_type__app_label='core',
+            codename='change_membershipchangerequest',
+        )
+        self.staff.user_permissions.add(permission)
+
+        self.current_plan = MembershipPlan.objects.create(
+            name='Current Plan',
+            price='50.00',
+            duration_days=30,
+        )
+        self.requested_plan = MembershipPlan.objects.create(
+            name='Requested Plan',
+            price='80.00',
+            duration_days=60,
+        )
+        self.other_plan = MembershipPlan.objects.create(
+            name='Other Plan',
+            price='95.00',
+            duration_days=45,
+        )
+        today = timezone.localdate()
+        self.membership = ClientMembership.objects.create(
+            user=self.member,
+            plan=self.current_plan,
+            start_date=today - timedelta(days=5),
+            end_date=today + timedelta(days=5),
+            agreed_price=            Decimal('45.00'),
+            status='active',
+        )
+        self.request_url = reverse('myfit:submit_membership_change_request')
+        self.staff_url = reverse('myfit:membership_requests')
+
+    def create_request(self, membership=None, requested_plan=None):
+        return MembershipChangeRequest.objects.create(
+            membership=membership or self.membership,
+            requested_plan=requested_plan or self.requested_plan,
+            reason='Please change my plan.',
+        )
+
+    def submit_request(self, plan=None, extra_data=None):
+        data = {
+            'requested_plan': (plan or self.requested_plan).pk,
+            'reason': 'Please change my plan.',
+        }
+        if extra_data:
+            data.update(extra_data)
+        return self.client.post(self.request_url, data)
+
+    def authorize_staff(self):
+        self.client.force_login(self.staff)
+
+    def review_request(self, change_request, decision='approve'):
+        return self.client.post(
+            reverse(
+                'myfit:review_membership_change_request',
+                kwargs={
+                    'request_id': change_request.pk,
+                    'decision': decision,
+                },
+            )
+        )
+
+    def test_request_submission_requires_login(self):
+        response = self.submit_request()
+        self.assertRedirects(
+            response,
+            f'{reverse("myfit:login")}?next={self.request_url}',
+        )
+
+    def test_client_cannot_choose_another_clients_membership(self):
+        self.client.force_login(self.member)
+        other_membership = ClientMembership.objects.create(
+            user=self.other_member,
+            plan=self.current_plan,
+            start_date=self.membership.start_date,
+            end_date=self.membership.end_date,
+            agreed_price='50.00',
+            status='active',
+        )
+
+        response = self.submit_request(
+            extra_data={'membership': other_membership.pk},
+        )
+
+        self.assertRedirects(response, reverse('myfit:client_membership'))
+        change_request = MembershipChangeRequest.objects.get()
+        self.assertEqual(change_request.membership, self.membership)
+
+    def test_request_is_rejected_without_a_current_membership(self):
+        self.client.force_login(self.other_member)
+
+        response = self.submit_request()
+
+        self.assertRedirects(response, reverse('myfit:client_membership'))
+        self.assertFalse(MembershipChangeRequest.objects.exists())
+
+    def test_client_can_create_pending_request_for_another_active_plan(self):
+        self.client.force_login(self.member)
+
+        response = self.submit_request(
+            extra_data={'reason': ''},
+        )
+
+        self.assertRedirects(response, reverse('myfit:client_membership'))
+        change_request = MembershipChangeRequest.objects.get()
+        self.assertEqual(change_request.membership, self.membership)
+        self.assertEqual(change_request.requested_plan, self.requested_plan)
+        self.assertEqual(change_request.reason, '')
+        self.assertEqual(change_request.status, 'pending')
+
+    def test_membership_page_shows_request_status_history(self):
+        self.create_request()
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse('myfit:client_membership'))
+
+        self.assertContains(response, 'Plan Change Request History')
+        self.assertContains(response, 'Requested Plan')
+        self.assertContains(response, 'Pending')
+
+    def test_same_plan_is_rejected_server_side(self):
+        self.client.force_login(self.member)
+
+        response = self.submit_request(plan=self.current_plan)
+
+        self.assertRedirects(response, reverse('myfit:client_membership'))
+        self.assertFalse(MembershipChangeRequest.objects.exists())
+
+    def test_inactive_plan_is_rejected_server_side(self):
+        self.requested_plan.is_active = False
+        self.requested_plan.save(update_fields=('is_active',))
+        self.client.force_login(self.member)
+
+        response = self.submit_request()
+
+        self.assertRedirects(response, reverse('myfit:client_membership'))
+        self.assertFalse(MembershipChangeRequest.objects.exists())
+
+    def test_duplicate_pending_request_is_prevented(self):
+        self.client.force_login(self.member)
+        existing = self.create_request()
+
+        response = self.submit_request(plan=self.other_plan)
+
+        self.assertRedirects(response, reverse('myfit:client_membership'))
+        self.assertEqual(
+            MembershipChangeRequest.objects.filter(
+                membership=self.membership,
+                status='pending',
+            ).count(),
+            1,
+        )
+        self.assertEqual(existing.requested_plan, self.requested_plan)
+
+    def test_staff_views_and_actions_require_staff_permission(self):
+        self.client.force_login(self.member)
+        change_request = self.create_request()
+
+        self.assertEqual(self.client.get(self.staff_url).status_code, 403)
+        self.assertEqual(self.review_request(change_request).status_code, 403)
+
+        staff_without_permission = get_user_model().objects.create_user(
+            username='unprivileged-change-staff',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        self.client.force_login(staff_without_permission)
+        self.assertEqual(self.client.get(self.staff_url).status_code, 403)
+        self.assertEqual(self.review_request(change_request).status_code, 403)
+
+    def test_staff_list_contains_only_pending_requests(self):
+        self.create_request()
+        reviewed = self.create_request(
+            membership=ClientMembership.objects.create(
+                user=self.other_member,
+                plan=self.current_plan,
+                start_date=self.membership.start_date,
+                end_date=self.membership.end_date,
+                agreed_price='50.00',
+                status='active',
+            ),
+        )
+        reviewed.status = 'rejected'
+        reviewed.save(update_fields=('status',))
+        self.authorize_staff()
+
+        response = self.client.get(self.staff_url)
+
+        self.assertContains(response, 'Requested Plan')
+        self.assertContains(response, self.member.username)
+        self.assertNotContains(response, self.other_member.username)
+
+    def test_approval_creates_scheduled_membership_after_current_end(self):
+        change_request = self.create_request()
+        original_dates = (self.membership.start_date, self.membership.end_date)
+        original_price = Decimal('45.00')
+        self.authorize_staff()
+
+        response = self.review_request(change_request)
+
+        self.assertRedirects(response, self.staff_url)
+        change_request.refresh_from_db()
+        self.membership.refresh_from_db()
+        new_membership = ClientMembership.objects.get(
+            user=self.member,
+            plan=self.requested_plan,
+        )
+        self.assertEqual(change_request.status, 'approved')
+        self.assertEqual(change_request.reviewed_by, self.staff)
+        self.assertIsNotNone(change_request.reviewed_at)
+        self.assertEqual(
+            (self.membership.start_date, self.membership.end_date),
+            original_dates,
+        )
+        self.assertEqual(self.membership.agreed_price, original_price)
+        self.assertEqual(
+            new_membership.start_date,
+            self.membership.end_date + timedelta(days=1),
+        )
+        self.assertEqual(
+            new_membership.end_date,
+            new_membership.start_date + timedelta(days=59),
+        )
+        self.assertEqual(new_membership.agreed_price, Decimal('80.00'))
+        self.assertEqual(new_membership.status, 'scheduled')
+        self.assertEqual(new_membership.current_status, 'scheduled')
+        with patch(
+            'django.utils.timezone.localdate',
+            return_value=new_membership.start_date,
+        ):
+            self.assertEqual(new_membership.current_status, 'active')
+
+    def test_approval_is_blocked_when_another_membership_overlaps(self):
+        change_request = self.create_request()
+        overlapping_start = self.membership.end_date + timedelta(days=2)
+        conflict = ClientMembership.objects.create(
+            user=self.member,
+            plan=self.other_plan,
+            start_date=overlapping_start,
+            end_date=overlapping_start + timedelta(days=4),
+            agreed_price=self.other_plan.price,
+            status='scheduled',
+        )
+        self.authorize_staff()
+
+        response = self.review_request(change_request)
+
+        self.assertRedirects(response, self.staff_url)
+        change_request.refresh_from_db()
+        self.assertEqual(change_request.status, 'pending')
+        self.assertEqual(
+            ClientMembership.objects.filter(user=self.member).count(),
+            2,
+        )
+        conflict.refresh_from_db()
+        self.assertEqual(conflict.status, 'scheduled')
+
+    def test_rejection_records_reviewer_without_changing_membership(self):
+        change_request = self.create_request()
+        original = (
+            self.membership.plan_id,
+            self.membership.start_date,
+            self.membership.end_date,
+            Decimal('45.00'),
+            self.membership.status,
+        )
+        self.authorize_staff()
+
+        response = self.review_request(change_request, decision='reject')
+
+        self.assertRedirects(response, self.staff_url)
+        change_request.refresh_from_db()
+        self.membership.refresh_from_db()
+        self.assertEqual(change_request.status, 'rejected')
+        self.assertEqual(change_request.reviewed_by, self.staff)
+        self.assertIsNotNone(change_request.reviewed_at)
+        self.assertEqual(
+            (
+                self.membership.plan_id,
+                self.membership.start_date,
+                self.membership.end_date,
+                self.membership.agreed_price,
+                self.membership.status,
+            ),
+            original,
+        )
+        self.assertEqual(ClientMembership.objects.filter(user=self.member).count(), 1)
+
+    def test_already_approved_request_cannot_be_processed_again(self):
+        change_request = self.create_request()
+        self.authorize_staff()
+        self.review_request(change_request)
+        change_request.refresh_from_db()
+        reviewed_at = change_request.reviewed_at
+
+        response = self.review_request(change_request)
+
+        self.assertRedirects(response, self.staff_url)
+        change_request.refresh_from_db()
+        self.assertEqual(change_request.status, 'approved')
+        self.assertEqual(change_request.reviewed_at, reviewed_at)
+        self.assertEqual(ClientMembership.objects.filter(user=self.member).count(), 2)
+
+    def test_staff_review_actions_require_post_and_csrf(self):
+        change_request = self.create_request()
+        self.authorize_staff()
+        review_url = reverse(
+            'myfit:review_membership_change_request',
+            kwargs={'request_id': change_request.pk, 'decision': 'approve'},
+        )
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.staff)
+
+        self.assertEqual(csrf_client.get(review_url).status_code, 405)
+        self.assertEqual(csrf_client.post(review_url).status_code, 403)
 
 
 class AuthenticationPresentationTests(TestCase):

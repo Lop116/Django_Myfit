@@ -1,8 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from .models import MembershipPlan
-
+from .models import MembershipPlan,MembershipChangeRequest
+from django.utils import timezone
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(
@@ -115,3 +115,88 @@ class MembershipPlanForm(forms.ModelForm):
 
 # END TASK 2 - MEMBERSHIPS AND ATTENDANCE
 # ==========================================================
+
+# ==========================================================
+# START TASK 2 - CLIENT MEMBERSHIP ASSIGNMENT FORM
+
+class ClientMembershipAssignmentForm(forms.Form):
+
+    user = forms.ModelChoiceField(
+        queryset=get_user_model().objects.none(),
+        label="Select Client"
+    )
+
+    plan = forms.ModelChoiceField(
+        queryset=MembershipPlan.objects.none(),
+        label="Membership Plan"
+    )
+
+    start_date = forms.DateField(
+        initial=timezone.localdate,
+        widget=forms.DateInput(attrs={"type": "date"}),
+        label="Start Date"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["user"].queryset = (
+            get_user_model().objects
+            .filter(is_active=True, is_staff=False, is_superuser=False)
+            .order_by("username")
+        )
+
+        self.fields["plan"].queryset = (
+            MembershipPlan.objects
+            .filter(is_active=True)
+            .order_by("name")
+        )
+
+# END TASK 2 - CLIENT MEMBERSHIP ASSIGNMENT FORM
+
+# ==========================================================
+# MYFIT - TASK 2: MEMBERSHIP CHANGE REQUEST FORM
+# Developer: Deshrao Saccaram
+
+
+class MembershipChangeRequestForm(forms.ModelForm):
+
+    class Meta:
+        model = MembershipChangeRequest
+
+        fields = [
+            'requested_plan',
+            'reason',
+        ]
+
+        labels = {
+            'requested_plan': 'Select New Membership Plan',
+            'reason': 'Reason for Change (Optional)',
+        }
+
+        widgets = {
+            'reason': forms.Textarea(
+                attrs={
+                    'rows': 4,
+                    'placeholder': 'Why would you like to change your plan?'
+                }
+            )
+        }
+
+    def __init__(self, *args, current_plan=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Show only active membership plans.
+        plans = MembershipPlan.objects.filter(
+            is_active=True
+        )
+
+        # Exclude the client's current plan.
+        if current_plan is not None:
+            plans = plans.exclude(pk=current_plan.pk)
+
+        self.fields['requested_plan'].queryset = (
+            plans.order_by('name')
+        )
+
+# END TASK 2 - MEMBERSHIP CHANGE REQUEST FORM

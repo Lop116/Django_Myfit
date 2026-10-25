@@ -69,12 +69,35 @@ urlpatterns = [
     path('client-bookings/', views.client_bookings, name='client_bookings'),
 
     path('membership/', views.client_membership, name='client_membership'),
+    # Developer: Deshrao Saccaram
+    path(
+        'membership/change-request/',
+        views.submit_membership_change_request,
+        name='submit_membership_change_request',
+    ),
     path('manage-bookings/', views.manage_bookings, name='manage_bookings'),
     path('manage-payments/', views.manage_payments, name='manage_payments'),
     path('membership-requests/', views.membership_requests, name='membership_requests'),
+    # Developer: Deshrao Saccaram
+    path(
+        'membership-requests/<int:request_id>/<str:decision>/',
+        views.review_membership_change_request,
+        name='review_membership_change_request',
+    ),
     path('manage-plans/', views.manage_plans, name='manage_plans'),
+
+# ==========================================================
+# TASK 2 - CLIENT MEMBERSHIP ASSIGNMENT
+# Developer: Deshrao Saccaram
+
+
+path(
+    'manage-memberships/assign/',
+    views.assign_client_membership,
+    name='assign_client_membership'
+),
+
     # START TASK 2 - Edit Membership Plan
-    # deshrao
 path(
     'manage-plans/<int:plan_id>/edit/',
     views.edit_membership_plan,

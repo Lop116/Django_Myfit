@@ -20,19 +20,57 @@
 </head>
 <body>
     <div class="container">
+        <!-- Developer: Deshrao Saccaram -->
         <h1>Membership Requests</h1>
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
         <table>
-            <tr><th>Request ID</th><th>Applicant Name</th><th>Plan Requested</th><th>Status</th><th>Controls</th></tr>
-            <tr>
-                <td>#R045</td>
-                <td>Jane Smith</td>
-                <td>Standard Access</td>
-                <td><span class="badge badge-pending">Pending</span></td>
-                <td>
-                    <button class="btn btn-success">Approve</button>
-                    <button class="btn btn-danger">Reject</button>
-                </td>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Client</th>
+                    <th>Current Membership</th>
+                    <th>Requested Plan</th>
+                    <th>Reason</th>
+                    <th>Requested At</th>
+                    <th>Controls</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for change_request in pending_requests %}
+                    <tr>
+                        <td>#{{ change_request.pk }}</td>
+                        <td>{{ change_request.membership.user.get_full_name|default:change_request.membership.user.username }}</td>
+                        <td>
+                            {{ change_request.membership.plan.name }}
+                            ({{ change_request.membership.start_date|date:"d M Y" }} -
+                            {{ change_request.membership.end_date|date:"d M Y" }})
+                        </td>
+                        <td>{{ change_request.requested_plan.name }}</td>
+                        <td>{{ change_request.reason|default:"—" }}</td>
+                        <td>{{ change_request.requested_at|date:"d M Y H:i" }}</td>
+                        <td>
+                            <form method="post" action="{% url 'myfit:review_membership_change_request' request_id=change_request.pk decision='approve' %}">
+                                {% csrf_token %}
+                                <button class="btn btn-success" type="submit">Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'myfit:review_membership_change_request' request_id=change_request.pk decision='reject' %}">
+                                {% csrf_token %}
+                                <button class="btn btn-danger" type="submit">Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">There are no pending membership requests.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 </body>

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from io import BytesIO
 from functools import wraps
 from urllib.parse import parse_qs, urlsplit
@@ -8,6 +9,7 @@ from django.contrib.auth import login as auth_login
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.core import signing
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -15,13 +17,25 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import urlencode, url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+from django.core.exceptions import ValidationError
+from .forms import ClientMembershipAssignmentForm, MembershipChangeRequestForm
+from .membership_services import assign_membership
+
 
 from .forms import MembershipVerificationForm, RegistrationForm, MembershipPlanForm
 from .membership_tokens import (
     create_membership_verification_token,
     get_membership_from_verification_token,
 )
-from .models import ClientBooking, MembershipPass, Notification, WorkoutRecord, MembershipPlan
+from .models import (
+    ClientBooking,
+    ClientMembership,
+    MembershipChangeRequest,
+    MembershipPass,
+    MembershipPlan,
+    Notification,
+    WorkoutRecord,
+)
 
 
 def authorized_membership_staff_required(view_func):
@@ -31,6 +45,20 @@ def authorized_membership_staff_required(view_func):
         if (
             not request.user.is_staff
             or not request.user.has_perm('core.view_membershippass')
+        ):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return wrapped_view
+
+
+def membership_change_staff_required(view_func):
+    @login_required(login_url='myfit:login')
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        if (
+            not request.user.is_staff
+            or not request.user.has_perm('core.change_membershipchangerequest')
         ):
             raise PermissionDenied
         return view_func(request, *args, **kwargs)
@@ -307,8 +335,65 @@ def mark_all_notifications_read(request):
     return _notification_redirect(request)
 
 
+
+# ==========================================================
+# MYFIT - TASK 2: MEMBERSHIP CHANGE REQUESTS
+# Developer: Deshrao Saccaram
+# ==========================================================
+
+@login_required(login_url='myfit:login')
 def client_membership(request):
-    return render(request, 'myfit/client_membership.html')
+
+    # Retrieve only memberships belonging to this client.
+    memberships = (
+        ClientMembership.objects
+        .filter(user=request.user)
+        .select_related('plan')
+        .order_by('-start_date', '-id')
+    )
+
+    # Find the current valid membership.
+    today = timezone.localdate()
+
+    current_membership = memberships.filter(
+        status__in=('active', 'scheduled'),
+        start_date__lte=today,
+        end_date__gte=today
+    ).first()
+    change_requests = (
+        MembershipChangeRequest.objects
+        .filter(membership__user=request.user)
+        .select_related('membership__plan', 'requested_plan', 'reviewed_by')
+        .order_by('-requested_at')
+    )
+
+    # Calculate remaining membership days.
+    days_remaining = None
+
+    if current_membership:
+        days_remaining = (
+            current_membership.end_date - today
+        ).days + 1
+
+    context = {
+        'current_membership': current_membership,
+        'memberships': memberships,
+        'days_remaining': days_remaining,
+        'change_requests': change_requests,
+        'change_request_form': (
+            MembershipChangeRequestForm(current_plan=current_membership.plan)
+            if current_membership else None
+        ),
+    }
+
+    return render(
+        request,
+        'myfit/client_membership.html',
+        context
+    )
+
+# END TASK 2 - CLIENT MEMBERSHIP DASHBOARD
+
 
 def manage_bookings(request):
     return render(request, 'myfit/manage_bookings.html')
@@ -316,8 +401,177 @@ def manage_bookings(request):
 def manage_payments(request):
     return render(request, 'myfit/manage_payments.html')
 
+
+# ==========================================================
+# MYFIT - TASK 2: MEMBERSHIP CHANGE REQUESTS
+# Developer: Deshrao Saccaram
+# ==========================================================
+
+@login_required(login_url='myfit:login')
+@require_POST
+def submit_membership_change_request(request):
+    today = timezone.localdate()
+    membership = (
+        ClientMembership.objects
+        .filter(
+            user=request.user,
+            status__in=('active', 'scheduled'),
+            start_date__lte=today,
+            end_date__gte=today,
+        )
+        .select_related('plan')
+        .order_by('-start_date', '-id')
+        .first()
+    )
+    if membership is None:
+        messages.error(request, 'A current active membership is required to request a plan change.')
+        return redirect('myfit:client_membership')
+
+    form = MembershipChangeRequestForm(
+        request.POST,
+        current_plan=membership.plan,
+    )
+    if not form.is_valid():
+        messages.error(
+            request,
+            f'Please correct the membership change request: {form.errors.as_text()}',
+        )
+        return redirect('myfit:client_membership')
+
+    requested_plan = form.cleaned_data['requested_plan']
+    try:
+        with transaction.atomic():
+            locked_membership = (
+                ClientMembership.objects
+                .select_for_update()
+                .get(pk=membership.pk, user=request.user)
+            )
+            today = timezone.localdate()
+            if not (
+                locked_membership.status in ('active', 'scheduled')
+                and locked_membership.start_date <= today <= locked_membership.end_date
+            ):
+                messages.error(request, 'Your current membership is no longer eligible for a plan change.')
+                return redirect('myfit:client_membership')
+
+            locked_plan = MembershipPlan.objects.select_for_update().get(
+                pk=requested_plan.pk
+            )
+            if not locked_plan.is_active or locked_plan.pk == locked_membership.plan_id:
+                messages.error(request, 'Select an active plan different from your current plan.')
+                return redirect('myfit:client_membership')
+
+            if MembershipChangeRequest.objects.filter(
+                membership=locked_membership,
+                status='pending',
+            ).exists():
+                messages.error(request, 'You already have a pending request for this membership.')
+                return redirect('myfit:client_membership')
+
+            change_request = form.save(commit=False)
+            change_request.membership = locked_membership
+            change_request.requested_plan = locked_plan
+            change_request.status = 'pending'
+            change_request.save()
+    except IntegrityError:
+        if MembershipChangeRequest.objects.filter(
+            membership_id=membership.pk,
+            status='pending',
+        ).exists():
+            messages.error(request, 'You already have a pending request for this membership.')
+            return redirect('myfit:client_membership')
+        raise
+
+    messages.success(request, 'Your membership change request has been submitted for review.')
+    return redirect('myfit:client_membership')
+
+
+@membership_change_staff_required
 def membership_requests(request):
-    return render(request, 'myfit/membership_requests.html')
+    pending_requests = (
+        MembershipChangeRequest.objects
+        .filter(status='pending')
+        .select_related(
+            'membership__user',
+            'membership__plan',
+            'requested_plan',
+        )
+        .order_by('requested_at')
+    )
+    return render(
+        request,
+        'myfit/membership_requests.html',
+        {'pending_requests': pending_requests},
+    )
+
+
+@membership_change_staff_required
+@require_POST
+def review_membership_change_request(request, request_id, decision):
+    if decision not in ('approve', 'reject'):
+        raise Http404
+
+    with transaction.atomic():
+        change_request = get_object_or_404(
+            MembershipChangeRequest.objects.select_for_update(),
+            pk=request_id,
+        )
+        if change_request.status != 'pending':
+            messages.error(request, 'This membership change request has already been reviewed.')
+            return redirect('myfit:membership_requests')
+
+        if decision == 'reject':
+            change_request.status = 'rejected'
+            change_request.reviewed_by = request.user
+            change_request.reviewed_at = timezone.now()
+            change_request.save(
+                update_fields=('status', 'reviewed_by', 'reviewed_at')
+            )
+            messages.success(request, 'The membership change request was rejected.')
+            return redirect('myfit:membership_requests')
+
+        membership = (
+            ClientMembership.objects
+            .select_for_update()
+            .select_related('plan')
+            .get(pk=change_request.membership_id)
+        )
+        requested_plan = MembershipPlan.objects.select_for_update().get(
+            pk=change_request.requested_plan_id
+        )
+        today = timezone.localdate()
+        if not (
+            membership.status in ('active', 'scheduled')
+            and membership.start_date <= today <= membership.end_date
+        ):
+            messages.error(request, 'The current membership is no longer valid; this request remains pending.')
+            return redirect('myfit:membership_requests')
+        if not requested_plan.is_active or requested_plan.pk == membership.plan_id:
+            messages.error(request, 'The requested plan is no longer eligible; this request remains pending.')
+            return redirect('myfit:membership_requests')
+
+        try:
+            assign_membership(
+                user=membership.user,
+                plan=requested_plan,
+                start_date=membership.end_date + timedelta(days=1),
+            )
+        except ValidationError as error:
+            messages.error(
+                request,
+                f'The request cannot be approved: {error.messages[0]}',
+            )
+            return redirect('myfit:membership_requests')
+
+        change_request.status = 'approved'
+        change_request.reviewed_by = request.user
+        change_request.reviewed_at = timezone.now()
+        change_request.save(
+            update_fields=('status', 'reviewed_by', 'reviewed_at')
+        )
+
+    messages.success(request, 'The membership change request was approved.')
+    return redirect('myfit:membership_requests')
 
 
 # ==========================================================
@@ -426,3 +680,48 @@ def manage_branches(request):
 def manage_coaches(request):
     return render(request, "myfit/manage_coaches.html")
 
+
+# ==========================================================
+# MYFIT - TASK 2: CLIENT MEMBERSHIP ASSIGNMENT
+# Developer: Deshrao Saccaram
+
+
+@permission_required('core.add_clientmembership', raise_exception=True)
+def assign_client_membership(request):
+
+    if request.method == 'POST':
+        form = ClientMembershipAssignmentForm(request.POST)
+
+        if form.is_valid():
+            user = form.cleaned_data['user']
+            plan = form.cleaned_data['plan']
+            start_date = form.cleaned_data['start_date']
+
+            try:
+                membership = assign_membership(
+                    user=user,
+                    plan=plan,
+                    start_date=start_date
+                )
+
+            except ValidationError as error:
+                form.add_error(None, error)
+
+            else:
+                messages.success(
+                    request,
+                    f'Membership assigned successfully to '
+                    f'{membership.user.username}.'
+                )
+                return redirect('myfit:assign_client_membership')
+
+    else:
+        form = ClientMembershipAssignmentForm()
+
+    return render(
+        request,
+        'myfit/assign_client_membership.html',
+        {'form': form}
+    )
+
+# END TASK 2 - CLIENT MEMBERSHIP ASSIGNMENT

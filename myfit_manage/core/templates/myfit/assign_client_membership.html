@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Assign Client Membership - MyFit</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f6;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form p {
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .errorlist {
+            color: #b00020;
+        }
+
+        .message {
+            background: #e7f5e8;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ==================================================
+         MYFIT - TASK 2: CLIENT MEMBERSHIP ASSIGNMENT
+         Developer: Deshrao Saccaram
+         ================================================== -->
+
+    <div class="container">
+
+        <h1>Assign Client Membership</h1>
+
+        <p>
+            Select a registered client and an active
+            membership plan.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit" class="btn">
+                Assign Membership
+            </button>
+        </form>
+
+        <p>
+            <a href="{% url 'myfit:manage_plans' %}">
+                Back to Membership Plans
+            </a>
+        </p>
+
+    </div>
+
+</body>
+</html>
