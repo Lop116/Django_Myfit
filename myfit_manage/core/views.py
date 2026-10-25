@@ -3,7 +3,7 @@ from functools import wraps
 from urllib.parse import parse_qs, urlsplit
 
 import qrcode
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import login as auth_login
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -16,12 +16,12 @@ from django.utils import timezone
 from django.utils.http import urlencode, url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .forms import MembershipVerificationForm, RegistrationForm
+from .forms import MembershipVerificationForm, RegistrationForm, MembershipPlanForm
 from .membership_tokens import (
     create_membership_verification_token,
     get_membership_from_verification_token,
 )
-from .models import ClientBooking, MembershipPass, Notification, WorkoutRecord
+from .models import ClientBooking, MembershipPass, Notification, WorkoutRecord, MembershipPlan
 
 
 def authorized_membership_staff_required(view_func):
@@ -319,8 +319,36 @@ def manage_payments(request):
 def membership_requests(request):
     return render(request, 'myfit/membership_requests.html')
 
+
+# ==========================================================
+# START TASK 2 - MEMBERSHIP PLAN MANAGEMENT
+# Developer: Deshrao Saccaram
+
+
+@permission_required('core.change_membershipplan', raise_exception=True)
 def manage_plans(request):
-    return render(request, 'myfit/manage_plans.html')
+    plans = MembershipPlan.objects.all().order_by('name')
+
+    if request.method == 'POST':
+        if not request.user.has_perm('core.add_membershipplan'):
+            raise PermissionDenied
+
+        form = MembershipPlanForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Membership plan created successfully.')
+            return redirect('myfit:manage_plans')
+    else:
+        form = MembershipPlanForm()
+
+    return render(request, 'myfit/manage_plans.html', {
+        'plans': plans,
+        'form': form,
+    })
+
+# END TASK 2 - MEMBERSHIP PLAN MANAGEMENT
+
 
 def coach_dashboard(request):
     context = {

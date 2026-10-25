@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
+from .models import MembershipPlan
 
 
 class RegistrationForm(UserCreationForm):
@@ -54,3 +55,63 @@ class MembershipVerificationForm(forms.Form):
             'placeholder': 'Paste the membership verification link or token',
         }),
     )
+
+
+# ==========================================================
+# START TASK 2 - MEMBERSHIPS AND ATTENDANCE
+# Developer: Deshrao Saccaram
+
+
+class MembershipPlanForm(forms.ModelForm):
+
+    class Meta:
+        model = MembershipPlan
+
+        fields = [
+            'name',
+            'price',
+            'duration_days',
+            'benefits',
+            'is_active',
+        ]
+
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'placeholder': 'Enter membership plan name',
+            }),
+            'price': forms.NumberInput(attrs={
+                'min': '0',
+                'step': '0.01',
+            }),
+            'duration_days': forms.NumberInput(attrs={
+                'min': '1',
+            }),
+            'benefits': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Describe membership benefits',
+            }),
+        }
+
+    def clean_price(self):
+        price = self.cleaned_data['price']
+
+        if price <= 0:
+            raise forms.ValidationError(
+                'Membership price must be greater than zero.'
+            )
+
+        return price
+
+    def clean_duration_days(self):
+        duration = self.cleaned_data['duration_days']
+
+        if duration <= 0:
+            raise forms.ValidationError(
+                'Membership duration must be greater than zero.'
+            )
+
+        return duration
+
+
+# END TASK 2 - MEMBERSHIPS AND ATTENDANCE
+# ==========================================================

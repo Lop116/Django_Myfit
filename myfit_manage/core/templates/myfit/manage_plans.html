@@ -18,22 +18,61 @@
 <body>
     <div class="container">
         <h1>Manage Membership Plans</h1>
-        <button class="btn btn-primary" style="margin-bottom: 15px;">+ Add New Plan</button>
-        <table>
-            <tr><th>Plan Name</th><th>Price</th><th>Benefits</th><th>Controls</th></tr>
-            <tr>
-                <td>Premium Access</td>
-                <td>$120/yr</td>
-                <td>Gym, Pool, Classes</td>
-                <td><button class="btn btn-primary">Edit</button></td>
-            </tr>
-            <tr>
-                <td>Standard Access</td>
-                <td>$60/yr</td>
-                <td>Gym only</td>
-                <td><button class="btn btn-primary">Edit</button></td>
-            </tr>
-        </table>
+    <!-- START TASK 2 - Membership plan creation -->
+{% if perms.core.add_membershipplan %}
+    <button type="button" class="btn btn-primary"
+            onclick="document.getElementById('plan-form').hidden = !document.getElementById('plan-form').hidden;">
+        + Add New Plan
+    </button>
+
+    <div id="plan-form" {% if not form.errors %}hidden{% endif %} style="margin-top: 20px;">
+        <h2>Create Membership Plan</h2>
+
+        <form method="post" action="{% url 'myfit:manage_plans' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit" class="btn btn-primary">
+                Save Plan
+            </button>
+        </form>
+    </div>
+{% endif %}
+
+<!-- END TASK 2 - Membership plan creation -->
+<!-- START TASK 2 - Dynamic membership plans -->
+<table>
+    <tr>
+        <th>Plan Name</th>
+        <th>Price</th>
+        <th>Duration</th>
+        <th>Benefits</th>
+        <th>Status</th>
+    </tr>
+
+    {% for plan in plans %}
+    <tr>
+        <td>{{ plan.name }}</td>
+        <td>Rs {{ plan.price }}</td>
+        <td>{{ plan.duration_days }} days</td>
+        <td>{{ plan.benefits|default:"No benefits specified" }}</td>
+        <td>
+            {% if plan.is_active %}
+                Active
+            {% else %}
+                Inactive
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5">No membership plans have been created yet.</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<!-- END TASK 2 - Dynamic membership plans -->
+
     </div>
 </body>
 </html>
