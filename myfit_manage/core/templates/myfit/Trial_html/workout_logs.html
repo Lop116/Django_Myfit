@@ -1,0 +1,84 @@
+
+{% extends 'myfit/Trial_html/coaching_base.html' %}
+
+{% block title %}Workout Logs{% endblock %}
+
+{% block content %}
+
+<h1>My Workout Logs</h1>
+
+<!-- Basic statistics -->
+<div class="panel">
+    <h2>Workout Statistics</h2>
+
+    <p>Total Workouts: {{ stats.total|default:0 }}</p>
+    <p>Total Training Time: {{ stats.minutes|default:0 }} minutes</p>
+</div>
+
+<!-- Form for adding a workout -->
+<div class="panel">
+    <h2>Add Workout</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">Save Workout</button>
+    </form>
+</div>
+
+<!-- Saved workout records -->
+<div class="panel">
+    <h2>Workout History</h2>
+
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Workout Type</th>
+                <th>Duration</th>
+                <th>Notes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for log in logs %}
+            <tr>
+                <td>{{ log.workout_date }}</td>
+                <td>{{ log.get_workout_type_display }}</td>
+                <td>{{ log.duration_minutes }} min</td>
+                <td>{{ log.notes|default:"-" }}</td>
+
+                <td>
+                    <!-- Edit the selected workout -->
+                    <a href="{% url 'myfit:coaching_edit_workout' log.id %}">
+                        Edit
+                    </a>
+
+                    <!-- Delete the selected workout -->
+                    <form method="POST"
+                          action="{% url 'myfit:coaching_delete_workout' log.id %}">
+                        {% csrf_token %}
+
+                        <button class="danger" type="submit"
+                          onclick="return confirm('Delete this workout?')">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+
+        {% empty %}
+            <tr>
+                <td colspan="5">No workouts recorded yet.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% endblock %}
