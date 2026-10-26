@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Manage Classes</h1>
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Class</th>
+        <th>Date & Time</th>
+        <th>Status</th>
+        <th>Bookings</th>
+        <th>Controls</th>
+    </tr>
+    {% for session in classes %}
+    <tr>
+        <td>{{ session.title }}</td>
+        <td>{{ session.date }} at {{ session.time }}</td>
+        <td>{{ session.status }}</td>
+        <td>
+            <ul>
+                {% for booking in session.bookings.all %}
+                    {% if booking.status == 'Confirmed' %}
+                    <li>
+                        {{ booking.client.user.username }}
+                        <form action="{% url 'myfit:cancel_booking' booking.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" style="color: red; font-size: 0.8em;">Remove</button>
+                        </form>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </td>
+        <td>
+            <a href="/admin/core/classsession/{{ session.id }}/change/">Edit</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No classes to manage.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

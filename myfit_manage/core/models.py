@@ -193,3 +193,26 @@ class CoachProfile(models.Model):
     def __str__(self):
         return f"Coach: {self.user.username}"
 #<----
+#jush===============
+class ClassSession(models.Model):
+    STATUS_CHOICES = [('Scheduled', 'Scheduled'), ('Cancelled', 'Cancelled'), ('Completed', 'Completed')]
+    title = models.CharField(max_length=100)
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE, related_name='classes')
+    coach = models.ForeignKey('CoachProfile', on_delete=models.CASCADE, related_name='classes')
+    date = models.DateField()
+    time = models.TimeField()
+    capacity = models.PositiveIntegerField(default=10)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def spaces_left(self):
+        return self.capacity - self.bookings.filter(status='Confirmed').count()
+
+class ClassBooking(models.Model):
+    STATUS_CHOICES = [('Confirmed', 'Confirmed'), ('Cancelled', 'Cancelled')]
+    session = models.ForeignKey(ClassSession, on_delete=models.CASCADE, related_name='bookings')
+    client = models.ForeignKey('ClientProfile', on_delete=models.CASCADE, related_name='bookings')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
+    booked_at = models.DateTimeField(auto_now_add=True)
+    #<----

@@ -368,4 +368,46 @@ def manage_branches(request):
 
 def manage_coaches(request):
     return render(request, "myfit/manage_coaches.html")
+#jush=====
+from .models import ClassSession, ClassBooking
+from .services import book_client_into_class, cancel_booking
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
 
+def class_list(request):
+    classes = ClassSession.objects.filter(status='Scheduled').order_by('date', 'time')
+    return render(request, 'core/class_list.html', {'classes': classes})
+
+@login_required
+def book_class_view(request, session_id):
+    if request.method == 'POST':
+        try:
+            book_client_into_class(session_id, request.user.client_profile)
+            messages.success(request, "Class booked successfully!")
+        except ValidationError as e:
+            messages.error(request, str(e.message))
+    return redirect('myfit:class_list')
+
+@login_required
+def manage_classes(request):
+    if request.user.groups.filter(name='Admin').exists() or request.user.is_superuser:
+        classes = ClassSession.objects.all().order_by('-date')
+    elif hasattr(request.user, 'coach_profile'):
+        classes = ClassSession.objects.filter(coach=request.user.coach_profile).order_by('-date')
+    else:
+        messages.error(request, "Unauthorized")
+        return redirect('myfit:home')
+    return render(request, 'core/manage_classes.html', {'classes': classes})
+
+@login_required
+def cancel_booking_view(request, booking_id):
+    if request.method == 'POST':
+        try:
+            cancel_booking(booking_id, request.user)
+            messages.success(request, "Booking cancelled.")
+        except ValidationError as e:
+            messages.error(request, str(e.message))
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+#<----

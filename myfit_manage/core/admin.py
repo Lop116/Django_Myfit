@@ -46,3 +46,15 @@ class CoachProfileAdmin(admin.ModelAdmin):
     filter_horizontal = ("specialties",)
 
  #>-------------------------------
+
+ #jush========
+from .models import ClassSession, ClassBooking
+
+@admin.register(ClassSession)
+class ClassSessionAdmin(admin.ModelAdmin):
+    list_display = ('title', 'date', 'time', 'coach', 'spaces_left', 'status')
+
+@admin.register(ClassBooking)
+class ClassBookingAdmin(admin.ModelAdmin):
+    list_display = ('client', 'session', 'status')
+#>-------

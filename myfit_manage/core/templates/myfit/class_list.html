@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Available Classes</h1>
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Class</th>
+        <th>Date & Time</th>
+        <th>Coach</th>
+        <th>Branch</th>
+        <th>Spaces Left</th>
+        <th>Action</th>
+    </tr>
+    {% for session in classes %}
+    <tr>
+        <td>{{ session.title }}</td>
+        <td>{{ session.date }} at {{ session.time }}</td>
+        <td>{{ session.coach.user.get_full_name|default:session.coach.user.username }}</td>
+        <td>{{ session.branch.name }}</td>
+        <td>{{ session.spaces_left }} / {{ session.capacity }}</td>
+        <td>
+            {% if session.spaces_left > 0 %}
+                <form action="{% url 'myfit:book_class' session.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Book Now</button>
+                </form>
+            {% else %}
+                <span style="color: red;">Full</span>
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">No classes scheduled right now.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

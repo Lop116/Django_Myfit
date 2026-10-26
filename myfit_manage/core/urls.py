@@ -82,4 +82,11 @@ urlpatterns = [
     path("coach/coaches/", views.manage_coaches, name="manage_coaches"),
 
 
+    #jush
+    path('classes/', views.class_list, name='class_list'),
+    path('classes/<int:session_id>/book/', views.book_class_view, name='book_class'),
+    path('manage-classes/', views.manage_classes, name='manage_classes'),
+    path('bookings/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
+
+
 ]
