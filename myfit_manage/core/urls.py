@@ -9,6 +9,8 @@ from django.contrib.auth.views import (
 )
 from django.urls import reverse_lazy
 from . import admin_views, views
+from . import coaching_views
+
 app_name = 'myfit' # namespace for named URLs
 
 urlpatterns = [
@@ -89,4 +91,35 @@ urlpatterns = [
     path('bookings/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
 
 
+    #ankush
+    # Main entry page
+    path('trial/', coaching_views.trial, name='coaching_trial' ),
+
+    # Admin assignment management
+    path('coaching/assignments/',coaching_views.assignments,name='coaching_assignments'),
+
+    path('coaching/assign/', coaching_views.assign_client, name='coaching_assign' ),
+
+    path('coaching/assignments/<int:assignment_id>/remove/', coaching_views.remove_assignment,name='coaching_remove_assignment' ),
+
+    # Client workout tracking
+    path( 'coaching/workouts/',coaching_views.workout_logs, name='coaching_workouts' ),
+
+    path('coaching/workouts/<int:record_id>/edit/',coaching_views.edit_workout, name='coaching_edit_workout'  ),
+
+    path( 'coaching/workouts/<int:record_id>/delete/',coaching_views.delete_workout, name='coaching_delete_workout'
+    ),
+
+    # Client progress tracking
+    path('coaching/progress/',coaching_views.progress_entries,name='coaching_progress'),
+
+    # Coach views
+    path( 'coaching/clients/', coaching_views.assigned_clients, name='coaching_clients' ),
+
+    path('coaching/clients/<int:client_id>/',coaching_views.client_records,name='coaching_client_records' ),
+
 ]
+
+
+
+

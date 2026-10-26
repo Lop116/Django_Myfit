@@ -58,3 +58,60 @@ class ClassSessionAdmin(admin.ModelAdmin):
 class ClassBookingAdmin(admin.ModelAdmin):
     list_display = ('client', 'session', 'status')
 #>-------
+
+#ankush
+# Register coaching and fitness models in Django Admin.
+
+from .models import (
+    CoachClientAssignment,
+    WorkoutLog,
+    ProgressEntry
+)
+
+
+@admin.register(CoachClientAssignment)
+class AssignmentAdmin(admin.ModelAdmin):
+
+    # Columns shown in the admin panel.
+    list_display = (
+        'client',
+        'coach',
+        'assigned_at'
+    )
+
+    search_fields = (
+        'client__user__username',
+        'coach__user__username'
+    )
+
+
+@admin.register(WorkoutLog)
+class WorkoutLogAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'client',
+        'workout_type',
+        'workout_date',
+        'duration_minutes'
+    )
+
+    list_filter = ('workout_type', 'workout_date')
+
+    search_fields = ('client__user__username',)
+
+
+@admin.register(ProgressEntry)
+class ProgressEntryAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'client',
+        'measurement_type',
+        'value',
+        'unit',
+        'recorded_on'
+    )
+
+    list_filter = ('measurement_type', 'unit')
+
+    search_fields = ('client__user__username',)
+#>-------

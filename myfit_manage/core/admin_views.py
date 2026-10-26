@@ -13,3 +13,4 @@ def admin_dashboard(request):
         "myfit/admin_dashboard.html",
         {"stats": get_dashboard_stats(), "today": timezone.localdate()},
     )
+
