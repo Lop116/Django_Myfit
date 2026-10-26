@@ -216,3 +216,197 @@ class ClassBooking(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
     booked_at = models.DateTimeField(auto_now_add=True)
     #<----
+
+#Ankush=================================
+from decimal import Decimal
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+
+
+# Connects a client to their assigned coach.
+class CoachClientAssignment(models.Model):
+
+    coach = models.ForeignKey(
+        'CoachProfile',
+        on_delete=models.CASCADE,
+        related_name='client_assignments'
+    )
+
+    # One client can have one assigned coach at a time.
+    client = models.OneToOneField(
+        'ClientProfile',
+        on_delete=models.CASCADE,
+        related_name='coaching_assignment'
+    )
+
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        # Ensure users have the appropriate roles.
+        from .permissions import has_role
+
+        if self.coach_id and not has_role(
+            self.coach.user, 'Coach'
+        ):
+            raise ValidationError({
+                'coach': 'The selected user must be a coach.'
+            })
+
+        if self.client_id and not has_role(
+            self.client.user, 'Client'
+        ):
+            raise ValidationError({
+                'client': 'The selected user must be a client.'
+            })
+
+    def __str__(self):
+        return f"{self.client.user.username} - {self.coach.user.username}"
+
+
+# Stores each workout completed by a client.
+class WorkoutLog(models.Model):
+
+    WORKOUT_TYPES = [
+        ('strength', 'Strength Training'),
+        ('cardio', 'Cardio'),
+        ('flexibility', 'Flexibility'),
+        ('sports', 'Sports'),
+        ('other', 'Other'),
+    ]
+
+    client = models.ForeignKey(
+        'ClientProfile',
+        on_delete=models.CASCADE,
+        related_name='workout_logs'
+    )
+
+    workout_type = models.CharField(
+        max_length=20,
+        choices=WORKOUT_TYPES
+    )
+
+    workout_date = models.DateField()
+
+    # Duration is measured in minutes.
+    duration_minutes = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)]
+    )
+
+    notes = models.TextField(blank=True, max_length=1000)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-workout_date', '-id']
+
+    def clean(self):
+        # Do not allow future workout dates.
+        if self.workout_date and self.workout_date > timezone.localdate():
+            raise ValidationError({
+                'workout_date': 'Date cannot be in the future.'
+            })
+
+    def __str__(self):
+        return f"{self.client.user.username} - {self.workout_type}"
+
+
+# Stores a client's fitness measurements.
+class ProgressEntry(models.Model):
+
+    MEASUREMENT_TYPES = [
+        ('weight', 'Weight'),
+        ('distance', 'Distance'),
+        ('repetitions', 'Repetitions'),
+        ('duration', 'Duration'),
+    ]
+
+    UNIT_CHOICES = [
+        ('kg', 'Kilograms'),
+        ('lb', 'Pounds'),
+        ('km', 'Kilometres'),
+        ('m', 'Metres'),
+        ('reps', 'Repetitions'),
+        ('min', 'Minutes'),
+        ('sec', 'Seconds'),
+    ]
+
+    # Each measurement type has valid units.
+    ALLOWED_UNITS = {
+        'weight': ('kg', 'lb'),
+        'distance': ('km', 'm'),
+        'repetitions': ('reps',),
+        'duration': ('min', 'sec'),
+    }
+
+    client = models.ForeignKey(
+        'ClientProfile',
+        on_delete=models.CASCADE,
+        related_name='progress_entries'
+    )
+
+    measurement_type = models.CharField(
+        max_length=20,
+        choices=MEASUREMENT_TYPES
+    )
+
+    value = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+
+    unit = models.CharField(
+        max_length=5,
+        choices=UNIT_CHOICES
+    )
+
+    recorded_on = models.DateField()
+
+    notes = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_on', '-id']
+
+    def clean(self):
+        errors = {}
+
+        # Check that the selected unit is appropriate.
+        allowed = self.ALLOWED_UNITS.get(
+            self.measurement_type, ()
+        )
+
+        if self.unit not in allowed:
+            errors['unit'] = 'Invalid measurement unit.'
+
+        # Measurements must be positive.
+        if self.value is not None and self.value <= 0:
+            errors['value'] = 'Value must be positive.'
+
+        # Repetitions must be whole numbers.
+        if (
+            self.measurement_type == 'repetitions'
+            and self.value is not None
+            and self.value % 1 != 0
+        ):
+            errors['value'] = 'Repetitions must be a whole number.'
+
+        # Prevent future dates.
+        if (
+            self.recorded_on
+            and self.recorded_on > timezone.localdate()
+        ):
+            errors['recorded_on'] = 'Date cannot be in the future.'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self):
+        return (
+            f"{self.client.user.username}: "
+            f"{self.value} {self.unit}"
+        )
