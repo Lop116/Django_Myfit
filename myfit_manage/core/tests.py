@@ -1233,6 +1233,75 @@ class AuthenticationPresentationTests(TestCase):
         self.assertContains(response, reverse('myfit:client_attendance_history'))
 
     # Developer: Deshrao Saccaram
+    def test_authenticated_desktop_navigation_has_single_pass_and_logout(self):
+        self.client.force_login(self.user)
+
+        for page_name in ('home', 'login'):
+            with self.subTest(page=page_name):
+                response = self.client.get(reverse(f'myfit:{page_name}'))
+                content = response.content.decode()
+                desktop_header = content.split(
+                    '<header class="site-header"',
+                    1,
+                )[1].split('<details class="mobile-menu"', 1)[0]
+
+                self.assertEqual(
+                    desktop_header.count(
+                        f'href="{reverse("myfit:membership_pass")}"',
+                    ),
+                    1,
+                )
+                self.assertEqual(
+                    desktop_header.count(
+                        f'action="{reverse("myfit:logout")}"',
+                    ),
+                    1,
+                )
+                self.assertEqual(desktop_header.count('>Log out</button>'), 1)
+                self.assertEqual(
+                    desktop_header.count('>Membership QR Pass</a>'),
+                    1,
+                )
+                self.assertContains(response, 'mobile-menu')
+                self.assertContains(response, 'notification-menu')
+
+    # Developer: Deshrao Saccaram
+    def test_authenticated_login_page_hides_login_form(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('myfit:login'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "YOU'RE SIGNED IN")
+        self.assertContains(response, 'CONTINUE TO MYFIT')
+        self.assertNotContains(response, 'id="id_password"')
+        self.assertNotContains(response, 'Forgot Password?')
+
+    # Developer: Deshrao Saccaram
+    def test_guest_desktop_navigation_shows_login_without_member_controls(self):
+        for page_name in ('home', 'login'):
+            with self.subTest(page=page_name):
+                response = self.client.get(reverse(f'myfit:{page_name}'))
+                content = response.content.decode()
+                desktop_header = content.split(
+                    '<header class="site-header"',
+                    1,
+                )[1].split('<details class="mobile-menu"', 1)[0]
+
+                self.assertIn(
+                    f'href="{reverse("myfit:login")}"',
+                    desktop_header,
+                )
+                self.assertNotIn(
+                    f'href="{reverse("myfit:membership_pass")}"',
+                    desktop_header,
+                )
+                self.assertNotIn(
+                    f'action="{reverse("myfit:logout")}"',
+                    desktop_header,
+                )
+
+    # Developer: Deshrao Saccaram
     def test_staff_navigation_links_follow_route_permissions(self):
         staff_user = get_user_model().objects.create_user(
             username='membership-nav-staff',

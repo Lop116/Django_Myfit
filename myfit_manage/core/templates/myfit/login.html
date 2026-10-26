@@ -37,20 +37,24 @@
     .topbar a { display: inline-flex; align-items: center; gap: 9px; }
     .site-header { position: sticky; top: 0; z-index: 100; height: 85px; background: rgba(14, 16, 18, .96); border-bottom: 1px solid rgba(255, 255, 255, .08); backdrop-filter: blur(18px); }
     .site-header::after { content: ""; position: absolute; inset: auto 0 -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--yellow), var(--pink), transparent); opacity: .45; }
-    .nav-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+    .nav-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
     .logo { position: relative; display: flex; align-items: center; gap: 10px; min-width: 163px; font-size: 1.45rem; font-weight: 1000; letter-spacing: -.09em; white-space: nowrap; }
     .logo-mark { width: 42px; height: 42px; object-fit: cover; border-radius: 5px; background: var(--yellow); }
     .logo-word span { color: var(--yellow); }
     .logo small { position: absolute; left: 54px; bottom: -9px; color: #aab1b8; font-size: .44rem; letter-spacing: .18em; font-weight: 800; }
-    .desktop-nav { display: flex; align-items: center; gap: 25px; font-size: .86rem; font-weight: 800; }
+    .desktop-nav { display: flex; align-items: center; gap: 25px; font-size: .88rem; font-weight: 800; }
     .desktop-nav a { position: relative; transition: color .2s; }
     .desktop-nav a:hover, .desktop-nav a[aria-current="page"] { color: var(--yellow); }
     .desktop-nav a[aria-current="page"]::after { content: ""; position: absolute; right: 0; bottom: -13px; left: 0; height: 2px; background: var(--yellow); }
-    .nav-cta { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 0 18px; background: var(--pink); border: 1px solid var(--pink); font-size: .72rem; font-weight: 950; letter-spacing: .06em; white-space: nowrap; }
+    .nav-actions { display: flex; align-items: center; gap: 10px; font-size: .76rem; font-weight: 900; }
+    .account-label { color: #f2f2f2; font-size: .7rem; font-weight: 850; white-space: nowrap; }
+    .login-btn, .join-btn { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 0 21px; white-space: nowrap; }
+    .login-btn { border: 1px solid #8b9092; }
+    .join-btn { background: var(--pink); border: 1px solid var(--pink); color: #fff; }
     .logout-form { margin: 0; }
-    .logout-button { min-height: 42px; padding: 0 18px; border: 1px solid #8b9092; background: transparent; color: #fff; font: inherit; font-size: .72rem; font-weight: 950; letter-spacing: .06em; cursor: pointer; }
+    .logout-button { font: inherit; cursor: pointer; }
     .logout-button:hover { border-color: var(--yellow); color: var(--yellow); }
-    .nav-cta:hover { background: #e73788; }
+    .join-btn:hover { background: #eb3689; }
     .mobile-menu { display: none; }
     main { min-height: calc(100vh - 180px); }
     .login-section { padding: 76px 0 92px; background: radial-gradient(ellipse at 12% 15%, rgba(72, 57, 165, .18), transparent 38%), var(--ink); }
@@ -92,9 +96,15 @@
     .footer-links { display: flex; flex-wrap: wrap; gap: 17px; font-size: .69rem; font-weight: 850; letter-spacing: .06em; }
     .footer-links a:hover { color: var(--yellow); }
     .footer-bottom { padding: 14px 0 20px; border-top: 1px solid var(--line); color: #858c94; font-size: .64rem; font-weight: 850; letter-spacing: .1em; }
-    @media (max-width: 1050px) {
+    @media (max-width: 1260px) {
+      .container { width: min(1170px, calc(100% - 64px)); }
+      .desktop-nav { gap: 15px; font-size: .75rem; }
+      .nav-inner { gap: 12px; }
+      .login-btn, .join-btn { padding: 0 14px; }
+    }
+    @media (max-width: 1060px) {
       .container { width: min(100% - 48px, 760px); }
-      .desktop-nav { display: none; }
+      .desktop-nav, .nav-actions { display: none; }
       .mobile-menu { position: relative; display: block; }
       .mobile-menu summary { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #555b61; color: #fff; cursor: pointer; list-style: none; }
       .mobile-menu summary::-webkit-details-marker { display: none; }
@@ -110,7 +120,6 @@
       .topbar-inner > a { display: none; }
       .site-header { height: 74px; }
       .logo { min-width: 0; }
-      .nav-cta { min-height: 39px; padding: 0 12px; font-size: .64rem; }
       .nav-inner { gap: 12px; }
       .login-section { padding: 34px 0 54px; }
       .login-layout { grid-template-columns: 1fr; }
@@ -149,20 +158,18 @@
         <a href="{% url 'myfit:classes' %}">Classes</a>
         <a href="{% url 'myfit:contact' %}">Support</a>
         {% include 'myfit/partials/membership_navigation.html' %}
-        {% if user.is_authenticated %}
-          {% include 'myfit/partials/notification_dropdown.html' %}
-          <a href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
-          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
-        {% else %}
-          <a href="{% url 'myfit:login' %}" aria-current="page">Log in</a>
-        {% endif %}
       </nav>
-      {% if user.is_authenticated %}
-        <a class="nav-cta" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
-        <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
-      {% else %}
-        <a class="nav-cta" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
-      {% endif %}
+      <div class="nav-actions">
+        {% if user.is_authenticated %}
+          <span class="account-label">Hi, {{ user.first_name|default:user.username }}</span>
+          {% include 'myfit/partials/notification_dropdown.html' %}
+          <a class="join-btn" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="login-btn logout-button" type="submit">Log out</button></form>
+        {% else %}
+          <a class="login-btn" href="{% url 'myfit:login' %}" aria-current="page">Log in</a>
+          <a class="join-btn" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
+        {% endif %}
+      </div>
       <details class="mobile-menu">
         <summary aria-label="Open navigation menu"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
         <nav aria-label="Mobile navigation">
@@ -182,6 +189,28 @@
     </div>
   </header>
   <main id="main-content">
+    <!-- Developer: Deshrao Saccaram -->
+    {% if user.is_authenticated %}
+      <section class="login-section" aria-labelledby="login-title">
+        <div class="container login-layout">
+          <div class="login-visual">
+            <div class="visual-copy">
+              <p class="eyebrow">MYFIT MAURITIUS / MEMBER ACCESS</p>
+              <h1>WELCOME<br><span>BACK.</span></h1>
+              <p>Your next session, your progress and your MyFit membership start here.</p>
+            </div>
+          </div>
+          <div class="login-panel">
+            <div class="login-content">
+              <p class="section-kicker">YOUR TRAINING CONTINUES</p>
+              <h2 id="login-title">YOU'RE SIGNED IN</h2>
+              <p class="intro">You're already signed in to MyFit. Continue to your membership and account tools.</p>
+              <a class="submit-button" href="{% url 'myfit:home' %}">CONTINUE TO MYFIT</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    {% else %}
     <section class="login-section" aria-labelledby="login-title">
       <div class="container login-layout">
         <div class="login-visual">
@@ -227,6 +256,7 @@
         </div>
       </div>
     </section>
+    {% endif %}
   </main>
   <footer class="site-footer">
     <div class="container footer-main">
