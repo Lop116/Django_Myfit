@@ -7,6 +7,15 @@ from .models import (
     ClientMembership,
     MembershipChangeRequest,
     AttendanceVisit,
+    Branch,
+    ClientProfile,
+    CoachProfile,
+    CoachSpecialty,
+    ClassSession,
+    ClassBooking,
+    CoachClientAssignment,
+    WorkoutLog,
+    ProgressEntry,
 )
 
 
@@ -85,7 +94,6 @@ class AttendanceVisitAdmin(admin.ModelAdmin):
 # END TASK 2 - MEMBERSHIPS AND ATTENDANCE
 
 #Loick >----------------------------
-from .models import Branch, ClientProfile, CoachProfile, CoachSpecialty
 @admin.register(Branch) #Display name in admin panel
 class BranchAdmin(admin.ModelAdmin):
     list_display = ("name", "phone", "is_active", "created_at")#which columns to display when viewing the Branch records.
@@ -111,9 +119,8 @@ class CoachProfileAdmin(admin.ModelAdmin):
     filter_horizontal = ("specialties",)
 
  #>-------------------------------
-
  #jush========
-from .models import ClassSession, ClassBooking
+ #jush========
 
 @admin.register(ClassSession)
 class ClassSessionAdmin(admin.ModelAdmin):
@@ -122,4 +129,54 @@ class ClassSessionAdmin(admin.ModelAdmin):
 @admin.register(ClassBooking)
 class ClassBookingAdmin(admin.ModelAdmin):
     list_display = ('client', 'session', 'status')
+#>-------
+
+#ankush
+# Register coaching and fitness models in Django Admin.
+
+@admin.register(CoachClientAssignment)
+class AssignmentAdmin(admin.ModelAdmin):
+
+    # Columns shown in the admin panel.
+    list_display = (
+        'client',
+        'coach',
+        'assigned_at'
+    )
+
+    search_fields = (
+        'client__user__username',
+        'coach__user__username'
+    )
+
+
+@admin.register(WorkoutLog)
+class WorkoutLogAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'client',
+        'workout_type',
+        'workout_date',
+        'duration_minutes'
+    )
+
+    list_filter = ('workout_type', 'workout_date')
+
+    search_fields = ('client__user__username',)
+
+
+@admin.register(ProgressEntry)
+class ProgressEntryAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'client',
+        'measurement_type',
+        'value',
+        'unit',
+        'recorded_on'
+    )
+
+    list_filter = ('measurement_type', 'unit')
+    search_fields = ('client__user__username',)
+#>-------
 #>-------
