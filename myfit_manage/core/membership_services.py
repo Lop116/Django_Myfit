@@ -7,11 +7,17 @@
 
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import AttendanceVisit, ClientMembership, MembershipPlan
+from .models import (
+    AttendanceVisit,
+    ClientMembership,
+    MembershipPass,
+    MembershipPlan,
+)
 
 
 @transaction.atomic
@@ -124,6 +130,56 @@ def check_out_visit(visit_id):
 
 
 # END TASK 2 - ATTENDANCE MANAGEMENT
+
+
+# ==========================================================
+# TASK 2 - MEMBERSHIP PASS SYNCHRONIZATION
+# Developer: Deshrao Saccaram
+
+
+@transaction.atomic
+def synchronize_membership_pass(user, membership_id):
+    locked_user = (
+        get_user_model().objects
+        .select_for_update()
+        .get(pk=user.pk)
+    )
+    membership = (
+        ClientMembership.objects
+        .select_for_update()
+        .get(pk=membership_id, user=locked_user)
+    )
+    if membership.current_status != 'active':
+        raise ValidationError(
+            'A currently active membership is required for a membership pass.'
+        )
+
+    member_pass, _ = MembershipPass.objects.select_for_update().get_or_create(
+        user=locked_user,
+        defaults={
+            'plan': MembershipPass.Plan.NEUTRAL,
+            'status': MembershipPass.Status.ACTIVE,
+            'expiry_date': membership.end_date,
+        },
+    )
+
+    updated_fields = []
+    if member_pass.plan != MembershipPass.Plan.NEUTRAL:
+        member_pass.plan = MembershipPass.Plan.NEUTRAL
+        updated_fields.append('plan')
+    if member_pass.status != MembershipPass.Status.ACTIVE:
+        member_pass.status = MembershipPass.Status.ACTIVE
+        updated_fields.append('status')
+    if member_pass.expiry_date != membership.end_date:
+        member_pass.expiry_date = membership.end_date
+        updated_fields.append('expiry_date')
+    if updated_fields:
+        member_pass.save(update_fields=updated_fields)
+
+    return member_pass
+
+
+# END TASK 2 - MEMBERSHIP PASS SYNCHRONIZATION
 
 
 # END TASK 2 - MEMBERSHIP ASSIGNMENT SERVICE

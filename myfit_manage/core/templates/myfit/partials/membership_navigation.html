@@ -1,0 +1,23 @@
+<!-- Developer: Deshrao Saccaram -->
+{% if user.is_authenticated %}
+    {% if not user.is_staff or perms.core.add_clientmembership or perms.core.view_attendancevisit or perms.core.view_membershippass %}
+        <details style="position:relative;">
+            <summary style="color:inherit;cursor:pointer;white-space:nowrap;">MyFit Tools</summary>
+            <div style="position:absolute;top:100%;right:0;z-index:200;min-width:220px;display:grid;padding:8px;background:#202328;border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 32px rgba(0,0,0,.4);">
+                {% if not user.is_staff %}
+                    <a style="display:block;padding:9px 12px;color:inherit;white-space:nowrap;" href="{% url 'myfit:client_membership' %}">My Membership</a>
+                    <a style="display:block;padding:9px 12px;color:inherit;white-space:nowrap;" href="{% url 'myfit:client_attendance_history' %}">Attendance History</a>
+                {% endif %}
+                {% if user.is_staff and perms.core.add_clientmembership %}
+                    <a style="display:block;padding:9px 12px;color:inherit;white-space:nowrap;" href="{% url 'myfit:assign_client_membership' %}">Membership Management</a>
+                {% endif %}
+                {% if user.is_staff and perms.core.view_attendancevisit %}
+                    <a style="display:block;padding:9px 12px;color:inherit;white-space:nowrap;" href="{% url 'myfit:attendance_dashboard' %}">Attendance Dashboard</a>
+                {% endif %}
+                {% if user.is_staff and perms.core.view_membershippass %}
+                    <a style="display:block;padding:9px 12px;color:inherit;white-space:nowrap;" href="{% url 'myfit:membership_scanner' %}">Staff QR Scanner</a>
+                {% endif %}
+            </div>
+        </details>
+    {% endif %}
+{% endif %}

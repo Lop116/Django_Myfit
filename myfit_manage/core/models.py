@@ -58,6 +58,8 @@ class ClientBooking(models.Model):
 
 class MembershipPass(models.Model):
     class Plan(models.TextChoices):
+        # Developer: Deshrao Saccaram
+        NEUTRAL = 'membership', 'MyFit Membership'
         ACCESS = 'access', 'My Access'
         ACCESS_XL = 'xl', 'My Access XL'
         PREMIUM = 'premium', 'My Access Premium'

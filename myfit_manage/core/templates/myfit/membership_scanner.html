@@ -67,7 +67,7 @@
     <div class="container">
       <p class="eyebrow">MEMBERSHIP OPERATIONS</p>
       <h1>QR SCANNER</h1>
-      <p class="intro">Scan a member’s current MyFit pass or enter its verification link below. Results show membership status only.</p>
+      <p class="intro">Scan a member’s current MyFit pass or enter its verification link below. A separate check-in action appears only when the pass and current subscription are eligible.</p>
       <!-- Developer: Deshrao Saccaram -->
       {% if messages %}
         {% for message in messages %}
@@ -116,7 +116,9 @@
             {% elif verification_status == 'expired_membership' %}
               <h2>EXPIRED MEMBERSHIP</h2><p>This membership has expired.</p>
             {% elif verification_status == 'inactive_membership' %}
-              <h2>INACTIVE MEMBERSHIP</h2><p>This membership is pending and is not active.</p>
+              <h2>INACTIVE MEMBERSHIP</h2><p>{{ attendance_message|default:"This pass or its current subscription is not active." }}</p>
+            {% elif verification_status == 'ambiguous_membership' %}
+              <h2>CHECK-IN UNAVAILABLE</h2><p>{{ attendance_message }}</p>
             {% elif verification_status == 'expired_qr_token' %}
               <h2>EXPIRED QR TOKEN</h2><p>This QR verification token has expired. Ask the member to refresh their pass and scan its current QR code.</p>
             {% else %}

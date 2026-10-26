@@ -99,6 +99,20 @@ class MembershipPassTests(TestCase):
             email='amina@example.com',
             password='MemberPassword!42',
         )
+        self.plan = MembershipPlan.objects.create(
+            name='My Actual Dynamic Plan',
+            price='75.00',
+            duration_days=30,
+        )
+        today = timezone.localdate()
+        self.client_membership = ClientMembership.objects.create(
+            user=self.user,
+            plan=self.plan,
+            start_date=today - timedelta(days=5),
+            end_date=today + timedelta(days=24),
+            agreed_price='70.00',
+            status='active',
+        )
         self.pass_record = MembershipPass.objects.create(
             user=self.user,
             plan=MembershipPass.Plan.ACCESS_XL,
@@ -127,17 +141,126 @@ class MembershipPassTests(TestCase):
         response = self.client.get(reverse('myfit:membership_pass'))
 
         self.assertContains(response, 'Amina Rahman')
-        self.assertContains(response, 'My Access XL')
+        self.assertContains(response, 'My Actual Dynamic Plan')
+        self.assertNotContains(response, 'My Access XL')
         self.assertNotContains(response, 'My Access Premium')
+        self.pass_record.refresh_from_db()
+        self.assertEqual(self.pass_record.plan, MembershipPass.Plan.NEUTRAL)
+        self.assertEqual(self.pass_record.status, MembershipPass.Status.ACTIVE)
+        self.assertEqual(self.pass_record.expiry_date, self.client_membership.end_date)
 
-    def test_member_without_a_pass_does_not_get_one_created(self):
+    # Developer: Deshrao Saccaram
+    def test_member_with_current_membership_gets_pass_provisioned(self):
         self.pass_record.delete()
         self.client.force_login(self.user)
 
         response = self.client.get(reverse('myfit:membership_pass'))
 
-        self.assertContains(response, 'No membership pass is linked to your account')
+        self.assertContains(response, 'My Actual Dynamic Plan')
+        self.assertContains(response, 'Time-limited QR code')
+        self.assertTrue(MembershipPass.objects.filter(user=self.user).exists())
+
+    def test_existing_pass_is_synchronized_idempotently(self):
+        self.pass_record.status = MembershipPass.Status.PENDING
+        self.pass_record.expiry_date = None
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
+        self.client.force_login(self.user)
+
+        first_response = self.client.get(reverse('myfit:membership_pass'))
+        self.pass_record.refresh_from_db()
+        first_updated_at = self.pass_record.created_at
+        first_id = self.pass_record.membership_id
+        second_response = self.client.get(reverse('myfit:membership_pass'))
+        self.pass_record.refresh_from_db()
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(MembershipPass.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(self.pass_record.membership_id, first_id)
+        self.assertEqual(self.pass_record.created_at, first_updated_at)
+        self.assertEqual(self.pass_record.plan, MembershipPass.Plan.NEUTRAL)
+        self.assertEqual(self.pass_record.status, MembershipPass.Status.ACTIVE)
+        self.assertEqual(self.pass_record.expiry_date, self.client_membership.end_date)
+
+    def test_no_or_ineligible_membership_does_not_provision_or_show_qr(self):
+        self.pass_record.delete()
+        self.client_membership.delete()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('myfit:membership_pass'))
+
+        self.assertContains(response, 'No eligible membership pass is available')
+        self.assertNotContains(response, 'Time-limited QR code')
         self.assertFalse(MembershipPass.objects.filter(user=self.user).exists())
+
+    def test_existing_active_pass_is_not_displayed_without_eligible_membership(self):
+        self.client_membership.delete()
+        self.pass_record.status = MembershipPass.Status.ACTIVE
+        self.pass_record.expiry_date = timezone.localdate() + timedelta(days=1)
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('myfit:membership_pass'))
+
+        self.assertContains(response, 'No eligible membership pass is available')
+        self.assertNotContains(response, 'Time-limited QR code')
+        self.assertTrue(MembershipPass.objects.filter(user=self.user).exists())
+
+    def test_scheduled_expired_and_suspended_memberships_do_not_provision_pass(self):
+        today = timezone.localdate()
+        cases = (
+            {
+                'start_date': today + timedelta(days=1),
+                'end_date': today + timedelta(days=30),
+                'status': 'scheduled',
+            },
+            {
+                'start_date': today - timedelta(days=30),
+                'end_date': today - timedelta(days=1),
+                'status': 'active',
+            },
+            {
+                'start_date': today - timedelta(days=1),
+                'end_date': today + timedelta(days=20),
+                'status': 'suspended',
+            },
+        )
+        self.client_membership.delete()
+        self.pass_record.delete()
+        self.client.force_login(self.user)
+
+        for case in cases:
+            with self.subTest(status=case['status'], start=case['start_date']):
+                self.client_membership = ClientMembership.objects.create(
+                    user=self.user,
+                    plan=self.plan,
+                    agreed_price='70.00',
+                    **case,
+                )
+                response = self.client.get(reverse('myfit:membership_pass'))
+                self.assertContains(response, 'No eligible membership pass is available')
+                self.assertNotContains(response, 'Time-limited QR code')
+                self.assertFalse(MembershipPass.objects.filter(user=self.user).exists())
+                self.client_membership.delete()
+
+    def test_ambiguous_active_memberships_do_not_provision_or_show_pass(self):
+        self.pass_record.delete()
+        second_membership = ClientMembership.objects.create(
+            user=self.user,
+            plan=self.plan,
+            start_date=self.client_membership.start_date,
+            end_date=self.client_membership.end_date,
+            agreed_price='70.00',
+            status='active',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('myfit:membership_pass'))
+
+        self.assertContains(response, 'Multiple valid memberships were found')
+        self.assertNotContains(response, 'Time-limited QR code')
+        self.assertFalse(MembershipPass.objects.filter(user=self.user).exists())
+        second_membership.delete()
 
     def test_status_reflects_pending_active_and_expired_records(self):
         self.assertEqual(self.pass_record.current_status, MembershipPass.Status.PENDING)
@@ -150,6 +273,9 @@ class MembershipPassTests(TestCase):
         self.assertEqual(self.pass_record.current_status, MembershipPass.Status.EXPIRED)
 
     def test_qr_contains_only_opaque_signed_verification_data(self):
+        self.pass_record.status = MembershipPass.Status.ACTIVE
+        self.pass_record.expiry_date = self.client_membership.end_date
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
         token = create_membership_verification_token(self.pass_record)
         payload = signing.loads(token, salt=MEMBERSHIP_QR_SALT)
 
@@ -173,7 +299,8 @@ class MembershipPassTests(TestCase):
 
     def test_verification_returns_status_without_personal_data(self):
         self.pass_record.status = MembershipPass.Status.ACTIVE
-        self.pass_record.save()
+        self.pass_record.expiry_date = self.client_membership.end_date
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
         token = create_membership_verification_token(self.pass_record)
 
         response = self.client.get(
@@ -204,12 +331,31 @@ class MembershipPassTests(TestCase):
         self.assertEqual(expired_response.status_code, 400)
 
     def test_qr_image_requires_current_members_own_pass(self):
+        self.pass_record.status = MembershipPass.Status.ACTIVE
+        self.pass_record.expiry_date = self.client_membership.end_date
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
         token = create_membership_verification_token(self.pass_record)
         other_user = get_user_model().objects.create_user(
             username='different-member',
             password='DifferentPassword!42',
         )
         self.client.force_login(other_user)
+
+        response = self.client.get(
+            reverse('myfit:membership_qr'),
+            {'token': token},
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_existing_qr_token_cannot_render_after_membership_is_suspended(self):
+        self.pass_record.status = MembershipPass.Status.ACTIVE
+        self.pass_record.expiry_date = self.client_membership.end_date
+        self.pass_record.save(update_fields=('status', 'expiry_date'))
+        token = create_membership_verification_token(self.pass_record)
+        self.client_membership.status = 'suspended'
+        self.client_membership.save(update_fields=('status',))
+        self.client.force_login(self.user)
 
         response = self.client.get(
             reverse('myfit:membership_qr'),
@@ -322,6 +468,7 @@ class MembershipScannerTests(TestCase):
         self.authorize_staff()
         token = create_membership_verification_token(self.pass_record)
 
+        self.create_client_membership()
         self.pass_record.status = MembershipPass.Status.ACTIVE
         self.pass_record.expiry_date = timezone.localdate() + timedelta(days=1)
         self.pass_record.save()
@@ -375,6 +522,7 @@ class MembershipScannerTests(TestCase):
         self.assertNotContains(response, self.user.first_name)
         self.assertNotContains(response, str(self.pass_record.membership_id))
 
+    # Developer: Deshrao Saccaram
     def test_qr_scan_offers_explicit_check_in_but_does_not_create_visit(self):
         token = self.create_active_pass()
         self.create_client_membership()
@@ -629,6 +777,22 @@ class MembershipScannerTests(TestCase):
         )
 
         self.assertContains(response, 'Membership status: Active')
+        self.assertFalse(AttendanceVisit.objects.exists())
+
+    def test_active_legacy_pass_without_active_subscription_is_not_verified_as_active(self):
+        token = self.create_active_pass()
+        self.authorize_staff()
+
+        scanner_response = self.verify_token(token)
+        public_response = self.client.get(
+            reverse('myfit:membership_verify'),
+            {'token': token},
+        )
+
+        self.assertContains(scanner_response, 'INACTIVE MEMBERSHIP')
+        self.assertNotContains(scanner_response, 'CHECK IN CLIENT')
+        self.assertContains(public_response, 'No currently active membership')
+        self.assertNotContains(public_response, 'Membership status: Active')
         self.assertFalse(AttendanceVisit.objects.exists())
 
 
@@ -977,9 +1141,17 @@ class AuthenticationPresentationTests(TestCase):
             password='StrongFitPassword!8462',
         )
 
+    # Developer: Deshrao Saccaram
     def assert_authenticated_navigation(self, response):
-        self.assertContains(response, 'Amina')
         self.assertContains(response, reverse('myfit:membership_pass'))
+        self.assertContains(response, 'Membership QR Pass')
+        self.assertContains(response, 'My Membership')
+        self.assertContains(response, reverse('myfit:client_membership'))
+        self.assertContains(response, 'Attendance History')
+        self.assertContains(response, reverse('myfit:client_attendance_history'))
+        self.assertNotContains(response, 'Staff QR Scanner')
+        self.assertNotContains(response, 'Attendance Dashboard')
+        self.assertNotContains(response, 'Membership Management')
         self.assertGreaterEqual(
             response.content.count(reverse('myfit:logout').encode()),
             2,
@@ -1047,6 +1219,75 @@ class AuthenticationPresentationTests(TestCase):
         login_response = self.client.get(reverse('myfit:login'))
         self.assertContains(login_response, 'Register for an account')
         self.assertContains(login_response, reverse('myfit:register'))
+
+    # Developer: Deshrao Saccaram
+    def test_membership_navigation_is_available_on_classes_page_for_clients(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('myfit:classes'))
+
+        self.assertContains(response, 'Membership QR Pass')
+        self.assertContains(response, 'My Membership')
+        self.assertContains(response, reverse('myfit:client_membership'))
+        self.assertContains(response, 'Attendance History')
+        self.assertContains(response, reverse('myfit:client_attendance_history'))
+
+    # Developer: Deshrao Saccaram
+    def test_staff_navigation_links_follow_route_permissions(self):
+        staff_user = get_user_model().objects.create_user(
+            username='membership-nav-staff',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        permission_routes = {
+            'add_clientmembership': (
+                'Membership Management',
+                'assign_client_membership',
+            ),
+            'view_attendancevisit': (
+                'Attendance Dashboard',
+                'attendance_dashboard',
+            ),
+            'view_membershippass': (
+                'Staff QR Scanner',
+                'membership_scanner',
+            ),
+        }
+
+        for codename, (label, route_name) in permission_routes.items():
+            with self.subTest(permission=codename):
+                permission = Permission.objects.get(
+                    content_type__app_label='core',
+                    codename=codename,
+                )
+                staff_user.user_permissions.set((permission,))
+                self.client.force_login(staff_user)
+
+                response = self.client.get(reverse('myfit:home'))
+
+                self.assertContains(response, label)
+                self.assertContains(response, reverse(f'myfit:{route_name}'))
+                for other_codename, (other_label, _) in permission_routes.items():
+                    if other_codename != codename:
+                        self.assertNotContains(response, other_label)
+                self.assertNotContains(response, 'My Membership')
+                self.assertNotContains(response, 'Attendance History')
+
+    # Developer: Deshrao Saccaram
+    def test_staff_without_tool_permissions_sees_no_staff_navigation(self):
+        staff_user = get_user_model().objects.create_user(
+            username='unprivileged-membership-nav-staff',
+            password='StaffPassword!42',
+            is_staff=True,
+        )
+        self.client.force_login(staff_user)
+
+        response = self.client.get(reverse('myfit:home'))
+
+        self.assertNotContains(response, 'MyFit Tools')
+        self.assertNotContains(response, 'Membership Management')
+        self.assertNotContains(response, 'Attendance Dashboard')
+        self.assertNotContains(response, 'Staff QR Scanner')
 
     def test_logout_uses_post_clears_session_and_redirects_home(self):
         self.client.force_login(self.user)

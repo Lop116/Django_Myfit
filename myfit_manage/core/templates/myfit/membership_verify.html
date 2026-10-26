@@ -34,6 +34,10 @@
       {% elif verification_status == "expired" %}
         <h1 class="expired">EXPIRED</h1>
         <p>Membership status: Expired</p>
+      {% elif verification_status == "inactive" %}
+        <!-- Developer: Deshrao Saccaram -->
+        <h1 class="invalid">INACTIVE</h1>
+        <p>No currently active membership is available for this pass.</p>
       {% else %}
         <h1 class="invalid">INVALID</h1>
         <p>This membership verification link is invalid or has expired. Scan the member’s current QR code to verify again.</p>

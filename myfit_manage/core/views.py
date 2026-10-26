@@ -27,6 +27,7 @@ from .membership_services import (
     assign_membership,
     check_in_membership,
     check_out_visit,
+    synchronize_membership_pass,
 )
 
 
@@ -133,11 +134,23 @@ def plans(request):
 
 
 @login_required(login_url='myfit:login')
+# Developer: Deshrao Saccaram
 def membership_pass(request):
-    try:
-        member_pass = request.user.membership_pass
-    except MembershipPass.DoesNotExist:
-        member_pass = None
+    membership, eligibility_message = get_attendance_membership_for_user(
+        request.user
+    )
+    member_pass = None
+    if membership is not None:
+        try:
+            member_pass = synchronize_membership_pass(
+                request.user,
+                membership.pk,
+            )
+        except (ClientMembership.DoesNotExist, ValidationError):
+            membership = None
+            eligibility_message = (
+                'Membership eligibility changed. Refresh to check your current pass status.'
+            )
 
     qr_image_url = None
     if member_pass is not None:
@@ -150,7 +163,12 @@ def membership_pass(request):
     return render(
         request,
         'myfit/membership_pass.html',
-        {'member_pass': member_pass, 'qr_image_url': qr_image_url},
+        {
+            'member_pass': member_pass,
+            'client_membership': membership,
+            'membership_eligibility_message': eligibility_message,
+            'qr_image_url': qr_image_url,
+        },
     )
 
 
@@ -162,7 +180,15 @@ def membership_qr(request):
     except signing.BadSignature:
         return HttpResponseBadRequest('This membership QR code is invalid or expired.')
 
-    if member_pass is None or member_pass.user_id != request.user.pk:
+    if (
+        member_pass is None
+        or member_pass.user_id != request.user.pk
+        or member_pass.current_status != MembershipPass.Status.ACTIVE
+    ):
+        raise Http404
+
+    membership, _ = get_attendance_membership_for_user(member_pass.user)
+    if membership is None:
         raise Http404
 
     verification_url = request.build_absolute_uri(
@@ -177,6 +203,7 @@ def membership_qr(request):
     return HttpResponse(image_buffer.getvalue(), content_type='image/png')
 
 
+# Developer: Deshrao Saccaram
 def membership_verify(request):
     token = request.GET.get('token', '')
     try:
@@ -191,8 +218,15 @@ def membership_verify(request):
 
     if member_pass is None:
         verification_status = 'invalid'
-    else:
+    elif member_pass.current_status != MembershipPass.Status.ACTIVE:
         verification_status = member_pass.current_status
+    else:
+        membership, _ = get_attendance_membership_for_user(member_pass.user)
+        verification_status = (
+            MembershipPass.Status.ACTIVE
+            if membership is not None
+            else 'inactive'
+        )
 
     return render(
         request,
@@ -202,6 +236,7 @@ def membership_verify(request):
 
 
 @authorized_membership_staff_required
+# Developer: Deshrao Saccaram
 def membership_scanner(request):
     form = MembershipVerificationForm(request.POST or None)
     verification_status = None
@@ -221,17 +256,23 @@ def membership_scanner(request):
             if member_pass is None:
                 verification_status = 'invalid_token'
             elif member_pass.current_status == MembershipPass.Status.ACTIVE:
-                verification_status = 'valid'
                 attendance_membership, attendance_message = (
                     get_attendance_membership_for_user(member_pass.user)
                 )
                 if attendance_membership is not None:
+                    verification_status = 'valid'
                     if request.user.has_perm('core.add_attendancevisit'):
                         verified_token = token
                     else:
                         attendance_message = (
                             'This staff account is not permitted to check in clients.'
                         )
+                elif attendance_message and attendance_message.startswith(
+                    'Multiple valid memberships'
+                ):
+                    verification_status = 'ambiguous_membership'
+                else:
+                    verification_status = 'inactive_membership'
             elif member_pass.current_status == MembershipPass.Status.EXPIRED:
                 verification_status = 'expired_membership'
             else:

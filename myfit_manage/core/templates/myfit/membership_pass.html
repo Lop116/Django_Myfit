@@ -57,18 +57,19 @@
       <p class="eyebrow">MEMBER ACCESS / DIGITAL PASS</p>
       <h1>YOUR MYFIT PASS</h1>
       {% if member_pass %}
-        <p class="intro">Your membership details and verification QR code.</p>
+        <p class="intro">Your current membership details and verification QR code.</p>
+        <!-- Developer: Deshrao Saccaram -->
         <section class="pass-card" aria-label="Digital membership pass">
           <div>
             <p class="pass-name">{{ request.user.get_full_name|default:request.user.username }}</p>
             <dl class="pass-details">
               <div><dt>Membership ID</dt><dd class="membership-id">{{ member_pass.membership_id }}</dd></div>
-              <div><dt>Plan</dt><dd>{{ member_pass.get_plan_display }}</dd></div>
+              <div><dt>Plan</dt><dd>{{ client_membership.plan.name }}</dd></div>
               <div>
                 <dt>Status</dt>
                 <dd><span class="status status-{{ member_pass.current_status }}">{{ member_pass.current_status_label }}</span></dd>
               </div>
-              <div><dt>Expiry date</dt><dd>{% if member_pass.expiry_date %}{{ member_pass.expiry_date|date:"j F Y" }}{% else %}Not set{% endif %}</dd></div>
+              <div><dt>Expiry date</dt><dd>{{ client_membership.end_date|date:"j F Y" }}</dd></div>
             </dl>
           </div>
           <div class="qr-panel">
@@ -77,10 +78,10 @@
           </div>
         </section>
       {% else %}
-        <p class="intro">Your pass appears here when a membership has been assigned to your account.</p>
+        <p class="intro">A verification QR is available only while you have exactly one currently active membership.</p>
         <div class="empty-state">
-          <strong>No membership pass is linked to your account</strong>
-          Membership plans shown on this site are informational. Contact MyFit or speak with staff to have an actual membership recorded.
+          <strong>No eligible membership pass is available</strong>
+          {{ membership_eligibility_message|default:"There is no currently active membership linked to your account." }}
         </div>
       {% endif %}
       <a class="back-link" href="{% url 'myfit:home' %}">← BACK TO MYFIT</a>
