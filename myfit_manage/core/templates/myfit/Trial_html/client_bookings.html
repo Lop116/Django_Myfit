@@ -1,0 +1,468 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Bookings | MyFit Mauritius</title>
+
+<style>
+:root {
+  --bg:#121416;
+  --card:#1d2125;
+  --yellow:#ffc324;
+  --text:#f8f8f7;
+  --muted:#aeb5bc;
+  --border:#353a40;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+}
+a { color:inherit;text-decoration:none; }
+button { font:inherit;cursor:pointer; }
+.topbar {
+  background:var(--yellow);
+  color:#111;
+  padding:10px 5%;
+  font-size:12px;
+  font-weight:800;
+}
+nav {
+  padding:22px 5%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--border);
+}
+.logo { font-size:26px;font-weight:900; }
+.logo span { color:var(--yellow); }
+.links { display:flex;gap:22px;flex-wrap:wrap; }
+.links a:hover,.active { color:var(--yellow); }
+main {
+  max-width:1200px;
+  margin:auto;
+  padding:45px 20px;
+}
+.eyebrow {
+  color:var(--yellow);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:2px;
+}
+h1 { font-size:45px;margin:10px 0; }
+h2 { font-size:23px;margin:0 0 20px; }
+.subtitle { color:var(--muted);margin-bottom:30px; }
+.stats {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:30px;
+}
+.card,.stat {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:22px;
+}
+.stat strong {
+  display:block;
+  color:var(--yellow);
+  font-size:32px;
+  margin-bottom:8px;
+}
+.stat span { color:var(--muted);font-size:13px; }
+.tabs { display:flex;gap:12px;margin-bottom:24px; }
+.tab {
+  background:#292e33;
+  color:white;
+  border:1px solid var(--border);
+  padding:12px 22px;
+  border-radius:8px;
+}
+.tab.active {
+  background:var(--yellow);
+  color:#111;
+  font-weight:800;
+}
+.booking-list {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:20px;
+}
+.booking-card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:24px;
+}
+.booking-head {
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+}
+.booking-head h3 { margin:0;font-size:21px; }
+.badge {
+  padding:7px 11px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:800;
+}
+.confirmed { background:#214d35;color:#83e5a9; }
+.cancelled { background:#4a2929;color:#ffaaaa; }
+.completed { background:#343b45;color:#d0d7df; }
+.details {
+  display:grid;
+  gap:13px;
+  margin:22px 0;
+}
+.detail {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid var(--border);
+  padding-bottom:10px;
+  font-size:14px;
+}
+.detail span:first-child { color:var(--muted); }
+.detail span:last-child { text-align:right; }
+.btn {
+  display:inline-block;
+  border:0;
+  border-radius:8px;
+  padding:12px 19px;
+  background:var(--yellow);
+  color:#111;
+  font-weight:800;
+}
+.btn:hover { filter:brightness(1.1); }
+.btn-danger {
+  background:#a93636;
+  color:white;
+}
+.btn-secondary {
+  background:#343b40;
+  color:white;
+}
+.actions { display:flex;gap:10px;flex-wrap:wrap; }
+.empty {
+  grid-column:1/-1;
+  text-align:center;
+  padding:55px 20px;
+  color:var(--muted);
+  border:1px dashed var(--border);
+  border-radius:12px;
+}
+.message {
+  background:#263d2e;
+  padding:13px;
+  border-radius:8px;
+  margin-bottom:18px;
+}
+.modal {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+.modal.show { display:flex; }
+.modal-box {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:30px;
+  width:100%;
+  max-width:440px;
+}
+.modal-box p { color:var(--muted);line-height:1.6; }
+.modal-actions {
+  display:flex;
+  gap:12px;
+  justify-content:flex-end;
+  margin-top:25px;
+}
+footer {
+  border-top:1px solid var(--border);
+  text-align:center;
+  padding:25px;
+  color:var(--muted);
+  font-size:12px;
+}
+[hidden] { display:none !important; }
+@media(max-width:800px) {
+  .booking-list { grid-template-columns:1fr; }
+  .stats { grid-template-columns:1fr; }
+  h1 { font-size:34px; }
+}
+</style>
+</head>
+
+<body>
+<div class="topbar">
+  MYFIT MAURITIUS · YOUR FITNESS JOURNEY STARTS HERE
+</div>
+
+<nav>
+  <a href="{% url 'myfit:home' %}" class="logo">
+    MY<span>FIT</span>
+  </a>
+  <div class="links">
+    <a href="{% url 'myfit:home' %}">Home</a>
+    <a href="{% url 'myfit:classes' %}">Classes</a>
+    <a href="{% url 'myfit:client_dashboard' %}">Dashboard</a>
+    <a href="{% url 'myfit:workouts' %}">Workouts</a>
+    <a href="{% url 'myfit:progress' %}">Progress</a>
+    <a href="{% url 'myfit:client_bookings' %}" class="active">
+      My Bookings
+    </a>
+  </div>
+</nav>
+
+<main>
+  <p class="eyebrow">CLIENT EXPERIENCE / CLASS BOOKINGS</p>
+  <h1>My Bookings</h1>
+  <p class="subtitle">
+    Manage your upcoming classes, view booking history
+    and cancel reservations.
+  </p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="message">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- BOOKING STATISTICS -->
+  <section class="stats">
+    <div class="stat">
+      <strong>{{ upcoming_count }}</strong>
+      <span>Upcoming Bookings</span>
+    </div>
+    <div class="stat">
+      <strong>{{ completed_count }}</strong>
+      <span>Completed Classes</span>
+    </div>
+    <div class="stat">
+      <strong>{{ cancelled_count }}</strong>
+      <span>Cancelled Bookings</span>
+    </div>
+  </section>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" type="button"
+            data-tab="upcoming">Upcoming</button>
+    <button class="tab" type="button"
+            data-tab="past">Past Bookings</button>
+  </div>
+
+  <!-- UPCOMING BOOKINGS -->
+  <section id="upcoming-section">
+    <h2>Upcoming Classes</h2>
+
+    <div class="booking-list">
+      {% for booking in upcoming_bookings %}
+      <article class="booking-card">
+        <div class="booking-head">
+          <h3>{{ booking.class_name }}</h3>
+          <span class="badge confirmed">Confirmed</span>
+        </div>
+
+        <div class="details">
+          <div class="detail">
+            <span>Date</span>
+            <span>{{ booking.class_date|date:"d M Y" }}</span>
+          </div>
+          <div class="detail">
+            <span>Time</span>
+            <span>{{ booking.start_time|time:"H:i" }}</span>
+          </div>
+          <div class="detail">
+            <span>Trainer</span>
+            <span>{{ booking.trainer }}</span>
+          </div>
+          <div class="detail">
+            <span>Location</span>
+            <span>{{ booking.location }}</span>
+          </div>
+          <div class="detail">
+            <span>Duration</span>
+            <span>{{ booking.duration_minutes }} minutes</span>
+          </div>
+          <div class="detail">
+            <span>Booking Reference</span>
+            <span>#{{ booking.id }}</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-danger cancel-btn"
+                  type="button"
+                  data-id="{{ booking.id }}"
+                  data-name="{{ booking.class_name }}">
+            Cancel Booking
+          </button>
+        </div>
+      </article>
+
+      {% empty %}
+      <div class="empty">
+        <h3>No upcoming bookings</h3>
+        <p>You haven't booked any upcoming fitness classes.</p>
+        <a href="{% url 'myfit:classes' %}" class="btn">
+          Explore Classes
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- PAST BOOKINGS -->
+  <section id="past-section" hidden>
+    <h2>Booking History</h2>
+
+    <div class="booking-list">
+      {% for booking in past_bookings %}
+      <article class="booking-card">
+        <div class="booking-head">
+          <h3>{{ booking.class_name }}</h3>
+
+          {% if booking.status == 'cancelled' %}
+            <span class="badge cancelled">Cancelled</span>
+          {% else %}
+            <span class="badge completed">Completed</span>
+          {% endif %}
+        </div>
+
+        <div class="details">
+          <div class="detail">
+            <span>Date</span>
+            <span>{{ booking.class_date|date:"d M Y" }}</span>
+          </div>
+          <div class="detail">
+            <span>Time</span>
+            <span>{{ booking.start_time|time:"H:i" }}</span>
+          </div>
+          <div class="detail">
+            <span>Trainer</span>
+            <span>{{ booking.trainer }}</span>
+          </div>
+          <div class="detail">
+            <span>Location</span>
+            <span>{{ booking.location }}</span>
+          </div>
+          <div class="detail">
+            <span>Booking Reference</span>
+            <span>#{{ booking.id }}</span>
+          </div>
+        </div>
+      </article>
+
+      {% empty %}
+      <div class="empty">
+        <h3>No booking history</h3>
+        <p>Your past bookings will appear here.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+
+<!-- CANCELLATION CONFIRMATION -->
+<div class="modal" id="cancel-modal" role="dialog"
+     aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-box">
+    <h2 id="modal-title">Cancel Booking?</h2>
+
+    <p>
+      Are you sure you want to cancel
+      <strong id="cancel-class-name"></strong>?
+    </p>
+
+    <p>This action cannot be undone.</p>
+
+    <form method="post"
+          action="{% url 'myfit:client_bookings' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="cancel">
+      <input type="hidden" name="booking_id"
+             id="cancel-booking-id">
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary"
+                id="keep-booking">
+          Keep Booking
+        </button>
+
+        <button type="submit" class="btn btn-danger">
+          Yes, Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer>
+  © MyFit Mauritius · Train Stronger, Live Better.
+</footer>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+const upcoming = document.getElementById('upcoming-section');
+const past = document.getElementById('past-section');
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    upcoming.hidden = tab.dataset.tab !== 'upcoming';
+    past.hidden = tab.dataset.tab !== 'past';
+  });
+});
+
+const modal = document.getElementById('cancel-modal');
+
+document.querySelectorAll('.cancel-btn').forEach(button => {
+  button.addEventListener('click', () => {
+    document.getElementById('cancel-booking-id').value =
+      button.dataset.id;
+
+    document.getElementById('cancel-class-name').textContent =
+      button.dataset.name;
+
+    modal.classList.add('show');
+  });
+});
+
+document.getElementById('keep-booking')
+  .addEventListener('click', () => {
+    modal.classList.remove('show');
+  });
+
+modal.addEventListener('click', event => {
+  if (event.target === modal) {
+    modal.classList.remove('show');
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    modal.classList.remove('show');
+  }
+});
+</script>
+
+</body>
+</html>

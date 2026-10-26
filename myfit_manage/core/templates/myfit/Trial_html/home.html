@@ -1,0 +1,540 @@
+
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MyFit Mauritius. Strength, coaching, classes and connected memberships at Caudan, Trianon and Riche Terre.">
+  <meta name="theme-color" content="#121416">
+  <title>MyFit Mauritius | Push Your Limits</title>
+    
+  <style>
+/* MYFIT — VISITOR HOMEPAGE / assessment-aligned palette
+   Original project references: #FFC324, #D52375, #4839A5, #08A5CB, #DF6848.
+   Local images: core/static/images/homepage_images/ (including logo.png).
+*/
+:root{--yellow:#ffc324;--yellow-soft:#ffda66;--pink:#d52375;--purple:#4839a5;--cyan:#08a5cb;--coral:#df6848;--ink:#121416;--ink2:#17191c;--panel:#202328;--cream:#f5f5f2;--muted:#a4a8ad;--line:rgba(255,255,255,.12);--font:Inter,"Arial Narrow",Arial,Helvetica,sans-serif}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;color:#f8f8f7;background:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button,summary{cursor:pointer}
+a,button,summary{outline-offset:5px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--yellow)}
+.container{width:min(1350px,calc(100% - 88px));margin-inline:auto}
+.svg-sprite{position:absolute;overflow:hidden;width:0;height:0}
+.icon{display:inline-block;width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.icon.sm{width:17px;height:17px}
+.skip-link{position:fixed;top:-60px;left:20px;padding:10px 16px;z-index:2000;background:var(--yellow);color:var(--ink)}
+.skip-link:focus{top:10px}
+
+
+/* top hotbar and sticky navigation */
+.topbar{background:var(--yellow);color:#111;min-height:34px}
+.topbar-inner{min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:.75rem;font-weight:900;letter-spacing:.10em}
+.topbar p{display:flex;align-items:center;gap:12px;margin:0}
+.topbar a{display:flex;align-items:center;gap:10px}
+.topbar-dot{display:inline-block;width:7px;height:7px;border-radius:100%;background:#17191c}
+.topbar-divider{opacity:.45}
+.site-header{height:85px;position:sticky;top:0;z-index:100;background:rgba(14,16,18,.95);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(20px)}
+.site-header::after{content:"";height:1px;position:absolute;left:0;bottom:-1px;right:0;background:linear-gradient(90deg,transparent,var(--yellow),var(--pink),transparent);opacity:.45}
+.nav-inner{height:100%;display:flex;gap:32px;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;position:relative;min-width:163px;font-size:1.45rem;font-weight:1000;letter-spacing:-.09em;white-space:nowrap}
+.logo-word span{color:var(--yellow)}
+.logo small{position:absolute;left:54px;bottom:-9px;font-size:.44rem;color:#aab1b8;letter-spacing:.18em;font-weight:800}
+.logo-mark{display:block;width:42px;height:42px;object-fit:cover;flex:none;border-radius:5px;background:var(--yellow)}
+.desktop-nav{display:flex;align-items:center;gap:25px;font-size:.88rem;font-weight:800}
+.desktop-nav a{transition:color .2s;position:relative}
+.desktop-nav a:hover,.desktop-nav .current{color:var(--yellow)}
+.desktop-nav a.current::after{content:"";position:absolute;bottom:-13px;left:0;right:0;background:var(--yellow);height:2px}
+.nav-actions{display:flex;align-items:center;gap:10px;font-size:.76rem;font-weight:900}
+.account-label{color:#f2f2f2;font-size:.7rem;font-weight:850;white-space:nowrap}
+.logout-form{margin:0}
+.logout-button{font:inherit;cursor:pointer}
+.mobile-menu nav .logout-button{width:100%;min-height:44px;padding:12px;text-align:left;border:0;background:transparent;color:inherit;font-weight:800}
+.mobile-menu nav .logout-button:hover{color:var(--yellow);background:rgba(255,195,36,.06)}
+.login-btn,.join-btn{min-height:42px;padding:0 21px;display:inline-flex;align-items:center;justify-content:center;gap:12px;white-space:nowrap}
+.login-btn{border:1px solid #8b9092}
+.join-btn{background:var(--pink);border:1px solid var(--pink);color:white}
+.join-btn:hover,.btn-pink:hover{background:#eb3689}
+.mobile-menu{display:none}
+.mobile-menu summary{list-style:none}
+.mobile-menu summary::-webkit-details-marker{display:none}
+.mobile-menu nav{display:grid}
+
+
+/* Hero */
+.hero{position:relative;min-height:700px;background:#101215;background-image:linear-gradient(90deg,rgba(13,15,17,.78) 0%,rgba(13,15,17,.35) 47%,rgba(13,15,17,.04) 75%),linear-gradient(0deg,#121416 0%,transparent 26%),var(--hero-image);background-size:cover;background-repeat:no-repeat;background-position:center center;overflow:hidden}
+.hero::before{content:"";pointer-events:none;position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,12,14,.27),transparent 80%)}
+.hero-layout{position:relative;z-index:1;min-height:574px;display:flex;align-items:center;padding-block:68px 40px}
+.hero-copy{max-width:655px}
+.overline{margin:0;color:var(--yellow);font-size:.77rem;letter-spacing:.19em;font-weight:950}
+.hero-kicker{display:flex;align-items:center;gap:12px}
+.yellow-square{width:7px;height:7px;background:var(--yellow);display:inline-block}
+.hero h1,.about-copy h2,.section-heading h2,.coach-content h2,.support-grid h2{font-family:Impact,"Arial Narrow",Arial,sans-serif;font-stretch:condensed;font-weight:900;letter-spacing:.005em}
+.hero h1{font-size:clamp(5rem,9.4vw,10.6rem);line-height:.96;letter-spacing:.012em;margin:26px 0 22px;text-transform:uppercase;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--yellow)}
+.hero h1 em span{color:var(--pink)}
+.hero-lead{max-width:505px;color:#d4d6d8;font-size:1rem;line-height:1.75;margin:36px 0 26px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;gap:16px;align-items:center;justify-content:center;min-height:52px;padding:0 24px;font-weight:950;font-size:.75rem;letter-spacing:.07em;transition:background .2s,transform .2s,border-color .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-pink{background:var(--pink);color:white;border:1px solid var(--pink)}
+.btn-outline{background:rgba(11,13,15,.52);border:1px solid rgba(255,255,255,.6)}
+.btn-outline:hover{border-color:var(--yellow);color:var(--yellow)}
+.btn-yellow{background:var(--yellow);color:#141414}
+.btn-yellow:hover{background:var(--yellow-soft)}
+.hero-side-label{position:absolute;right:0;bottom:50px;font-size:.64rem;letter-spacing:.19em;font-weight:900;writing-mode:vertical-rl;color:rgba(255,255,255,.52)}
+.hero-stats{position:relative;z-index:1;min-height:127px;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;border-top:1px solid rgba(255,255,255,.13);background:rgba(15,17,19,.42)}
+.hero-stats>div{border-right:1px solid rgba(255,255,255,.16);padding:17px 30px}
+.hero-stats>div:first-child{padding-left:0}
+.hero-stats>div:last-child{border-right:0}
+.stat-num{display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:2.7rem;letter-spacing:.01em;line-height:1;color:white}
+.stat-num>span{color:var(--yellow)}
+.hero-stats small{display:block;margin-top:11px;font-size:.78rem;letter-spacing:.13em;font-weight:900;color:#b8bcc1}
+
+
+/* quick access */
+.features-section{background:#171a1e;border-bottom:1px solid rgba(255,255,255,.06)}
+.features-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));min-height:134px}
+.feature-card{position:relative;display:flex;align-items:center;gap:18px;padding:22px;border-right:1px solid rgba(255,255,255,.09)}
+.feature-card:first-child{padding-left:0}
+.feature-card:last-child{border-right:0}
+.feature-card:hover{background:rgba(255,195,36,.045)}
+.feature-icon{color:var(--yellow)}
+.feature-icon .icon{width:32px;height:32px}
+.feature-text strong{display:block;font-size:.84rem;letter-spacing:.035em}
+.feature-text small{display:block;font-size:.84rem;color:var(--muted);margin-top:8px;line-height:1.4}
+.feature-arrow{width:15px;height:15px;color:var(--yellow);margin-left:auto}
+
+
+/* about */
+.about-section{background:var(--purple);overflow:hidden}
+.about-grid{min-height:505px;display:grid;grid-template-columns:1fr .82fr;align-items:stretch;gap:30px}
+.about-copy{align-self:center;padding:75px 40px 75px 0;position:relative;z-index:1}
+.light-overline{color:#dad2ff}
+.about-copy h2{font-size:clamp(3.6rem,5.8vw,6.7rem);line-height:1.06;margin:28px 0 22px}
+.about-copy h2 span{color:var(--yellow)}
+.about-copy>p:not(.overline){max-width:545px;color:#e2dffb;font-size:1rem;line-height:1.8}
+.text-link{display:inline-flex;align-items:center;gap:12px;font-weight:950;letter-spacing:.06em;font-size:.76rem;margin-top:20px;border-bottom:1px solid currentColor;padding-bottom:7px}
+.on-purple{color:var(--yellow)}
+.about-visual{position:relative;min-height:505px;isolation:isolate}
+.about-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--purple) 0%,transparent 45%),linear-gradient(0deg,rgba(30,20,80,.5),transparent 45%)}
+.about-visual img{width:100%;height:100%;object-fit:cover;object-position:50% 36%;filter:contrast(1.12)}
+.about-visual-tag{position:absolute;z-index:2;bottom:38px;right:4%;font-size:2rem;font-weight:1000;line-height:1.02;letter-spacing:-.045em;text-align:right}
+.about-visual-tag b{color:var(--yellow)}
+
+
+/* shared sections */
+.section-pad{padding:105px 0}
+.section-heading{display:flex;align-items:end;justify-content:space-between;gap:40px;margin-bottom:42px}
+.section-heading h2{font-size:clamp(3.1rem,5vw,5.7rem);line-height:1.06;letter-spacing:.018em;margin:18px 0 13px}
+.section-heading p:not(.overline){max-width:660px;margin:0;color:#b3b7ba;line-height:1.6;font-size:.96rem}
+.link-arrow{color:var(--yellow);display:flex;align-items:center;gap:11px;white-space:nowrap;font-size:.78rem;font-weight:950;letter-spacing:.05em;padding-bottom:6px;border-bottom:1px solid rgba(255,195,36,.4)}
+.yellow-text{color:var(--yellow)}
+.cyan-text{color:var(--cyan)}
+.dark-overline{color:#38383a}
+
+
+/* classes */
+.classes-section{background:#121416}
+.classes-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.class-card{position:relative;min-height:340px;background:#1b1e22;border:1px solid rgba(255,255,255,.085);padding:30px 24px 26px;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
+.class-card:hover{border-color:var(--cyan);transform:translateY(-5px)}
+.class-card-number{position:absolute;top:25px;right:22px;font-family:Impact,sans-serif;font-size:1.25rem;color:#56616a}
+.class-illustration{width:62px;height:62px;display:grid;place-items:center;margin:8px 0 22px;background:#093544;color:#36cef3;border:1px solid rgba(54,206,243,.2);border-radius:50%}
+.class-illustration .icon{width:31px;height:31px}
+.class-illustration-hiit{background:#413315;color:#f7c852}
+.class-illustration-yoga{background:#362e58;color:#ada4fb}
+.class-illustration-zumba{background:#43263a;color:#f279b7}
+.class-tag{font-size:.65rem;font-weight:950;letter-spacing:.12em;color:var(--cyan)}
+.class-card h3{margin:13px 0 15px;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:2rem;line-height:1.05;letter-spacing:.015em}
+.class-card p{font-size:.92rem;line-height:1.65;color:#abb0b6;margin:0 0 25px}
+.class-card a{margin-top:auto;display:flex;align-items:center;gap:8px;color:var(--yellow);font-size:.78rem;letter-spacing:.07em;font-weight:950}
+/* Keep the class-card design but make the entire card open the Classes page. */
+.class-card a::after{content:"";position:absolute;inset:0;cursor:pointer}
+.class-card:focus-within{outline:3px solid var(--yellow);outline-offset:3px}
+.section-note{color:#777d83;margin:23px 0 0;font-size:.76rem}
+
+
+/* memberships */
+.membership-section{background:var(--cream);color:#141414}
+.membership-heading h2{font-size:clamp(3.8rem,6vw,6.5rem)}
+.membership-heading p:not(.overline){color:#686c72}
+.membership-badge{display:flex;align-items:center;gap:10px;border:2px solid #161616;border-radius:100px;padding:12px 15px;font-size:.73rem;font-weight:950;white-space:nowrap}
+.membership-badge .icon{width:20px;height:20px}
+.plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.plan-card{position:relative;overflow:hidden;background:#fff;border:1px solid #dadbd9;min-height:483px;padding:32px 30px 26px;display:flex;flex-direction:column;border-top:6px solid var(--yellow)}
+.plan-featured{border-top-color:var(--pink);background:#1a1b20;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.12)}
+.plan-card:nth-child(3){border-top-color:var(--purple)}
+.plan-upper{display:flex;justify-content:space-between;gap:20px;color:#656a6d;font-size:.65rem;font-weight:950;letter-spacing:.15em}
+.plan-featured .plan-upper{color:#b9bdc6}
+.plan-featured-ribbon{position:absolute;top:0;right:0;padding:7px 12px;background:var(--pink);color:#fff;font-size:.63rem;letter-spacing:.07em;font-weight:950}
+.plan-featured .plan-upper{padding-top:19px}
+.plan-card h3{font-size:1.65rem;font-weight:1000;letter-spacing:-.05em;margin:27px 0 10px}
+/* Give the currency, amount and billing period independent spacing. */
+.plan-price{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:12px;row-gap:4px;font-family:Impact,Arial,sans-serif;line-height:1.12;letter-spacing:normal}
+.plan-price .price-currency{font-family:Arial,sans-serif;font-size:1.1rem;position:static;margin:0;font-weight:900}
+.plan-price .price-amount{font-size:3.4rem;font-weight:900;letter-spacing:.018em;white-space:nowrap}
+.plan-price .price-period{font:800 .68rem Arial,sans-serif;letter-spacing:.09em;color:#777;margin:0 0 5px 2px;white-space:nowrap}
+.plan-featured .plan-price .price-period{color:#bdc1c4}
+.plan-description{color:#6b6e72;font-size:.81rem;line-height:1.6;min-height:48px}
+.plan-featured .plan-description{color:#c2c4c7}
+.plan-card ul{list-style:none;padding:0;margin:15px 0 24px}
+.plan-card li{display:flex;align-items:center;gap:10px;border-top:1px solid rgba(0,0,0,.07);font-size:.91rem;padding:11px 0}
+.plan-card li::before{content:"✓";color:var(--purple);font-weight:1000}
+.plan-featured li{border-color:rgba(255,255,255,.09)}
+.plan-featured li::before{color:var(--yellow)}
+.plan-button{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:15px;min-height:49px;padding:0 18px;background:var(--yellow);color:#121212;font-size:.75rem;font-weight:1000}
+.plan-button:hover{background:#ffda61}
+.plan-featured .plan-button{background:var(--pink);color:#fff}
+.plan-featured .plan-button:hover{background:#ea3588}
+.membership-footnote{color:#696b6d;font-size:.73rem;margin-top:22px}
+
+
+/* coaches */
+.coaches-section{background:#191b1f}
+.coach-layout{display:grid;grid-template-columns:.86fr 1fr;gap:8%;align-items:center}
+.coach-visual{position:relative;height:550px}
+.coach-visual img{width:100%;height:100%;object-fit:cover;object-position:55% 42%;filter:saturate(.85)}
+.coach-image-stamp{position:absolute;bottom:0;left:0;background:var(--yellow);padding:23px 30px;color:#111;font:900 2.3rem/1 Impact,Arial,sans-serif}
+.coach-image-stamp strong{font-weight:900}
+.coach-content h2{font-size:clamp(3.5rem,5.7vw,6.1rem);line-height:1.07;letter-spacing:.016em;margin:20px 0}
+.coach-content h2 span{color:var(--yellow)}
+.coach-content>p:not(.overline){color:#c2c5c9;max-width:570px;font-size:.96rem;line-height:1.8}
+.coach-pills{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 31px}
+.coach-pills span{border:1px solid #44494e;padding:10px 13px;font-size:.78rem;font-weight:900;letter-spacing:.04em;color:#d7d9dc}
+
+
+/* branches */
+.branches-section{background:var(--coral);color:#161616}
+.branch-heading p:not(.overline){color:#342520}
+.branch-decoration{font:900 3rem/.77 Impact,Arial,sans-serif;text-align:right;opacity:.22;letter-spacing:-.09em}
+.branch-decoration b{font-size:5rem}
+.branches-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px}
+.branch-card{background:#181b1f;color:#f5f6f7;transition:transform .2s,box-shadow .2s}
+.branch-card:hover{transform:translateY(-5px);box-shadow:0 18px 36px rgba(61,28,20,.27)}
+.branch-img{height:180px;position:relative;overflow:hidden}
+.branch-img img{width:100%;height:100%;object-fit:cover;object-position:center;image-rendering:auto;filter:none}
+.branch-card:hover img{transform:none}
+.branch-index{position:absolute;top:12px;left:12px;background:var(--yellow);color:#141414;padding:7px 10px;font-size:.71rem;font-weight:1000}
+.branch-index.soon{background:var(--pink);color:#fff}
+.branch-body{padding:22px 20px 28px;display:flex;align-items:end;justify-content:space-between;min-height:139px}
+.branch-body p{color:var(--yellow);font-size:.80rem;letter-spacing:.13em;font-weight:950;margin:0 0 10px}
+.branch-body h3{font:900 1.64rem/1 Impact,"Arial Narrow",Arial,sans-serif;letter-spacing:.01em;margin:0}
+.branch-pin{color:var(--yellow)}
+.branch-bottom{display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.1);margin:0 20px;padding:14px 0;font-size:.76rem;letter-spacing:.09em;font-weight:900;color:#c9cdd1}
+.branch-bottom.coming-soon{color:#ff86b6}
+.branch-disclaimer{font-size:.72rem;color:#40291e;line-height:1.5;margin:24px 0 0}
+
+
+/* support + footer */
+.support-section{padding:105px 0;background:#15181a}
+.support-grid{display:grid;grid-template-columns:1.1fr .85fr;gap:90px;align-items:center}
+.support-grid h2{font-size:clamp(4rem,7vw,8rem);line-height:1.07;letter-spacing:.013em;margin:23px 0}
+.support-grid h2 span{color:var(--yellow)}
+.support-grid>div>p:not(.overline){max-width:500px;color:#a9b0b5;line-height:1.8}
+.support-panel{background:#202429;border-top:5px solid var(--yellow);padding:34px}
+.support-panel-icon{width:51px;height:51px;color:var(--yellow);margin-bottom:18px}
+.support-panel-icon .icon{width:43px;height:43px}
+.support-panel strong{font-size:1.06rem;letter-spacing:.02em}
+.support-panel p{color:#c0c5ca;font-size:.85rem;line-height:1.7;margin:15px 0 24px}
+.site-footer{background:#0a0b0d;border-top:1px solid rgba(255,255,255,.08)}
+.footer-main{padding:50px 0;display:flex;align-items:center;justify-content:space-between;gap:30px}
+.footer-main>p{font-weight:900;font-size:.73rem;line-height:1.65;letter-spacing:.1em;color:#a2a8ac}
+.footer-main nav{display:flex;flex-wrap:wrap;gap:20px;font-size:.78rem;font-weight:900;letter-spacing:.06em}
+.footer-main nav a:hover{color:var(--yellow)}
+.footer-bottom{min-height:65px;border-top:1px solid rgba(255,255,255,.09);display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:.62rem;font-weight:800;letter-spacing:.07em;color:#878f96}
+.footer-bottom b{color:var(--yellow)}
+.footer-bottom a:hover{color:var(--yellow)}
+
+
+/* Responsive layout */
+@media(max-width:1260px){.container{width:min(1170px,calc(100% - 64px))}
+.desktop-nav{gap:15px;font-size:.75rem}
+.nav-inner{gap:12px}
+.login-btn,.join-btn{padding:0 14px}
+.feature-card{padding-inline:13px}
+.feature-text strong{font-size:.80rem}
+.hero h1{font-size:clamp(5.2rem,9.2vw,9.1rem)}
+.branch-body h3{font-size:1.4rem}
+.branch-img{height:158px}
+}
+
+@media(max-width:1060px){.desktop-nav,.nav-actions{display:none}
+.mobile-menu{display:block;position:relative}
+.mobile-menu summary{display:grid;place-items:center;border:1px solid #575c60;padding:9px;color:var(--yellow)}
+.mobile-menu nav{position:absolute;top:55px;right:0;width:min(310px,80vw);padding:13px;box-shadow:0 18px 48px rgba(0,0,0,.5);background:#212429;border:1px solid #494b50;z-index:10}
+.mobile-menu nav a{padding:12px 14px;border-bottom:1px solid #383b42;font-weight:850;font-size:.88rem}
+.mobile-menu nav a:hover{color:var(--yellow)}
+.hero{background-position:62% center}
+.hero h1{font-size:clamp(5rem,12vw,8.5rem)}
+.features-grid,.classes-grid,.branches-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.features-grid{min-height:0}
+.feature-card{padding:25px}
+.feature-card:first-child{padding-left:25px}
+.feature-card:nth-child(2){border-right:0}
+.feature-card:nth-child(-n+2){border-bottom:1px solid var(--line)}
+.about-grid{grid-template-columns:1.1fr .9fr}
+.plan-grid{gap:12px}
+.plan-card{padding:28px 20px}
+.plan-price .price-amount{font-size:2.9rem}
+.coach-layout{gap:6%}
+.coach-visual{height:485px}
+.branch-img{height:240px}
+.support-grid{gap:35px}
+}
+
+@media(max-width:750px){.container{width:calc(100% - 38px)}
+.topbar-inner{font-size:.55rem;min-height:31px}
+.topbar-inner a{display:none}
+.site-header{height:72px}
+.hero{min-height:0;background-position:63% center}
+.hero::before{background:linear-gradient(90deg,rgba(9,11,14,.65),rgba(9,11,14,.23))}
+.hero-layout{min-height:600px;padding-block:58px 50px;align-items:end}
+.hero-copy{max-width:550px}
+.hero h1{font-size:clamp(5rem,17vw,8rem);margin-top:23px}
+.hero-lead{font-size:.93rem;max-width:390px;line-height:1.65;margin-top:27px}
+.hero-side-label{display:none}
+.hero-stats{grid-template-columns:repeat(2,1fr);min-height:0;margin-bottom:0}
+.hero-stats>div{padding:18px 12px!important}
+.hero-stats>div:nth-child(2){border-right:0}
+.hero-stats>div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+.stat-num{font-size:2.2rem}
+.features-grid{grid-template-columns:1fr 1fr}
+.feature-card{display:grid;gap:12px;padding:20px!important;grid-template-columns:32px 1fr}
+.feature-arrow{display:none}
+.feature-text small{font-size:.7rem}
+.about-grid,.coach-layout,.support-grid{grid-template-columns:1fr}
+.about-copy{padding:70px 0 30px}
+.about-visual{min-height:370px;max-height:370px;margin-inline:-19px}
+.about-copy h2,.section-heading h2,.coach-content h2,.support-grid h2{font-size:clamp(3.3rem,10vw,5.1rem)}
+.section-pad{padding:73px 0}
+.section-heading{align-items:start;flex-direction:column;gap:12px}
+.classes-grid,.branches-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.class-card{padding:23px 18px;min-height:315px}
+.plan-grid{grid-template-columns:1fr;gap:17px}
+.plan-card{min-height:0;padding:28px}
+.membership-badge{display:none}
+.coach-visual{height:385px}
+.coach-content{padding-top:20px}
+.coach-layout{gap:0}
+.branch-img{height:155px}
+.branch-body{padding:19px 15px 23px;min-height:115px}
+.branch-bottom{margin:0 15px}
+.branch-body h3{font-size:1.36rem}
+.support-grid{gap:32px}
+.footer-main{flex-direction:column;align-items:flex-start}
+.footer-bottom{flex-wrap:wrap;padding-block:16px}
+}
+
+@media(max-width:490px){.topbar p{gap:6px;letter-spacing:.05em}
+.topbar-divider{display:none}
+.hero-layout{min-height:560px}
+.hero h1{font-size:clamp(4.55rem,18vw,6.6rem)}
+.hero-kicker{font-size:.56rem;letter-spacing:.13em}
+.hero-actions{display:grid;grid-template-columns:1fr;max-width:270px}
+.btn{justify-content:space-between}
+.hero-stats small{font-size:.69rem}
+.feature-text strong{font-size:.77rem}
+.classes-grid,.branches-grid{grid-template-columns:1fr}
+.class-card{min-height:290px}
+.branch-img{height:195px}
+.about-visual-tag{font-size:1.55rem}
+.footer-main nav{gap:15px}
+}
+
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}
+*,*::before,*::after{transition:none!important}
+}
+  </style>
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m3-13a3 3 0 0 1 0 6m1 7v-2a5 5 0 0 0-3-4.6"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M6 8v8m-3-6v4m6-8v12m6-8v12m3-10v8m3-6v4M3 12h18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3m4 0v3m-7 4v-3h3m1 3h3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-dance" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="m12 7.5-1 6.5m0-4.6L6 7m5 2.4 6-2.4m-6 7-5 6m5-6 6 6"/></symbol>
+  </svg>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <p><span class="topbar-dot"></span> MADE FOR MAURITIUS <span class="topbar-divider">/</span> TRAIN · TRACK · TRANSFORM</p>
+      <a href="/branches/">THREE ACTIVE CLUBS <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container nav-inner">
+      <a href="/" class="logo" aria-label="MyFit Home"><img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42"><span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small></a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a class="current" href="/">Home</a>
+        <a href="/coaches/">Coaches</a>
+        <a href="/branches/">Branches</a>
+        <a href="/plans/">Membership</a>
+        <a href="/classes/">Classes</a>
+        <a href="/contact/">Support</a>
+        {% include 'myfit/partials/membership_navigation.html' %}
+      </nav>
+      <div class="nav-actions">
+        {% if user.is_authenticated %}
+          <span class="account-label">Hi, {{ user.first_name|default:user.username }}</span>
+          {% include 'myfit/partials/notification_dropdown.html' %}
+          <a class="join-btn" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="login-btn logout-button" type="submit">Log out</button></form>
+        {% else %}
+          <a class="login-btn" href="{% url 'myfit:login' %}">Log in</a>
+          <a class="join-btn" href="{% url 'myfit:register' %}">JOIN MYFIT <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+        {% endif %}
+      </div>
+      <details class="mobile-menu">
+        <summary aria-label="Open navigation"><svg class="icon"><use href="#i-menu"/></svg></summary>
+        <nav aria-label="Mobile navigation">
+          <a href="/">Home</a><a href="/coaches/">Coaches</a><a href="/branches/">Branches</a><a href="/plans/">Membership</a><a href="/classes/">Classes</a><a href="/contact/">Support</a>
+          {% include 'myfit/partials/membership_navigation.html' %}
+          {% if user.is_authenticated %}
+            {% include 'myfit/partials/notification_dropdown.html' %}
+            <a href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+            <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+          {% else %}
+            <a href="{% url 'myfit:login' %}">Log in</a>
+          {% endif %}
+        </nav>
+      </details>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- HERO IMAGE: core/static/images/homepage_images/hero-myfit.webp -->
+    <section class="hero" id="home" style="--hero-image:url('{% static 'images/homepage_images/hero-myfit.webp' %}')">
+      <div class="container hero-layout">
+        <div class="hero-copy">
+          <p class="overline hero-kicker"><span class="yellow-square"></span> MYFIT MAURITIUS / TRAIN WITH PURPOSE</p>
+          <h1>PUSH<br>YOUR<br><em>LIMITS</em></h1>
+          <p class="hero-lead">Your goals deserve more. Discover expert coaching, powerful training spaces and a community that keeps you moving forward.</p>
+          <div class="hero-actions"><a class="btn btn-pink" href="/register/">BECOME A MEMBER <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="/classes/">EXPLORE CLASSES <svg class="icon"><use href="#i-arrow"/></svg></a></div>
+        </div>
+        <div class="hero-side-label" aria-hidden="true">EST. MAURITIUS &nbsp; — &nbsp; MOVE WITH INTENT</div>
+      </div>
+      <div class="container hero-stats" aria-label="MyFit assessment sample statistics">
+        <div><span class="stat-num">5,000<span>+</span></span><small>HAPPY MEMBERS</small></div>
+        <div><span class="stat-num">03</span><small>ACTIVE CLUBS</small></div>
+        <div><span class="stat-num">50<span>+</span></span><small>CLASSES / WEEK</small></div>
+        <div><span class="stat-num">20<span>+</span></span><small>EXPERT COACHES</small></div>
+      </div>
+    </section>
+
+    <!-- Visual preview of services; account features are not connected yet. -->
+    <section class="features-section" aria-label="MyFit services">
+      <div class="container features-grid">
+        <a class="feature-card" href="{% url 'myfit:membership_pass' %}"><span class="feature-icon"><svg class="icon"><use href="#i-qr"/></svg></span><span class="feature-text"><strong>DIGITAL MYFIT PASS</strong><small>Your membership, on your phone.</small></span><svg class="icon feature-arrow"><use href="#i-arrow"/></svg></a>
+        <a class="feature-card" href="/client/bookings/"><span class="feature-icon"><svg class="icon"><use href="#i-calendar"/></svg></span><span class="feature-text"><strong>BOOK YOUR CLASSES</strong><small>Discover your next session.</small></span><svg class="icon feature-arrow"><use href="#i-arrow"/></svg></a>
+        <a class="feature-card" href="/coaches/"><span class="feature-icon"><svg class="icon"><use href="#i-users"/></svg></span><span class="feature-text"><strong>EXPERT COACHES</strong><small>Guidance for every goal.</small></span><svg class="icon feature-arrow"><use href="#i-arrow"/></svg></a>
+        <a class="feature-card" href="/client/progress/"><span class="feature-icon"><svg class="icon"><use href="#i-activity"/></svg></span><span class="feature-text"><strong>TRACK YOUR PROGRESS</strong><small>Keep every milestone close.</small></span><svg class="icon feature-arrow"><use href="#i-arrow"/></svg></a>
+      </div>
+    </section>
+
+    <section class="about-section" id="about">
+      <div class="container about-grid">
+        <div class="about-copy"><p class="overline light-overline">01 / WHAT WE STAND FOR</p><h2>MORE THAN<br>JUST A <span>GYM</span></h2><p>MyFit brings training, coaching and your digital fitness life into one connected experience. Whether you are here to build strength, move better or start fresh, there is a place for you.</p><a class="text-link on-purple" href="/coaches/">MEET THE PEOPLE BEHIND MYFIT <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
+        <div class="about-visual"><img src="{% static 'images/homepage_images/coaching-myfit.webp' %}" alt="Strength training in a modern gym" loading="lazy"><span class="about-visual-tag">STRONGER<br><b>TOGETHER</b></span></div>
+      </div>
+    </section>
+
+    <section class="classes-section section-pad" id="classes">
+      <div class="container">
+        <div class="section-heading dark-heading"><div><p class="overline cyan-text">02 / FIND YOUR ENERGY</p><h2>MOVE YOUR WAY</h2><p>Different goals. One place to show up, push yourself and enjoy the process.</p></div><a href="/classes/" class="link-arrow">VIEW ALL CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
+        <div class="classes-grid">
+          <article class="class-card"><div class="class-card-number">01</div><div class="class-illustration class-illustration-strength"><svg class="icon"><use href="#i-dumbbell"/></svg></div><span class="class-tag">STRENGTH</span><h3>STRENGTH<br>FUNDAMENTALS</h3><p>Build a foundation with technique, control and consistency.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">02</div><div class="class-illustration class-illustration-hiit"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">CONDITIONING</span><h3>HIIT<br>TRAINING</h3><p>Challenge your endurance with energising interval sessions.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">03</div><div class="class-illustration class-illustration-yoga"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">MOBILITY</span><h3>YOGA &amp;<br>RECOVERY</h3><p>Improve flexibility, mobility and the way you feel.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">04</div><div class="class-illustration class-illustration-zumba"><svg class="icon"><use href="#i-dance"/></svg></div><span class="class-tag">GROUP FITNESS</span><h3>ZUMBA<br>FITNESS</h3><p>Music, movement and good energy in every session.</p><a href="/classes/">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+        </div>
+        
+      </div>
+    </section>
+
+    <section class="membership-section section-pad" id="membership">
+      <div class="container">
+        <div class="section-heading membership-heading">
+          <div><p class="overline dark-overline">03 / INVEST IN YOURSELF</p><h2>YOUR PLAN<br>YOUR PROGRESS</h2><p>Compare MyFit memberships and choose the benefits that suit you.</p></div>
+          <span class="membership-badge">THREE MEMBERSHIP PLANS <svg class="icon"><use href="#i-activity"/></svg></span>
+        </div>
+        <div class="plan-grid">
+          <article class="plan-card">
+            <div class="plan-upper"><span>THE ESSENTIALS</span><span>01</span></div>
+            <h3>MY ACCESS</h3>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,249</strong><small class="price-period">/ MONTH</small></div>
+            <p class="plan-description">My Access membership benefits</p>
+            <ul>
+              <li>Unlimited gym access</li>
+              <li>One free trial session for friends/family</li>
+            </ul>
+            <a href="/register/?plan=access" class="plan-button">CHOOSE MY ACCESS <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+          </article>
+          <article class="plan-card plan-featured">
+            <div class="plan-featured-ribbon">POPULAR CHOICE</div>
+            <div class="plan-upper"><span>MORE MOMENTUM</span><span>02</span></div>
+            <h3>MY ACCESS XL</h3>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,399</strong><small class="price-period">/ MONTH</small></div>
+            <p class="plan-description">Includes My Access benefits</p>
+            <ul>
+              <li>My Access benefits</li>
+              <li>Access to the MYGYM360 network (Réunion, Mauritius, France)</li>
+              <li>Membership suspension</li>
+              <li>Unlimited group classes</li>
+            </ul>
+            <a href="/register/?plan=xl" class="plan-button">CHOOSE MY ACCESS XL <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+          </article>
+          <article class="plan-card">
+            <div class="plan-upper"><span>GO ALL IN</span><span>03</span></div>
+            <h3>MY ACCESS PREMIUM</h3>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,549</strong><small class="price-period">/ MONTH</small></div>
+            <p class="plan-description">Includes My Access XL benefits</p>
+            <ul>
+              <li>My Access XL benefits</li>
+              <li>Unlimited My Drink</li>
+              <li>Unlimited My Sismo</li>
+            </ul>
+            <a href="/register/?plan=premium" class="plan-button">CHOOSE PREMIUM <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+          </article>
+        </div>
+    
+      </div>
+    </section>
+
+    <section class="coaches-section section-pad" id="coaches">
+      <div class="container coach-layout"><div class="coach-visual"><img src="{% static 'images/homepage_images/training-myfit.webp' %}" alt="Athlete training with weights in the gym" loading="lazy"><div class="coach-image-stamp">GUIDED BY<br><strong>EXPERTS</strong></div></div><div class="coach-content"><p class="overline yellow-text">04 / TRAIN WITH THE BEST</p><h2>PEOPLE WHO<br><span>MOVE YOU</span><br>FORWARD</h2><p>Our coaches help you train smarter and stay accountable. Explore strength, HIIT, mobility and conditioning guidance from the MyFit team.</p><div class="coach-pills"><span>STRENGTH &amp; CONDITIONING</span><span>FUNCTIONAL TRAINING</span><span>YOGA &amp; MOBILITY</span><span>WEIGHT MANAGEMENT</span></div><a class="btn btn-yellow" href="/contact/">ASK ABOUT COACHING <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
+    </section>
+
+    <section class="branches-section section-pad" id="branches">
+      <div class="container">
+        <div class="section-heading branch-heading"><div><p class="overline dark-overline">05 / THREE CLUBS. ONE COMMUNITY.</p><h2>FIND YOUR<br>NEXT SESSION</h2><p>Explore MyFit across Mauritius. Your next workout could be closer than you think.</p></div><span class="branch-decoration">MYFIT<br><b>360</b></span></div>
+        <div class="branches-grid">
+          <a class="branch-card" href="/branches/" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-caudan.webp' %}" alt="Illustrative architecture for Caudan Waterfront branch" loading="lazy"><span class="branch-index">01</span></div><div class="branch-body"><div><p>PORT LOUIS</p><h3>CAUDAN<br>WATERFRONT</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom">CURRENT LOCATION <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+          <a class="branch-card" href="/branches/" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-trianon.webp' %}" alt="Illustrative architecture for Trianon fitness club" loading="lazy"><span class="branch-index">02</span></div><div class="branch-body"><div><p>TRIANON</p><h3>EMERALD<br>PARK</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom">CURRENT LOCATION <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+          <a class="branch-card" href="/branches/" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-riche-terre.webp' %}" alt="Illustrative architecture for Riche Terre fitness club" loading="lazy"><span class="branch-index">03</span></div><div class="branch-body"><div><p>PORT LOUIS</p><h3>RICHE<br>TERRE</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom">CURRENT LOCATION <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+          <a class="branch-card" href="/branches/" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-plaisance.webp' %}" alt="Illustrative architecture for upcoming Plaisance Mall fitness club" loading="lazy"><span class="branch-index soon">SOON</span></div><div class="branch-body"><div><p>ROSE BELLE</p><h3>PLAISANCE<br>MALL</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom coming-soon">COMING SOON <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="support-section" id="support">
+      <div class="container support-grid"><div><p class="overline yellow-text">06 / WE'RE HERE TO HELP</p><h2>QUESTIONS?<br><span>LET'S TALK</span></h2><p>Membership enquiries, classes, coaching and account support — MyFit keeps it simple to find your next step.</p></div><div class="support-panel"><div class="support-panel-icon"><svg class="icon"><use href="#i-message"/></svg></div><strong>SUPPORT THAT MOVES WITH YOU.</strong><p>Our MyFit project includes support tickets, a contact page and member assistance. These will be linked here as your Django pages are built.</p><a class="btn btn-yellow" href="/contact/" title="Support/contact page will be added later">EMAIL MYFIT SUPPORT <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
+    </section>
+  </main>
+  <footer class="site-footer"><div class="container footer-main"><a href="/" class="logo footer-logo" aria-label="Back to MyFit home"><img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42"><span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small></a><p>TRAIN HARD. TRACK SMARTER.<br>BUILD SOMETHING BETTER</p><nav aria-label="Footer links"><a href="/">HOME</a><a href="/coaches/">COACHES</a><a href="/classes/">CLASSES</a><a href="/plans/">MEMBERSHIP</a><a href="/branches/">BRANCHES</a><a href="/contact/">SUPPORT</a></nav></div><div class="container footer-bottom"><span>© {% now "Y" %} MYFIT MAURITIUS </span><a href="#home">BACK TO TOP ↑</a><span>MADE TO MOVE. <b>BUILT TO LAST.</b></span></div></footer>
+</body>
+</html>

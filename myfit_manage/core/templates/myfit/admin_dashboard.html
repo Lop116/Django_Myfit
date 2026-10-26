@@ -1,0 +1,80 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="dashboard" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Administration</p>
+        <h1 class="page-title">Admin dashboard<em>.</em></h1>
+        <p class="subtitle">Overview for {{ today|date:"l j F Y" }}.</p>
+      </div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
+
+    <h2 class="section-title">People &amp; locations</h2>
+    <section class="stats" aria-label="People and locations">
+      <article class="stat"><div class="stat-label">Total clients</div><div class="stat-value" id="stat-clients">{{ stats.clients.total }}</div><div class="stat-foot">{{ stats.clients.active }} active accounts</div></article>
+      <article class="stat"><div class="stat-label">Total coaches</div><div class="stat-value" id="stat-coaches">{{ stats.coaches.total }}</div><div class="stat-foot">{{ stats.coaches.active }} active accounts</div></article>
+      <article class="stat"><div class="stat-label">Branches</div><div class="stat-value" id="stat-branches">{{ stats.branches.total }}</div><div class="stat-foot">{{ stats.branches.active }} active</div></article>
+      <article class="stat"><div class="stat-label">Today's attendance</div>
+        {% if stats.attendance.today is None %}<div class="stat-value na" id="stat-attendance">—</div><div class="stat-foot na">Not connected yet</div>
+        {% else %}<div class="stat-value" id="stat-attendance">{{ stats.attendance.today }}</div><div class="stat-foot">check-ins today</div>{% endif %}
+      </article>
+    </section>
+
+    <h2 class="section-title">Memberships</h2>
+    <section class="stats" aria-label="Memberships">
+      <article class="stat"><div class="stat-label">Active memberships</div>
+        {% if stats.memberships.active is None %}<div class="stat-value na" id="stat-mem-active">—</div><div class="stat-foot na">Not connected yet</div>
+        {% else %}<div class="stat-value" id="stat-mem-active">{{ stats.memberships.active }}</div><div class="stat-foot">currently valid</div>{% endif %}
+      </article>
+      <article class="stat"><div class="stat-label">Expired memberships</div>
+        {% if stats.memberships.expired is None %}<div class="stat-value na" id="stat-mem-expired">—</div><div class="stat-foot na">Not connected yet</div>
+        {% else %}<div class="stat-value" id="stat-mem-expired">{{ stats.memberships.expired }}</div><div class="stat-foot">need renewal</div>{% endif %}
+      </article>
+      <article class="stat accent"><div class="stat-label">Pending membership requests</div>
+        {% if stats.memberships.pending_requests is None %}<div class="stat-value na" id="stat-mem-pending">—</div><div class="stat-foot na">Not connected yet</div>
+        {% else %}<div class="stat-value" id="stat-mem-pending">{{ stats.memberships.pending_requests }}</div><div class="stat-foot"><a href="{% url 'myfit:membership_requests' %}">Review requests →</a></div>{% endif %}
+      </article>
+    </section>
+
+    <h2 class="section-title">Classes &amp; bookings</h2>
+    <section class="stats" aria-label="Classes and bookings">
+      <article class="stat"><div class="stat-label">Scheduled classes</div>
+        {% if stats.classes.scheduled is None %}<div class="stat-value na" id="stat-classes-scheduled">—</div><div class="stat-foot na">Not connected yet</div>
+        {% else %}<div class="stat-value" id="stat-classes-scheduled">{{ stats.classes.scheduled }}</div><div class="stat-foot">upcoming &amp; running</div>{% endif %}
+      </article>
+      <article class="stat"><div class="stat-label">Cancelled classes</div>
+        {% if stats.classes.cancelled is None %}<div class="stat-value na" id="stat-classes-cancelled">—</div><div class="stat-foot na">Not connected yet</div>
+        {% else %}<div class="stat-value" id="stat-classes-cancelled">{{ stats.classes.cancelled }}</div><div class="stat-foot">kept in history</div>{% endif %}
+      </article>
+      <article class="stat"><div class="stat-label">Total bookings</div>
+        {% if stats.bookings.total is None %}<div class="stat-value na" id="stat-bookings">—</div><div class="stat-foot na">Not connected yet</div>
+        {% else %}<div class="stat-value" id="stat-bookings">{{ stats.bookings.total }}</div><div class="stat-foot">all time</div>{% endif %}
+      </article>
+    </section>
+
+    <h2 class="section-title">Quick links</h2>
+    <section class="panel">
+      <div class="quick-links">
+        <a class="btn" href="{% url 'myfit:membership_requests' %}">Membership requests</a>
+        <a class="btn" href="{% url 'myfit:manage_plans' %}">Membership plans</a>
+        <a class="btn" href="{% url 'myfit:manage_bookings' %}">Classes &amp; bookings</a>
+        <a class="btn" href="{% url 'myfit:manage_coaches' %}">Coaches</a>
+        <a class="btn" href="{% url 'myfit:manage_branches' %}">Branches</a>
+        {% if request.user.is_staff %}<a class="btn" href="{% url 'admin:index' %}">Django Admin</a>{% endif %}
+      </div>
+    </section>
+    <p class="footer-note">Cards showing “Not connected yet” light up automatically once the matching models are merged into core.</p>
+  </main>
+</div>
+</body>
+</html>

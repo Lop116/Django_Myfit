@@ -253,3 +253,32 @@ class AttendanceCheckInForm(forms.Form):
         return membership
 
 # END TASK 2 - ATTENDANCE MANAGEMENT
+
+#Loick>---------------------------------------------
+from .models import ClientProfile, CoachProfile
+
+User = get_user_model()
+class ClientRegistrationForm(UserCreationForm):#means that our class inherits from Django's built-in UserCreationForm.
+    email = forms.EmailField(required=True)
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username", "first_name", "last_name", "email")
+    def clean_email(self): # check for a better explanation for why clean<--------------------
+        email = self.cleaned_data["email"].strip().lower() # check for a better explanation for why self.clean <--------------------
+        if User.objects.filter(email__iexact=email).exists():   # check for a better explanation <--------------------
+            raise forms.ValidationError("That email address is already in use.")
+        return email
+
+class ClientProfileForm(forms.ModelForm):
+    class Meta:
+        model = ClientProfile
+        fields = ("date_of_birth", "gender", "phone")
+        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"})}
+
+class CoachProfileForm(forms.ModelForm):
+    class Meta:
+        model = CoachProfile
+        fields = ("date_of_birth", "gender", "phone", "bio")
+        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"})}
+
+#>.-----------------------------------------------

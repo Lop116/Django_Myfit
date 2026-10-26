@@ -1,0 +1,262 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121416">
+  <meta name="description" content="Log in to your MyFit account.">
+  <title>Log in | MyFit Mauritius</title>
+  <style>
+    :root {
+      --yellow: #ffc324;
+      --yellow-soft: #ffda66;
+      --pink: #d52375;
+      --ink: #121416;
+      --ink-soft: #17191c;
+      --panel: #202328;
+      --muted: #aeb4bb;
+      --line: rgba(255, 255, 255, .13);
+      --font: Inter, "Arial Narrow", Arial, Helvetica, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--ink); color: #f8f8f7; font-family: var(--font); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+    a, button, input { outline-offset: 4px; }
+    :focus-visible { outline: 3px solid var(--yellow); }
+    .container { width: min(1350px, calc(100% - 88px)); margin-inline: auto; }
+    .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    .skip-link { position: fixed; z-index: 300; top: -60px; left: 16px; padding: 10px 15px; background: var(--yellow); color: var(--ink); font-weight: 900; }
+    .skip-link:focus { top: 10px; }
+    .topbar { min-height: 34px; background: var(--yellow); color: #111; }
+    .topbar-inner { min-height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: .73rem; font-weight: 900; letter-spacing: .1em; }
+    .topbar p { display: flex; align-items: center; gap: 11px; margin: 0; }
+    .topbar-dot { width: 7px; height: 7px; border-radius: 50%; background: #17191c; }
+    .topbar a { display: inline-flex; align-items: center; gap: 9px; }
+    .site-header { position: sticky; top: 0; z-index: 100; height: 85px; background: rgba(14, 16, 18, .96); border-bottom: 1px solid rgba(255, 255, 255, .08); backdrop-filter: blur(18px); }
+    .site-header::after { content: ""; position: absolute; inset: auto 0 -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--yellow), var(--pink), transparent); opacity: .45; }
+    .nav-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+    .logo { position: relative; display: flex; align-items: center; gap: 10px; min-width: 163px; font-size: 1.45rem; font-weight: 1000; letter-spacing: -.09em; white-space: nowrap; }
+    .logo-mark { width: 42px; height: 42px; object-fit: cover; border-radius: 5px; background: var(--yellow); }
+    .logo-word span { color: var(--yellow); }
+    .logo small { position: absolute; left: 54px; bottom: -9px; color: #aab1b8; font-size: .44rem; letter-spacing: .18em; font-weight: 800; }
+    .desktop-nav { display: flex; align-items: center; gap: 25px; font-size: .86rem; font-weight: 800; }
+    .desktop-nav a { position: relative; transition: color .2s; }
+    .desktop-nav a:hover, .desktop-nav a[aria-current="page"] { color: var(--yellow); }
+    .desktop-nav a[aria-current="page"]::after { content: ""; position: absolute; right: 0; bottom: -13px; left: 0; height: 2px; background: var(--yellow); }
+    .nav-cta { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 0 18px; background: var(--pink); border: 1px solid var(--pink); font-size: .72rem; font-weight: 950; letter-spacing: .06em; white-space: nowrap; }
+    .logout-form { margin: 0; }
+    .logout-button { min-height: 42px; padding: 0 18px; border: 1px solid #8b9092; background: transparent; color: #fff; font: inherit; font-size: .72rem; font-weight: 950; letter-spacing: .06em; cursor: pointer; }
+    .logout-button:hover { border-color: var(--yellow); color: var(--yellow); }
+    .nav-cta:hover { background: #e73788; }
+    .mobile-menu { display: none; }
+    main { min-height: calc(100vh - 180px); }
+    .login-section { padding: 76px 0 92px; background: radial-gradient(ellipse at 12% 15%, rgba(72, 57, 165, .18), transparent 38%), var(--ink); }
+    .login-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, .8fr); min-height: 560px; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 24px 70px rgba(0, 0, 0, .28); }
+    .login-visual { position: relative; display: flex; align-items: flex-end; min-height: 560px; overflow: hidden; background: #17191c url("{% static 'images/homepage_images/hero-myfit.webp' %}") center / cover no-repeat; }
+    .login-visual::before { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(12, 14, 16, .96), rgba(12, 14, 16, .06) 78%), linear-gradient(90deg, rgba(12, 14, 16, .16), transparent); }
+    .visual-copy { position: relative; z-index: 1; max-width: 560px; padding: 46px; }
+    .eyebrow { margin: 0 0 16px; color: var(--yellow); font-size: .72rem; font-weight: 950; letter-spacing: .18em; text-transform: uppercase; }
+    .visual-copy h1 { margin: 0; font-family: Impact, "Arial Narrow", Arial, sans-serif; font-size: clamp(3.4rem, 6vw, 6rem); font-weight: 900; line-height: .98; letter-spacing: .015em; text-transform: uppercase; }
+    .visual-copy h1 span { color: var(--yellow); }
+    .visual-copy p:last-child { max-width: 420px; margin: 20px 0 0; color: #d1d5d8; font-size: .95rem; line-height: 1.75; }
+    .login-panel { display: flex; align-items: center; justify-content: center; padding: 48px clamp(28px, 5vw, 66px); }
+    .login-content { width: 100%; max-width: 430px; }
+    .section-kicker { margin: 0 0 12px; color: var(--yellow); font-size: .7rem; font-weight: 950; letter-spacing: .17em; text-transform: uppercase; }
+    .login-content h2 { margin: 0; font-family: Impact, "Arial Narrow", Arial, sans-serif; font-size: clamp(2.5rem, 4vw, 3.55rem); font-weight: 900; line-height: 1; text-transform: uppercase; }
+    .intro { margin: 13px 0 28px; color: var(--muted); font-size: .9rem; line-height: 1.65; }
+    .form-errors { margin: 0 0 20px; padding: 13px 15px; border-left: 4px solid var(--pink); background: rgba(213, 35, 117, .12); color: #ffd9e8; font-size: .84rem; line-height: 1.55; }
+    .form-errors ul, .field-errors { margin: 7px 0 0; padding-left: 20px; }
+    .field { margin: 0 0 19px; }
+    .field label { display: block; margin-bottom: 8px; color: #e9eaec; font-size: .79rem; font-weight: 850; letter-spacing: .035em; }
+    .field input { width: 100%; min-height: 51px; padding: 12px 14px; border: 1px solid #454a50; border-radius: 0; background: #15171a; color: #fff; }
+    .field input::placeholder { color: #747d85; }
+    .field input:focus { border-color: var(--yellow); outline: 2px solid rgba(255, 195, 36, .23); }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 78px; }
+    .password-toggle { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); padding: 7px 4px; border: 0; background: transparent; color: var(--yellow); font-size: .68rem; font-weight: 950; letter-spacing: .05em; cursor: pointer; }
+    .password-toggle:hover { color: var(--yellow-soft); }
+    .field-errors { color: #ffb7d5; font-size: .78rem; }
+    .form-options { display: flex; justify-content: flex-end; margin: -3px 0 22px; font-size: .77rem; }
+    .form-options span { color: #9299a1; }
+    .submit-button { width: 100%; min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid var(--pink); background: var(--pink); color: #fff; font-size: .75rem; font-weight: 950; letter-spacing: .09em; cursor: pointer; transition: transform .2s, background .2s; }
+    .submit-button:hover { transform: translateY(-2px); background: #e73788; }
+    .form-footnote { margin: 20px 0 0; padding-top: 18px; border-top: 1px solid var(--line); color: #aeb4bb; font-size: .78rem; line-height: 1.65; }
+    .form-footnote a { color: var(--yellow); font-weight: 850; }
+    .form-footnote a:hover { color: var(--yellow-soft); text-decoration: underline; }
+    .site-footer { background: #0c0e10; border-top: 1px solid var(--line); }
+    .footer-main { min-height: 112px; display: flex; align-items: center; justify-content: space-between; gap: 25px; }
+    .footer-note { margin: 0; color: #aeb4bb; font-size: .76rem; font-weight: 850; letter-spacing: .08em; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 17px; font-size: .69rem; font-weight: 850; letter-spacing: .06em; }
+    .footer-links a:hover { color: var(--yellow); }
+    .footer-bottom { padding: 14px 0 20px; border-top: 1px solid var(--line); color: #858c94; font-size: .64rem; font-weight: 850; letter-spacing: .1em; }
+    @media (max-width: 1050px) {
+      .container { width: min(100% - 48px, 760px); }
+      .desktop-nav { display: none; }
+      .mobile-menu { position: relative; display: block; }
+      .mobile-menu summary { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #555b61; color: #fff; cursor: pointer; list-style: none; }
+      .mobile-menu summary::-webkit-details-marker { display: none; }
+      .mobile-menu nav { position: absolute; top: 53px; right: 0; z-index: 110; min-width: 220px; display: grid; gap: 0; padding: 8px; border: 1px solid var(--line); background: #17191c; box-shadow: 0 16px 35px rgba(0, 0, 0, .4); }
+      .mobile-menu nav a { padding: 12px; font-size: .84rem; font-weight: 800; }
+      .mobile-menu nav a:hover, .mobile-menu nav a[aria-current="page"] { color: var(--yellow); background: rgba(255, 195, 36, .06); }
+      .login-layout { grid-template-columns: minmax(0, 1fr) minmax(340px, .9fr); }
+      .visual-copy { padding: 34px; }
+    }
+    @media (max-width: 720px) {
+      .container { width: calc(100% - 36px); }
+      .topbar-inner { justify-content: center; font-size: .62rem; }
+      .topbar-inner > a { display: none; }
+      .site-header { height: 74px; }
+      .logo { min-width: 0; }
+      .nav-cta { min-height: 39px; padding: 0 12px; font-size: .64rem; }
+      .nav-inner { gap: 12px; }
+      .login-section { padding: 34px 0 54px; }
+      .login-layout { grid-template-columns: 1fr; }
+      .login-visual { min-height: 270px; background-position: center 38%; }
+      .visual-copy { padding: 27px; }
+      .visual-copy h1 { font-size: clamp(3rem, 12vw, 4.4rem); }
+      .visual-copy p:last-child { margin-top: 12px; font-size: .83rem; }
+      .login-panel { padding: 35px 25px 39px; }
+      .footer-main { align-items: flex-start; flex-direction: column; padding: 26px 0; }
+      .footer-links { gap: 13px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <p><span class="topbar-dot" aria-hidden="true"></span> MADE FOR MAURITIUS <span aria-hidden="true">/</span> TRAIN · TRACK · TRANSFORM</p>
+      <a href="{% url 'myfit:branches' %}">THREE ACTIVE CLUBS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
+    </div>
+  </div>
+  <header class="site-header">
+    <div class="container nav-inner">
+      <a href="{% url 'myfit:home' %}" class="logo" aria-label="MyFit home">
+        <img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42">
+        <span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small>
+      </a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="{% url 'myfit:home' %}">Home</a>
+        <a href="{% url 'myfit:coaches' %}">Coaches</a>
+        <a href="{% url 'myfit:branches' %}">Branches</a>
+        <a href="{% url 'myfit:plans' %}">Membership</a>
+        <a href="{% url 'myfit:classes' %}">Classes</a>
+        <a href="{% url 'myfit:contact' %}">Support</a>
+        {% include 'myfit/partials/membership_navigation.html' %}
+        {% if user.is_authenticated %}
+          {% include 'myfit/partials/notification_dropdown.html' %}
+          <a href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+        {% else %}
+          <a href="{% url 'myfit:login' %}" aria-current="page">Log in</a>
+        {% endif %}
+      </nav>
+      {% if user.is_authenticated %}
+        <a class="nav-cta" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+        <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+      {% else %}
+        <a class="nav-cta" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
+      {% endif %}
+      <details class="mobile-menu">
+        <summary aria-label="Open navigation menu"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
+        <nav aria-label="Mobile navigation">
+          <a href="{% url 'myfit:home' %}">Home</a><a href="{% url 'myfit:coaches' %}">Coaches</a>
+          <a href="{% url 'myfit:branches' %}">Branches</a><a href="{% url 'myfit:plans' %}">Membership</a>
+          <a href="{% url 'myfit:classes' %}">Classes</a><a href="{% url 'myfit:contact' %}">Support</a>
+          {% include 'myfit/partials/membership_navigation.html' %}
+          {% if user.is_authenticated %}
+            {% include 'myfit/partials/notification_dropdown.html' %}
+            <a href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+            <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+          {% else %}
+            <a href="{% url 'myfit:login' %}" aria-current="page">Log in</a>
+          {% endif %}
+        </nav>
+      </details>
+    </div>
+  </header>
+  <main id="main-content">
+    <section class="login-section" aria-labelledby="login-title">
+      <div class="container login-layout">
+        <div class="login-visual">
+          <div class="visual-copy">
+            <p class="eyebrow">MYFIT MAURITIUS / MEMBER ACCESS</p>
+            <h1>WELCOME<br><span>BACK.</span></h1>
+            <p>Your next session, your progress and your MyFit membership start here.</p>
+          </div>
+        </div>
+        <div class="login-panel">
+          <div class="login-content">
+            <p class="section-kicker">YOUR TRAINING CONTINUES</p>
+            <h2 id="login-title">LOG IN</h2>
+            <p class="intro">Enter your MyFit account details to continue.</p>
+            {% if form.errors %}
+              <div class="form-errors" role="alert" aria-live="polite">
+                <strong>We couldn't log you in.</strong>
+                <p>Check your username and password, then try again.</p>
+                {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+              </div>
+            {% endif %}
+            <form method="post" action="{% url 'myfit:login' %}" autocomplete="on">
+              {% csrf_token %}
+              {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+              <div class="field">
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}<ul class="field-errors" role="alert">{% for error in form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+              </div>
+              <div class="field">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                <div class="password-wrap">
+                  {{ form.password }}
+                  <button class="password-toggle" type="button" id="toggle-password" aria-controls="{{ form.password.id_for_label }}" aria-pressed="false">SHOW</button>
+                </div>
+                {% if form.password.errors %}<ul class="field-errors" role="alert">{% for error in form.password.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+              </div>
+              <p class="form-options"><a href="{% url 'myfit:password_reset' %}">Forgot Password?</a></p>
+              <button class="submit-button" type="submit">LOG IN TO MYFIT <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+            </form>
+            <p class="form-footnote">New to MyFit? <a href="{% url 'myfit:register' %}">Register for an account</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-main">
+      <a href="{% url 'myfit:home' %}" class="logo" aria-label="Back to MyFit home">
+        <img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42">
+        <span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small>
+      </a>
+      <p class="footer-note">TRAIN HARD. TRACK SMARTER.<br>BUILD SOMETHING BETTER</p>
+      <nav class="footer-links" aria-label="Footer links">
+        <a href="{% url 'myfit:home' %}">HOME</a><a href="{% url 'myfit:coaches' %}">COACHES</a>
+        <a href="{% url 'myfit:classes' %}">CLASSES</a><a href="{% url 'myfit:plans' %}">MEMBERSHIP</a>
+        <a href="{% url 'myfit:branches' %}">BRANCHES</a><a href="{% url 'myfit:contact' %}">SUPPORT</a>
+      </nav>
+    </div>
+    <div class="container footer-bottom">© {% now "Y" %} MYFIT MAURITIUS</div>
+  </footer>
+  <script>
+    (() => {
+      const password = document.getElementById('id_password');
+      const toggle = document.getElementById('toggle-password');
+      if (!password || !toggle) return;
+
+      toggle.addEventListener('click', () => {
+        const showing = password.type === 'password';
+        password.type = showing ? 'text' : 'password';
+        toggle.textContent = showing ? 'HIDE' : 'SHOW';
+        toggle.setAttribute('aria-pressed', String(showing));
+        toggle.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+      });
+    })();
+  </script>
+</body>
+</html>

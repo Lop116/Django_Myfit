@@ -1,0 +1,13 @@
+{# Admin sidebar. Include with: {% include "myfit/partials/admin_sidebar.html" with active="dashboard" %} #}
+<aside class="sidebar">
+  <a class="brand" href="{% url 'myfit:admin_dashboard' %}"><span class="brand-mark">M</span><span>MY<span>FIT</span></span></a>
+  <div class="nav-label">ADMINISTRATION</div>
+  <a class="nav-link {% if active == 'dashboard' %}active{% endif %}" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
+  <a class="nav-link" href="{% url 'myfit:membership_requests' %}">Membership requests</a>
+  <a class="nav-link" href="{% url 'myfit:manage_plans' %}">Membership plans</a>
+  <a class="nav-link" href="{% url 'myfit:manage_bookings' %}">Classes &amp; bookings</a>
+  <a class="nav-link" href="{% url 'myfit:manage_coaches' %}">Coaches</a>
+  <a class="nav-link" href="{% url 'myfit:manage_branches' %}">Branches</a>
+  {% if request.user.is_staff %}<a class="nav-link" href="{% url 'admin:index' %}">Django Admin</a>{% endif %}
+  <div class="sidebar-note"><strong>MYFIT ADMIN</strong>Manage clients, coaches, memberships, classes and support.</div>
+</aside>

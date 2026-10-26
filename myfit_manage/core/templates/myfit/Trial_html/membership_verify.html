@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121416">
+  <title>Membership Verification | MyFit Mauritius</title>
+  <style>
+    :root{--yellow:#ffc324;--pink:#d52375;--ink:#121416;--panel:#202328;--line:rgba(255,255,255,.13);--font:Inter,"Arial Narrow",Arial,Helvetica,sans-serif}
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;background:var(--ink);color:#f8f8f7;font-family:var(--font);-webkit-font-smoothing:antialiased}
+    .topbar{padding:10px 20px;background:var(--yellow);color:#111;text-align:center;font-size:.7rem;font-weight:900;letter-spacing:.1em}
+    main{display:grid;place-items:center;padding:30px 18px;background:radial-gradient(ellipse at 50% 20%,rgba(72,57,165,.2),transparent 55%),var(--ink)}
+    .result{width:min(100%,560px);padding:clamp(28px,6vw,54px);border:1px solid var(--line);border-top:5px solid var(--yellow);background:var(--panel);text-align:center}
+    .eyebrow{margin:0 0 14px;color:var(--yellow);font-size:.7rem;font-weight:950;letter-spacing:.18em}
+    h1{margin:0;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:clamp(2.8rem,9vw,4.7rem);line-height:1;text-transform:uppercase}
+    .result p:last-child{margin:18px 0 0;color:#aeb4bb;line-height:1.7}
+    .active{color:#78e0a3}.pending{color:var(--yellow)}.expired,.invalid{color:#ff9ac5}
+    footer{padding:17px;text-align:center;border-top:1px solid var(--line);background:#0c0e10;color:#aeb4bb;font-size:.65rem;font-weight:850;letter-spacing:.1em}
+  </style>
+</head>
+<body>
+  <header class="topbar">MYFIT MAURITIUS / MEMBERSHIP VERIFICATION</header>
+  <main>
+    <section class="result" aria-live="polite">
+      <p class="eyebrow">SECURE PASS CHECK</p>
+      {% if verification_status == "active" %}
+        <h1 class="active">ACTIVE</h1>
+        <p>Membership status: Active</p>
+      {% elif verification_status == "pending" %}
+        <h1 class="pending">PENDING</h1>
+        <p>Membership status: Pending</p>
+      {% elif verification_status == "expired" %}
+        <h1 class="expired">EXPIRED</h1>
+        <p>Membership status: Expired</p>
+      {% elif verification_status == "inactive" %}
+        <!-- Developer: Deshrao Saccaram -->
+        <h1 class="invalid">INACTIVE</h1>
+        <p>No currently active membership is available for this pass.</p>
+      {% else %}
+        <h1 class="invalid">INVALID</h1>
+        <p>This membership verification link is invalid or has expired. Scan the member’s current QR code to verify again.</p>
+      {% endif %}
+    </section>
+  </main>
+  <footer>© {% now "Y" %} MYFIT MAURITIUS</footer>
+</body>
+</html>

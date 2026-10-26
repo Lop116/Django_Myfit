@@ -291,3 +291,97 @@ class AttendanceVisit(models.Model):
 
 # END TASK 2 - MEMBERSHIPS AND ATTENDANCE
 # ==========================================================
+
+#Loick--#################################################-----22/10/26 6.52>
+class Branch(models.Model): #allows Django to map this class to a database table.
+    name = models.CharField(max_length=120, unique=True) #short strings, maximum of 120 characters, unique name
+    address = models.TextField() #Stores text without, field as required by default, field is non-null by default.
+    phone = models.CharField(max_length=20, blank=True) #Stores the number as text because someone could put a + at the start
+    email = models.EmailField(blank=True) #specialized CharField that validates email formatting
+    opening_hours = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)#Stores when the branch record was created.
+    updated_at = models.DateTimeField(auto_now=True)#Stores when the branch record was updated.
+
+    class Meta:
+        verbose_name_plural = "Branches"
+        ordering = ["name"] #This tells Django to sort query results by name in ascending alphabetical order by default.
+
+        def __str__(self):
+            return self.name #This defines the human-readable text representation of a Branch object.
+
+from .validators import validate_not_future #import the contrait
+
+class CoachSpecialty(models.Model):
+    name = models.CharField(max_length=60, unique=True)
+    is_active = models.BooleanField(default=True)
+    class Meta:
+        verbose_name_plural = "Coach specialties" #what name to display when referring to multiple records of the model
+        ordering = ["name"]
+
+    def __str__(self):
+            return self.name
+
+class ClientProfile(models.Model):
+    user = models.OneToOneField( #Creates a one-to-one relationship between ClientProfile and User.
+        settings.AUTH_USER_MODEL, #It tells Django which User model your application uses for authentication (login, passwords, usernames, etc.).
+        on_delete=models.CASCADE, #Defines what happens when the referenced User is deleted.
+        related_name="client_profile",) #Django to define a name for accessing a related model in the reverse direction.
+
+    date_of_birth = models.DateField(null=True, blank=True,
+                                     validators=[validate_not_future]) #chech if date is valide
+    gender = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Client: {self.user.username}"
+
+class CoachProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,
+                                on_delete=models.CASCADE,
+                                related_name="coach_profile",)
+
+    branch = models.ForeignKey(Branch,on_delete=models.PROTECT, #prevent cascading delete from deleting all coach related to it
+                               null=True,blank=True, #The database can store NULL for branch_id, A Django form can leave the branch field empty. We create a new coach account, but haven't assigned a gym branch yet.
+                               related_name="coaches",)
+
+    specialties = models.ManyToManyField(CoachSpecialty, #Creates a many-to-many relationship. It automatically creates a third table called a junction table.
+                                blank=True, #a coach can be created without selecting any specialties yet.
+                                related_name="coaches",)
+
+    date_of_birth = models.DateField(null=True, blank=True,
+                                    validators=[validate_not_future])
+
+    gender = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    bio = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return f"Coach: {self.user.username}"
+#<----
+#jush===============
+class ClassSession(models.Model):
+    STATUS_CHOICES = [('Scheduled', 'Scheduled'), ('Cancelled', 'Cancelled'), ('Completed', 'Completed')]
+    title = models.CharField(max_length=100)
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE, related_name='classes')
+    coach = models.ForeignKey('CoachProfile', on_delete=models.CASCADE, related_name='classes')
+    date = models.DateField()
+    time = models.TimeField()
+    capacity = models.PositiveIntegerField(default=10)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def spaces_left(self):
+        return self.capacity - self.bookings.filter(status='Confirmed').count()
+
+class ClassBooking(models.Model):
+    STATUS_CHOICES = [('Confirmed', 'Confirmed'), ('Cancelled', 'Cancelled')]
+    session = models.ForeignKey(ClassSession, on_delete=models.CASCADE, related_name='bookings')
+    client = models.ForeignKey('ClientProfile', on_delete=models.CASCADE, related_name='bookings')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
+    booked_at = models.DateTimeField(auto_now_add=True)
+    #<----

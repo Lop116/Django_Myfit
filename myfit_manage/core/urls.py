@@ -8,11 +8,12 @@ from django.contrib.auth.views import (
     PasswordResetView,
 )
 from django.urls import reverse_lazy
-from . import views
+from . import admin_views, views
 app_name = 'myfit' # namespace for named URLs
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('login/', LoginView.as_view(template_name='myfit/login.html', next_page='myfit:home'), name='login'),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('myfit:home')), name='logout'),
     path(
@@ -137,6 +138,13 @@ path(
     path("coach/clients/", views.coach_clients, name="coach_clients"),
     path("coach/branches/", views.manage_branches, name="manage_branches"),
     path("coach/coaches/", views.manage_coaches, name="manage_coaches"),
+
+
+    #jush
+    path('class-list/', views.class_list, name='class_list'),
+    path('classes/<int:session_id>/book/', views.book_class_view, name='book_class'),
+    path('manage-classes/', views.manage_classes, name='manage_classes'),
+    path('bookings/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
 
 
 ]

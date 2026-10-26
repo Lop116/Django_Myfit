@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Client Membership</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .btn-primary { background-color: #007bff; }
+        .btn-success { background-color: #28a745; }
+        .btn-danger { background-color: #dc3545; }
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.85em; color: white; }
+        .badge-active { background-color: #28a745; }
+    </style>
+</head>
+
+<body>
+    <!-- ==================================================
+         MYFIT - TASK 2: CLIENT MEMBERSHIP DASHBOARD
+         Developer: Deshrao Saccaram
+         ================================================== -->
+
+    <div class="container">
+
+        <h1>My Membership</h1>
+
+        <!-- Developer: Deshrao Saccaram -->
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if current_membership %}
+
+            <div>
+                <h3>
+                    Current Plan:
+                    {{ current_membership.plan.name }}
+                </h3>
+
+                <p>
+                    <strong>Validity:</strong>
+                    {{ current_membership.start_date|date:"d M Y" }}
+                    -
+                    {{ current_membership.end_date|date:"d M Y" }}
+
+                    <span class="badge badge-active">
+                        Active
+                    </span>
+                </p>
+
+                <p>
+                    <strong>Membership Price:</strong>
+                    Rs {{ current_membership.agreed_price }}
+                </p>
+
+                <p>
+                    <strong>Days Remaining:</strong>
+                    {{ days_remaining }}
+                </p>
+
+                <p>
+                    <strong>Benefits:</strong>
+                    {{ current_membership.plan.benefits|default:"No benefits listed" }}
+                </p>
+            </div>
+
+            <!-- Developer: Deshrao Saccaram -->
+            {% if change_request_form %}
+                <section>
+                    <h3>Request a Plan Change</h3>
+                    <p>
+                        If approved, your new plan starts the day after your
+                        current membership ends. Your current plan and price
+                        remain unchanged until then.
+                    </p>
+                    <form method="post" action="{% url 'myfit:submit_membership_change_request' %}">
+                        {% csrf_token %}
+                        {{ change_request_form.non_field_errors }}
+                        <p>
+                            {{ change_request_form.requested_plan.label_tag }}
+                            {{ change_request_form.requested_plan }}
+                            {{ change_request_form.requested_plan.errors }}
+                        </p>
+                        <p>
+                            {{ change_request_form.reason.label_tag }}
+                            {{ change_request_form.reason }}
+                            {{ change_request_form.reason.errors }}
+                        </p>
+                        <button class="btn btn-primary" type="submit">Submit Request</button>
+                    </form>
+                </section>
+            {% endif %}
+
+        {% else %}
+
+            <div>
+                <h3>No Active Membership</h3>
+
+                <p>
+                    You currently do not have an active
+                    membership plan.
+                </p>
+
+                <p>
+                    Please contact the gym administration
+                    for membership assistance.
+                </p>
+            </div>
+
+        {% endif %}
+
+        <hr>
+
+        <h3>Membership History</h3>
+        <!-- Developer: Deshrao Saccaram -->
+        <p><a href="{% url 'myfit:client_attendance_history' %}">View My Attendance History</a></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Plan</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for membership in memberships %}
+
+                    <tr>
+                        <td>{{ membership.plan.name }}</td>
+
+                        <td>
+                            {{ membership.start_date|date:"d M Y" }}
+                        </td>
+
+                        <td>
+                            {{ membership.end_date|date:"d M Y" }}
+                        </td>
+
+                        <td>
+                            Rs {{ membership.agreed_price }}
+                        </td>
+
+                        <td>
+                            {{ membership.current_status|title }}
+                        </td>
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="5">
+                            No membership history available.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Developer: Deshrao Saccaram -->
+        <h3>Plan Change Request History</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Current Plan</th>
+                    <th>Requested Plan</th>
+                    <th>Reason</th>
+                    <th>Requested</th>
+                    <th>Status</th>
+                    <th>Reviewed By</th>
+                    <th>Reviewed At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for change_request in change_requests %}
+                    <tr>
+                        <td>{{ change_request.membership.plan.name }}</td>
+                        <td>{{ change_request.requested_plan.name }}</td>
+                        <td>{{ change_request.reason|default:"—" }}</td>
+                        <td>{{ change_request.requested_at|date:"d M Y H:i" }}</td>
+                        <td>{{ change_request.get_status_display }}</td>
+                        <td>{{ change_request.reviewed_by|default:"—" }}</td>
+                        <td>{{ change_request.reviewed_at|date:"d M Y H:i"|default:"—" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">No plan change requests yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+</body>
+</html>

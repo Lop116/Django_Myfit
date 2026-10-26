@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Payments</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.85em; color: white; }
+        .badge-active { background-color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Manage Payments</h1>
+        <div style="margin-bottom: 15px;">
+            <input type="text" placeholder="Filter by member name or status..." style="padding: 8px; width: 300px;">
+        </div>
+        <table>
+            <tr><th>Payment ID</th><th>Member</th><th>Date</th><th>Amount</th><th>Status</th></tr>
+            <tr>
+                <td>#P992</td>
+                <td>John Doe</td>
+                <td>2026-10-15</td>
+                <td>$50.00</td>
+                <td><span class="badge badge-active">Completed</span></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
