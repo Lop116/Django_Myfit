@@ -1236,7 +1236,7 @@ class AuthenticationPresentationTests(TestCase):
     def test_authenticated_desktop_navigation_has_single_pass_and_logout(self):
         self.client.force_login(self.user)
 
-        for page_name in ('home', 'login'):
+        for page_name in ('home', 'login', 'register'):
             with self.subTest(page=page_name):
                 response = self.client.get(reverse(f'myfit:{page_name}'))
                 content = response.content.decode()
@@ -1279,7 +1279,7 @@ class AuthenticationPresentationTests(TestCase):
 
     # Developer: Deshrao Saccaram
     def test_guest_desktop_navigation_shows_login_without_member_controls(self):
-        for page_name in ('home', 'login'):
+        for page_name in ('home', 'login', 'register'):
             with self.subTest(page=page_name):
                 response = self.client.get(reverse(f'myfit:{page_name}'))
                 content = response.content.decode()
@@ -1300,6 +1300,34 @@ class AuthenticationPresentationTests(TestCase):
                     f'action="{reverse("myfit:logout")}"',
                     desktop_header,
                 )
+
+    # Developer: Deshrao Saccaram
+    def test_authenticated_registration_page_hides_registration_form(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('myfit:register'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "YOU'RE SIGNED IN")
+        self.assertContains(response, 'CONTINUE TO MYFIT')
+        self.assertNotContains(response, 'id="id_password1"')
+        self.assertNotContains(response, 'id="id_password2"')
+        self.assertNotContains(response, 'CREATE MY ACCOUNT')
+
+    # Developer: Deshrao Saccaram
+    def test_guest_registration_preserves_selected_plan_query(self):
+        response = self.client.get(
+            reverse('myfit:register'),
+            {'plan': 'access'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'CREATE ACCOUNT')
+        self.assertContains(response, 'id="id_password1"')
+        self.assertContains(
+            response,
+            'action="{}?plan=access"'.format(reverse('myfit:register')),
+        )
 
     # Developer: Deshrao Saccaram
     def test_staff_navigation_links_follow_route_permissions(self):
