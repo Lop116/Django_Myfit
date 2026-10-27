@@ -22,3 +22,13 @@ urlpatterns = [
     path('', include('core.urls')),   # send other paths to this app
 ]
 
+
+# Serve uploaded media ONLY on the local development server. ------------------- 10/27 Loick
+# Production must serve MEDIA_ROOT using its own web server / object storage.
+from django.conf import settings
+from django.conf.urls.static import static
+# The Django development server can serve uploaded images locally.
+# Production media needs separate serving/storage configuration.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#<----------------------------

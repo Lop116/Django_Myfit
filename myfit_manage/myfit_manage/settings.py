@@ -142,3 +142,8 @@ LOGOUT_REDIRECT_URL = "myfit:home" #When a user logs out, this setting determine
 
 DEFAULT_FROM_EMAIL = "noreply@myfit.local" #default sender address
 #<--
+#Loick<------ 10/27
+# User uploads (admin-managed image files), separate from version-controlled static files.
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+#<------
