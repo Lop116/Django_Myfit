@@ -3,6 +3,13 @@ from io import BytesIO
 from functools import wraps
 from urllib.parse import parse_qs, urlsplit
 
+
+from django.contrib.auth.models import Group #Loick
+from django.contrib.auth.views import LoginView #Loick
+from .permissions import role_required #Loick
+from .models import WebsiteImage #Loick
+
+
 import qrcode
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import login as auth_login
@@ -44,6 +51,11 @@ from .models import (
     MembershipPass,
     MembershipPlan,
     Notification,
+    ClientProfile,
+    Branch,
+    CoachProfile,
+    ClassSession,
+    CoachSpecialty,
     WorkoutRecord,
 )
 
@@ -109,31 +121,66 @@ def get_attendance_membership_for_user(user):
 
 
 # Create your views here.
-def home(request):
-    return render(request, 'myfit/home.html')
+#>>>Loick-------------------------------
+def website_images():
+    # Each active placement has at most one picture (unique=True in the model).
+    # Templates use the returned dictionary and otherwise show original art.
+    return {picture.placement: picture for picture in WebsiteImage.objects.filter(is_active=True)}
 
+def home(request):
+    # Live homepage cards come from the database rather than example HTML data.
+    # Changes saved in Django Admin show on the site after refreshing.
+    return render(request, 'myfit/home.html', {
+        'site_images': website_images(),
+        'home_classes': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).select_related('branch','coach__user').order_by('date','time')[:4],
+        'home_plans': MembershipPlan.objects.filter(is_active=True).order_by('price')[:3],
+        'home_branches': Branch.objects.filter(is_active=True).order_by('name')[:4],
+        'home_branch_count': Branch.objects.filter(is_active=True).count(),
+        'home_coach_count': CoachProfile.objects.filter(user__is_active=True).count(),
+        'home_client_count': ClientProfile.objects.filter(user__is_active=True).count(),
+        'home_class_count': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).count(),
+        'home_specialties': CoachSpecialty.objects.filter(
+            is_active=True, coaches__user__is_active=True
+        ).distinct()[:4],
+    })
+ 
+ 
+class RoleAwareLoginView(LoginView):
+    """Respect a safe ?next= URL; otherwise send members to their role dashboard."""
+ 
+    def get_success_url(self):
+        from .permissions import dashboard_name
+        return self.get_redirect_url() or reverse(dashboard_name(self.request.user))
+ 
+ 
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            # A public signup creates a Client account, not only a bare Django User.
+            with transaction.atomic():
+                user = form.save()
+                client_group, _ = Group.objects.get_or_create(name='Client')
+                user.groups.add(client_group)
+                ClientProfile.objects.get_or_create(user=user)
             auth_login(request, user)
+            # Preserve the existing welcome flow; subsequent logins use the role dashboard.
             return redirect('myfit:home')
     else:
         form = RegistrationForm()
     return render(request, 'myfit/register.html', {'form': form})
-
-def branches(request):
-    return render(request, 'myfit/branches.html')
-def coaches(request):
-    return render(request, 'myfit/coaches.html')
+ 
 def classes(request):
-    return render(request, 'myfit/classes.html')
-def plans(request):
-    return render(request, 'myfit/plans.html')
+    return render(request, 'myfit/classes.html', {
+        'site_images': website_images(),
+        'upcoming_sessions': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).select_related('branch','coach__user').order_by('date','time'),
+    })
+
 
 
 @login_required(login_url='myfit:login')
+#<<<<<<<<<<<<<<<---------------------------
+
 # Developer: Deshrao Saccaram
 def membership_pass(request):
     membership, eligibility_message = get_attendance_membership_for_user(
@@ -902,7 +949,7 @@ def edit_membership_plan(request, plan_id):
 
 # END TASK 2 - MEMBERSHIP PLAN MANAGEMENT
 
-
+@role_required("Coach")
 def coach_dashboard(request):
     context = {
         "active_client_count": 6,
@@ -920,6 +967,7 @@ def coach_dashboard(request):
     }
     return render(request, "myfit/coach_dashboard.html", context)
 
+@role_required("Coach")
 def coach_clients(request):
     context = {
         "total_clients": 12,
@@ -1038,3 +1086,220 @@ def cancel_booking_view(request, booking_id):
             messages.error(request, str(e.message))
     return redirect(request.META.get('HTTP_REFERER', '/'))
 #<----
+
+
+
+#<<<<<<<<<<<---------Loick
+# Public website, administration and support — all in the existing core app.
+from django.contrib.auth import get_user_model
+from .permissions import has_role
+from .models import SupportTicket
+from .forms import BranchForm, CoachAccountForm, AccountDetailsForm, ContactSubmissionForm, ClientProfileForm, CoachProfileForm
+ 
+def branches(request):
+    # Exclude inactive branches so the Admin toggle controls public visibility.
+    return render(request, 'myfit/branches.html', {
+        'branches': Branch.objects.filter(is_active=True),
+        'site_images': website_images(),
+    })
+ 
+ 
+def coaches(request):
+    # Load real coach accounts, their branches and their many-to-many specialties.
+    # select_related/prefetch_related avoid many repeated database queries.
+    return render(request, 'myfit/coaches.html', {
+        'coaches': CoachProfile.objects.filter(user__is_active=True).select_related('user','branch').prefetch_related('specialties'),
+        'site_images': website_images(),
+        'filter_branches': Branch.objects.filter(is_active=True),
+        'filter_specialties': CoachSpecialty.objects.filter(is_active=True),
+    })
+ 
+ 
+def plans(request):
+    # Plan updates made by Task 2 automatically appear on this page. No duplicate prices.
+    return render(request, 'myfit/plans.html', {
+        'membership_plans': MembershipPlan.objects.filter(is_active=True).order_by('price'),
+        'site_images': website_images(),
+    })
+ 
+ 
+def contact(request):
+    initial = {'topic': request.GET.get('topic', '')[:100]}
+    plan_name = request.GET.get('plan_name', '')[:100]
+    if plan_name: initial['subject'] = f'Membership enquiry: {plan_name}'
+    form = ContactSubmissionForm(request.POST or None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        if form.cleaned_data['kind'] == 'ticket' and not request.user.is_authenticated:
+            form.add_error('kind', 'Log in to create a trackable support ticket. You can send a general enquiry without an account.')
+        else:
+            ticket = form.save(commit=False)
+            if request.user.is_authenticated:
+                ticket.user = request.user
+            ticket.save()
+            messages.success(request, f'Your request MF-{ticket.pk} was saved successfully.')
+            return redirect('myfit:contact')
+    my_tickets = (SupportTicket.objects.filter(user=request.user, kind='ticket')
+                  if request.user.is_authenticated else SupportTicket.objects.none())
+    return render(request, 'myfit/contact.html', {
+        'contact_form': form, 'my_tickets': my_tickets,
+        'contact_branches': Branch.objects.filter(is_active=True),
+    })
+ 
+ 
+@login_required(login_url='myfit:login')
+def support_ticket_detail(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, pk=ticket_id, kind='ticket')
+    if ticket.user_id != request.user.pk and not has_role(request.user, 'Admin'):
+        raise PermissionDenied
+    return render(request, 'myfit/support_ticket_detail.html', {'ticket': ticket})
+ 
+ 
+@role_required('Admin')
+def manage_branches(request):
+    return render(request, 'myfit/manage_branches.html', {'branches': Branch.objects.all(), 'active_branch_count': Branch.objects.filter(is_active=True).count()})
+ 
+ 
+@role_required('Admin')
+def branch_edit(request, branch_id=None):
+    branch = get_object_or_404(Branch, pk=branch_id) if branch_id else None
+    form = BranchForm(request.POST or None, request.FILES or None, instance=branch)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Branch saved successfully.')
+        return redirect('myfit:manage_branches')
+    return render(request, 'myfit/management_form.html', {'form': form, 'heading': 'Edit branch' if branch else 'Add branch', 'back_url':reverse('myfit:manage_branches')})
+ 
+ 
+@role_required('Admin')
+@require_POST
+def branch_toggle(request, branch_id):
+    branch = get_object_or_404(Branch, pk=branch_id)
+    branch.is_active = not branch.is_active
+    branch.save(update_fields=['is_active', 'updated_at'])
+    messages.success(request, f'{branch.name} {"activated" if branch.is_active else "deactivated"}.')
+    return redirect('myfit:manage_branches')
+ 
+ 
+@role_required('Admin')
+def manage_coaches(request):
+    return render(request, 'myfit/manage_coaches.html', {
+        'coaches': CoachProfile.objects.select_related('user','branch').prefetch_related('specialties'),
+    })
+ 
+ 
+@role_required('Admin')
+@transaction.atomic
+def coach_edit(request, coach_id=None):
+    coach = get_object_or_404(CoachProfile.objects.select_related('user'), pk=coach_id) if coach_id else None
+    form = CoachAccountForm(request.POST or None, request.FILES or None, coach=coach)
+    if request.method == 'POST' and form.is_valid():
+        User = get_user_model()
+        if coach:
+            user = coach.user
+        else:
+            user = User()
+        for field in ('username', 'first_name', 'last_name', 'email', 'is_active'):
+            setattr(user, field, form.cleaned_data[field])
+        if form.cleaned_data['password']:
+            user.set_password(form.cleaned_data['password'])
+        user.save()
+        group, _ = Group.objects.get_or_create(name='Coach')
+        user.groups.add(group)
+        if coach is None:
+            coach = CoachProfile(user=user)
+        if form.cleaned_data['remove_image'] and coach.image:
+            coach.image = None
+        if form.cleaned_data.get('image'):
+            coach.image = form.cleaned_data['image']
+        for field in ('branch', 'bio', 'phone'):
+            setattr(coach, field, form.cleaned_data[field])
+        coach.save()
+        coach.specialties.set(form.cleaned_data['specialties'])
+        messages.success(request, 'Coach saved successfully.')
+        return redirect('myfit:manage_coaches')
+    return render(request, 'myfit/management_form.html', {'form':form, 'heading': 'Edit coach' if coach else 'Add coach', 'back_url':reverse('myfit:manage_coaches')})
+ 
+ 
+@role_required('Admin')
+@require_POST
+def coach_toggle(request, coach_id):
+    coach = get_object_or_404(CoachProfile.objects.select_related('user'), pk=coach_id)
+    coach.user.is_active = not coach.user.is_active
+    coach.user.save(update_fields=['is_active'])
+    messages.success(request, 'Coach account status updated.')
+    return redirect('myfit:manage_coaches')
+ 
+ 
+@login_required(login_url='myfit:login')
+@transaction.atomic
+def edit_profile(request):
+    # Exactly four editable personal details per role:
+    # User.first_name, User.last_name, User.email, plus profile.phone.
+    # Other structural fields remain in models for the team's existing logic.
+    if has_role(request.user, 'Coach'):
+        profile, _ = CoachProfile.objects.get_or_create(user=request.user)
+        profile_form_class = CoachProfileForm
+    elif has_role(request.user, 'Client'):
+        profile, _ = ClientProfile.objects.get_or_create(user=request.user)
+        profile_form_class = ClientProfileForm
+    else:
+        raise PermissionDenied('Only clients and coaches can use this profile editor.')
+    account_form = AccountDetailsForm(request.POST or None, instance=request.user, prefix='account')
+    profile_form = profile_form_class(request.POST or None, request.FILES or None, instance=profile, prefix='profile')
+    if request.method == 'POST' and account_form.is_valid() and profile_form.is_valid():
+        # Unique email isn't a DB constraint in the default Django User model.
+        email = account_form.cleaned_data['email'].strip()
+        if get_user_model().objects.filter(email__iexact=email).exclude(pk=request.user.pk).exists():
+            account_form.add_error('email', 'An account is already using this email.')
+        else:
+            account_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('myfit:edit_profile')
+    return render(request, 'myfit/profile_edit.html', {
+        'account_form': account_form, 'profile_form': profile_form,
+    })
+ 
+ 
+@role_required('Admin')
+def specialty_manage(request):
+    specialties = CoachSpecialty.objects.all()
+    return render(request, 'myfit/specialty_manage.html', {'specialties': specialties})
+ 
+ 
+@role_required('Admin')
+def specialty_edit(request, specialty_id=None):
+    from django import forms
+    class SpecialtyForm(forms.ModelForm):
+        class Meta:
+            model = CoachSpecialty
+            fields = ('name','is_active')
+    instance = get_object_or_404(CoachSpecialty, pk=specialty_id) if specialty_id else None
+    form = SpecialtyForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Specialty saved.')
+        return redirect('myfit:specialty_manage')
+    return render(request, 'myfit/management_form.html', {'form': form, 'heading': 'Edit specialty' if instance else 'Add specialty', 'back_url': reverse('myfit:specialty_manage')})
+ 
+ 
+@role_required('Admin')
+def support_manage(request):
+    return render(request, 'myfit/support_manage.html', {
+        'tickets': SupportTicket.objects.select_related('user').all(),
+    })
+ 
+ 
+@role_required('Admin')
+@require_POST
+def support_update(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, pk=ticket_id)
+    status = request.POST.get('status')
+    if status not in dict(SupportTicket.STATUS_CHOICES):
+        return HttpResponseBadRequest('Invalid ticket status.')
+    ticket.status = status
+    ticket.save(update_fields=['status', 'updated_at'])
+    messages.success(request, f'Request MF-{ticket.pk} updated.')
+    return redirect('myfit:support_manage')
+ 
+#<<<<<<<<<<<<<<<--------------------

@@ -269,16 +269,131 @@ class ClientRegistrationForm(UserCreationForm):#means that our class inherits fr
             raise forms.ValidationError("That email address is already in use.")
         return email
 
+# Form for editing client profile information.
+# ModelForm automatically creates form fields based on ClientProfile.
 class ClientProfileForm(forms.ModelForm):
     class Meta:
         model = ClientProfile
-        fields = ("date_of_birth", "gender", "phone")
-        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"})}
 
+        # Fields that the client can edit.
+        fields = ("date_of_birth", "gender", "phone")
+
+        # Display date_of_birth using an HTML date picker.
+        widgets = {
+            "date_of_birth": forms.DateInput(
+                attrs={"type": "date"}
+            )
+        }
+
+
+# Form for editing coach profile information.
+# ModelForm automatically creates form fields based on CoachProfile.
 class CoachProfileForm(forms.ModelForm):
     class Meta:
         model = CoachProfile
+
+        # Fields that the coach can edit.
         fields = ("date_of_birth", "gender", "phone", "bio")
-        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"})}
+
+        # Display date_of_birth using an HTML date picker.
+        widgets = {
+            "date_of_birth": forms.DateInput(
+                attrs={"type": "date"}
+            )
+        }
+
+# Public directory, account management, and support forms.
+from django.contrib.auth.password_validation import validate_password
+from .models import Branch, CoachProfile, CoachSpecialty, SupportTicket
+ 
+class BranchForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = ['name', 'address', 'phone', 'email', 'opening_hours', 'image', 'is_active']
+        widgets = {'address': forms.Textarea(attrs={'rows': 2}), 'opening_hours': forms.Textarea(attrs={'rows': 2})}
+ 
+ 
+# These THREE User fields + the ONE phone field above = four details total.
+class AccountDetailsForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+ 
+ 
+class CoachAccountForm(forms.Form):
+    username = forms.CharField(max_length=150)
+    first_name = forms.CharField(max_length=150)
+    last_name = forms.CharField(max_length=150)
+    email = forms.EmailField()
+    password = forms.CharField(widget=forms.PasswordInput, required=False, help_text='Required for new coaches; leave blank when editing to keep current password.')
+    branch = forms.ModelChoiceField(queryset=Branch.objects.none(), required=False)
+    specialties = forms.ModelMultipleChoiceField(queryset=CoachSpecialty.objects.none(), required=False, widget=forms.CheckboxSelectMultiple)
+    bio = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
+    image = forms.ImageField(required=False, help_text='Optional coach portrait, JPG/PNG/WEBP, maximum 5 MB.')
+    remove_image = forms.BooleanField(required=False, label='Remove existing portrait')
+    phone = forms.CharField(max_length=20, required=False)
+    is_active = forms.BooleanField(required=False, initial=True, label='Account active')
+ 
+    def __init__(self, *args, coach=None, **kwargs):
+        self.coach = coach
+        if coach and not args and 'initial' not in kwargs:
+            kwargs['initial'] = {
+                'username': coach.user.username, 'first_name': coach.user.first_name,
+                'last_name': coach.user.last_name, 'email': coach.user.email,
+                'branch': coach.branch_id, 'specialties': coach.specialties.all(),
+                'bio': coach.bio, 'phone': coach.phone, 'is_active': coach.user.is_active,
+            }
+        super().__init__(*args, **kwargs)
+        if coach and coach.image:
+            self.fields['image'].help_text += f' Current: {coach.image.name}'
+        self.fields['branch'].queryset = Branch.objects.filter(is_active=True)
+        if coach and coach.branch_id:
+            self.fields['branch'].queryset = Branch.objects.filter(pk=coach.branch_id) | Branch.objects.filter(is_active=True)
+        self.fields['specialties'].queryset = CoachSpecialty.objects.filter(is_active=True)
+        if coach:
+            self.fields['specialties'].queryset = CoachSpecialty.objects.filter(pk__in=coach.specialties.values_list('pk', flat=True)) | CoachSpecialty.objects.filter(is_active=True)
+ 
+    def clean_image(self):
+        from .models import validate_myfit_image_size
+        from django.core.validators import FileExtensionValidator
+        image = self.cleaned_data['image']
+        if image:
+            FileExtensionValidator(allowed_extensions=['jpg','jpeg','png','webp'])(image)
+            validate_myfit_image_size(image)
+        return image
+ 
+    def clean_username(self):
+        value = self.cleaned_data['username'].strip()
+        existing = User.objects.filter(username__iexact=value)
+        if self.coach: existing = existing.exclude(pk=self.coach.user_id)
+        if existing.exists(): raise forms.ValidationError('Username is already in use.')
+        return value
+ 
+    def clean_email(self):
+        value = self.cleaned_data['email'].strip()
+        existing = User.objects.filter(email__iexact=value)
+        if self.coach: existing = existing.exclude(pk=self.coach.user_id)
+        if existing.exists(): raise forms.ValidationError('Email address is already in use.')
+        return value
+ 
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        if not self.coach and not password:
+            raise forms.ValidationError('Set an initial password for the new coach.')
+        if password: validate_password(password, user=self.coach.user if self.coach else None)
+        return password
+ 
+ 
+class ContactSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = SupportTicket
+        fields = ['kind', 'name', 'email', 'topic', 'branch', 'subject', 'message']
+        widgets = {'message': forms.Textarea(attrs={'rows': 5})}
+ 
+    def clean_message(self):
+        value = self.cleaned_data['message'].strip()
+        if len(value) < 10:
+            raise forms.ValidationError('Please enter at least 10 characters.')
+        return value
 
 #>.-----------------------------------------------

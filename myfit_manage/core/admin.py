@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html#<---Loick
 
 from .models import (
     MembershipPass,
@@ -8,6 +9,7 @@ from .models import (
     MembershipChangeRequest,
     AttendanceVisit,
     Branch,
+    WebsiteImage,#<---Loick
     ClientProfile,
     CoachProfile,
     CoachSpecialty,
@@ -94,11 +96,30 @@ class AttendanceVisitAdmin(admin.ModelAdmin):
 # END TASK 2 - MEMBERSHIPS AND ATTENDANCE
 
 #Loick >----------------------------
+
+# Edit the homepage/page-header pictures in one Django Admin section.
+# No HTML modifications are needed for future photo replacements.
+@admin.register(WebsiteImage)
+class WebsiteImageAdmin(admin.ModelAdmin):
+    list_display = ('placement', 'is_active', 'image_preview', 'updated_at')
+    list_filter = ('is_active',)
+    readonly_fields = ('image_preview', 'updated_at')
+    fields = ('placement', 'image', 'image_preview', 'alt_text', 'is_active', 'updated_at')
+ 
+    @admin.display(description='Preview')
+    def image_preview(self, obj):
+        if obj and obj.image:
+            return format_html('<img src="{}" style="max-width:140px;max-height:80px;object-fit:cover" alt="" />', obj.image.url)
+        return 'No uploaded image'
+
+
+
 @admin.register(Branch) #Display name in admin panel
 class BranchAdmin(admin.ModelAdmin):
     list_display = ("name", "phone", "is_active", "created_at")#which columns to display when viewing the Branch records.
     search_fields = ("name", "address")#which fields administrators can search through using the search box.
     list_filter = ("is_active",)
+    fields = ("name", "address", "phone", "email", "opening_hours", "image", "is_active")
 
 @admin.register(CoachSpecialty)
 class CoachSpecialtyAdmin(admin.ModelAdmin):
@@ -117,6 +138,7 @@ class CoachProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email")
     list_filter = ("branch",)
     filter_horizontal = ("specialties",)
+    fields = ("user", "branch", "specialties", "date_of_birth", "gender", "phone", "bio", "image")
 
  #>-------------------------------
  #jush========
@@ -125,6 +147,7 @@ class CoachProfileAdmin(admin.ModelAdmin):
 @admin.register(ClassSession)
 class ClassSessionAdmin(admin.ModelAdmin):
     list_display = ('title', 'date', 'time', 'coach', 'spaces_left', 'status')
+    fields = ('title', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image') #<----------------
 
 @admin.register(ClassBooking)
 class ClassBookingAdmin(admin.ModelAdmin):
@@ -180,3 +203,14 @@ class ProgressEntryAdmin(admin.ModelAdmin):
     search_fields = ('client__user__username',)
 #>-------
 #>-------
+
+
+#>---------Loick
+from .models import SupportTicket
+@admin.register(SupportTicket)
+class SupportTicketAdmin(admin.ModelAdmin):
+    list_display = ('id','kind','subject','user','email','status','created_at')
+    list_filter = ('kind','status','created_at')
+    search_fields = ('subject','email','name','message')
+    readonly_fields = ('created_at','updated_at')
+#>--------
