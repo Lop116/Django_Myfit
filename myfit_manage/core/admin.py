@@ -1,9 +1,12 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.utils.html import format_html#<---Loick
 
 from .models import (
+    ClientBooking,
     MembershipPass,
     Notification,
+    WorkoutRecord,
     MembershipPlan,
     ClientMembership,
     MembershipChangeRequest,
@@ -65,8 +68,10 @@ class ClientMembershipAdmin(admin.ModelAdmin):
         'end_date',
         'status',
     )
-    list_filter = ('status', 'plan')
-    search_fields = ('user__username',)
+    list_filter = ('status', 'plan', 'start_date', 'end_date')
+    search_fields = ('user__username', 'user__email', 'plan__name')
+    date_hierarchy = 'start_date'
+    list_select_related = ('user', 'plan')
 
 
 @admin.register(MembershipChangeRequest)
@@ -78,7 +83,8 @@ class MembershipChangeRequestAdmin(admin.ModelAdmin):
         'requested_at',
         'reviewed_by',
     )
-    list_filter = ('status',)
+    list_filter = ('status', 'requested_plan')
+    search_fields = ('membership__user__username', 'requested_plan__name')
     readonly_fields = ('requested_at',)
 
 
@@ -91,6 +97,8 @@ class AttendanceVisitAdmin(admin.ModelAdmin):
         'is_checked_in',
     )
     list_filter = ('check_in',)
+    search_fields = ('membership__user__username', 'membership__user__email')
+    date_hierarchy = 'check_in'
 
 
 # END TASK 2 - MEMBERSHIPS AND ATTENDANCE
@@ -129,14 +137,36 @@ class CoachSpecialtyAdmin(admin.ModelAdmin):
 
 @admin.register(ClientProfile)
 class ClientProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "phone", "created_at")
-    search_fields = ("user__username", "user__email", "phone")
+    list_display = ("user", "phone", "account_active", "created_at")
+    list_filter = ("user__is_active",)
+    search_fields = ("user__username", "user__email", "user__first_name", "user__last_name", "phone")
+    actions = ("deactivate_accounts", "activate_accounts")
+
+    @admin.display(boolean=True, description="Account active", ordering="user__is_active")
+    def account_active(self, obj):
+        return obj.user.is_active
+
+    @admin.action(description="Deactivate selected accounts")
+    def deactivate_accounts(self, request, queryset):
+        # Never let an admin lock themselves out.
+        users = get_user_model().objects.filter(pk__in=queryset.values("user")).exclude(pk=request.user.pk)
+        count = users.update(is_active=False)
+        self.message_user(request, f"{count} account(s) deactivated.")
+
+    @admin.action(description="Activate selected accounts")
+    def activate_accounts(self, request, queryset):
+        count = get_user_model().objects.filter(pk__in=queryset.values("user")).update(is_active=True)
+        self.message_user(request, f"{count} account(s) activated.")
 
 @admin.register(CoachProfile)
 class CoachProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "branch", "created_at")
-    search_fields = ("user__username", "user__email")
-    list_filter = ("branch",)
+    list_display = ("user", "branch", "account_active", "created_at")
+    search_fields = ("user__username", "user__email", "user__first_name", "user__last_name")
+    list_filter = ("branch", "specialties", "user__is_active")
+
+    @admin.display(boolean=True, description="Account active", ordering="user__is_active")
+    def account_active(self, obj):
+        return obj.user.is_active
     filter_horizontal = ("specialties",)
     fields = ("user", "branch", "specialties", "date_of_birth", "gender", "phone", "bio", "image")
 
@@ -146,12 +176,17 @@ class CoachProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ClassSession)
 class ClassSessionAdmin(admin.ModelAdmin):
-    list_display = ('title', 'date', 'time', 'coach', 'spaces_left', 'status')
+    list_display = ('title', 'date', 'time', 'branch', 'coach', 'capacity', 'spaces_left', 'status')
+    list_filter = ('status', 'branch', 'date')
+    search_fields = ('title', 'coach__user__username', 'branch__name')
+    date_hierarchy = 'date'
     fields = ('title', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image') #<----------------
 
 @admin.register(ClassBooking)
 class ClassBookingAdmin(admin.ModelAdmin):
-    list_display = ('client', 'session', 'status')
+    list_display = ('client', 'session', 'status', 'booked_at')
+    list_filter = ('status', 'session__branch')
+    search_fields = ('client__user__username', 'client__user__email', 'session__title')
 #>-------
 
 #ankush
@@ -214,3 +249,22 @@ class SupportTicketAdmin(admin.ModelAdmin):
     search_fields = ('subject','email','name','message')
     readonly_fields = ('created_at','updated_at')
 #>--------
+
+# ==========================================================
+# TASK 6 - INTEGRATION: models that had no Django Admin page
+# ==========================================================
+# Legacy models from the first version of the site. They are still used by
+# older pages, so Admins can search them but not edit history by accident.
+
+@admin.register(WorkoutRecord)
+class WorkoutRecordAdmin(admin.ModelAdmin):
+    list_display = ('user', 'exercise', 'workout_date', 'sets', 'reps', 'weight_kg')
+    list_filter = ('workout_date',)
+    search_fields = ('user__username', 'exercise')
+
+
+@admin.register(ClientBooking)
+class ClientBookingAdmin(admin.ModelAdmin):
+    list_display = ('user', 'class_name', 'class_date', 'trainer', 'location', 'status')
+    list_filter = ('status', 'class_date')
+    search_fields = ('user__username', 'class_name', 'trainer', 'location')
