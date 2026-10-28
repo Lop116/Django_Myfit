@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, FileExtensionValidator #< ---Loick 10/27
 from django.db import models
 from django.utils import timezone
 
@@ -303,6 +303,7 @@ class Branch(models.Model): #allows Django to map this class to a database table
     email = models.EmailField(blank=True) #specialized CharField that validates email formatting
     opening_hours = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='branches/', blank=True, validators=MYFIT_IMAGE_VALIDATORS)#<------ image
     created_at = models.DateTimeField(auto_now_add=True)#Stores when the branch record was created.
     updated_at = models.DateTimeField(auto_now=True)#Stores when the branch record was updated.
 
@@ -310,8 +311,8 @@ class Branch(models.Model): #allows Django to map this class to a database table
         verbose_name_plural = "Branches"
         ordering = ["name"] #This tells Django to sort query results by name in ascending alphabetical order by default.
 
-        def __str__(self):
-            return self.name #This defines the human-readable text representation of a Branch object.
+    def __str__(self):
+        return self.name #This defines the human-readable text representation of a Branch object.
 
 from .validators import validate_not_future #import the contrait
 
@@ -360,6 +361,7 @@ class CoachProfile(models.Model):
     gender = models.CharField(max_length=20, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     bio = models.TextField(blank=True)
+    image = models.ImageField(upload_to='coaches/', blank=True, validators=MYFIT_IMAGE_VALIDATORS)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
@@ -373,6 +375,7 @@ class ClassSession(models.Model):
     coach = models.ForeignKey('CoachProfile', on_delete=models.CASCADE, related_name='classes')
     date = models.DateField()
     time = models.TimeField()
+    image = models.ImageField(upload_to='classes/', blank=True, validators=MYFIT_IMAGE_VALIDATORS)#<----Loick
     capacity = models.PositiveIntegerField(default=10)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -577,3 +580,77 @@ class ProgressEntry(models.Model):
             f"{self.client.user.username}: "
             f"{self.value} {self.unit}"
         )
+
+
+
+
+
+    # MEDIA (simplest Django approach):---------------------------------------------------------
+# - static/images/ contains artwork shipped with the project;
+# - media/ contains pictures uploaded by administrators while the site runs.
+# ImageField saves the picture's filename/path in the database, not its bytes.
+# File-type and size checks below are small optional safeguards.
+def validate_myfit_image_size(file):
+    from django.core.exceptions import ValidationError
+    if file.size > 5 * 1024 * 1024:
+        raise ValidationError('Images must be 5 MB or smaller.')
+ 
+ 
+MYFIT_IMAGE_VALIDATORS = [
+    FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp']),
+    validate_myfit_image_size,
+]
+ 
+ 
+class WebsiteImage(models.Model):
+    """One Admin-controlled image per public page/section."""
+    # These choices prevent accidental extra records for the same placement.
+    class Placement(models.TextChoices):
+        HOME_HERO = 'home_hero', 'Homepage — hero background'
+        HOME_ABOUT = 'home_about', 'Homepage — about section'
+        HOME_COACHING = 'home_coaching', 'Homepage — coaching section'
+        BRANCHES_HERO = 'branches_hero', 'Branches — header'
+        COACHES_HERO = 'coaches_hero', 'Coaches — header'
+        CLASSES_HERO = 'classes_hero', 'Classes — header'
+        PLANS_HERO = 'plans_hero', 'Membership plans — header'
+ 
+    # unique=True means one replacement image for each named website location.
+    placement = models.CharField(max_length=30, choices=Placement.choices, unique=True)
+    # upload_to creates the subdirectory underneath MEDIA_ROOT when uploading.
+    image = models.ImageField(upload_to='website/', validators=MYFIT_IMAGE_VALIDATORS)
+    alt_text = models.CharField(max_length=180, blank=True, help_text='Describe the picture for accessibility.')
+    is_active = models.BooleanField(default=True, help_text='Uncheck to restore the original static picture.')
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        verbose_name = 'Website image'
+        verbose_name_plural = 'Website images'
+        ordering = ('placement',)
+ 
+    def __str__(self):
+        return self.get_placement_display()#----------------------------------------------------
+
+
+#<-------------------------Loick
+class SupportTicket(models.Model):
+    """Stored contact enquiry or logged-in support ticket (never browser-only)."""
+    KIND_CHOICES = [('enquiry', 'General enquiry'), ('ticket', 'Support ticket')]
+    STATUS_CHOICES = [('open', 'Open'), ('progress', 'In progress'), ('resolved', 'Resolved')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='support_tickets')
+    kind = models.CharField(max_length=12, choices=KIND_CHOICES, default='enquiry')
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=160)
+    topic = models.CharField(max_length=100)
+    branch = models.CharField(max_length=120, blank=True)
+    subject = models.CharField(max_length=130)
+    message = models.TextField(max_length=2000)
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='open')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['-created_at']
+ 
+    def __str__(self):
+        return f'MF-{self.pk}: {self.subject}'
+#<----------------------------------------
