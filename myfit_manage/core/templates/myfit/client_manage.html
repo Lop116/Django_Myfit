@@ -1,0 +1,61 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage clients | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="clients" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Administration</p>
+        <h1 class="page-title">Manage clients<em>.</em></h1>
+        <p class="subtitle">Search, edit and deactivate client accounts. Deactivated clients cannot log in; their records are kept.</p>
+      </div>
+    </header>
+    {% include "myfit/partials/admin_messages.html" %}
+    <section class="panel">
+      <form class="toolbar" method="get" role="search">
+        <input class="control search" type="search" name="q" value="{{ q }}" placeholder="Search username, name, email or phone…" aria-label="Search clients">
+        <select class="control" name="status" aria-label="Filter by status">
+          <option value="">All accounts</option>
+          <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Deactivated</option>
+        </select>
+        <button class="btn btn-primary" type="submit">Filter</button>
+        <a class="btn" href="{% url 'myfit:client_manage' %}">Reset</a>
+      </form>
+      <div class="table-wrap">
+        <table id="client-table">
+          <thead><tr><th>CLIENT</th><th>EMAIL</th><th>PHONE</th><th>JOINED</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>
+          {% for client in clients %}
+            <tr>
+              <td><strong>{{ client.get_full_name|default:client.username }}</strong><div class="secondary-text">@{{ client.username }}</div></td>
+              <td>{{ client.email|default:"—" }}</td>
+              <td>{{ client.client_profile.phone|default:"—" }}</td>
+              <td>{{ client.date_joined|date:"j M Y" }}</td>
+              <td><span class="status {% if client.is_active %}status-active{% else %}status-inactive{% endif %}">{% if client.is_active %}Active{% else %}Deactivated{% endif %}</span></td>
+              <td><div class="row-actions">
+                <a class="text-btn" href="{% url 'myfit:client_edit' client.pk %}">Edit</a>
+                <form method="post" action="{% url 'myfit:client_toggle' client.pk %}">{% csrf_token %}
+                  <button class="text-btn" type="submit">{% if client.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+                </form>
+              </div></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="empty">No clients match your search.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">Showing {{ clients|length }} of {{ total }} clients</div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

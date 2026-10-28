@@ -21,45 +21,26 @@
 
     <h2 class="section-title">People &amp; locations</h2>
     <section class="stats" aria-label="People and locations">
-      <article class="stat"><div class="stat-label">Total clients</div><div class="stat-value" id="stat-clients">{{ stats.clients.total }}</div><div class="stat-foot">{{ stats.clients.active }} active accounts</div></article>
-      <article class="stat"><div class="stat-label">Total coaches</div><div class="stat-value" id="stat-coaches">{{ stats.coaches.total }}</div><div class="stat-foot">{{ stats.coaches.active }} active accounts</div></article>
-      <article class="stat"><div class="stat-label">Branches</div><div class="stat-value" id="stat-branches">{{ stats.branches.total }}</div><div class="stat-foot">{{ stats.branches.active }} active</div></article>
-      <article class="stat"><div class="stat-label">Today's attendance</div>
-        {% if stats.attendance.today is None %}<div class="stat-value na" id="stat-attendance">—</div><div class="stat-foot na">Not connected yet</div>
-        {% else %}<div class="stat-value" id="stat-attendance">{{ stats.attendance.today }}</div><div class="stat-foot">check-ins today</div>{% endif %}
-      </article>
+      <article class="stat"><div class="stat-label">Total clients</div><div class="stat-value" id="stat-clients">{{ stats.clients.total }}</div><div class="stat-foot"><a href="{% url 'myfit:client_manage' %}">{{ stats.clients.active }} active · manage →</a></div></article>
+      <article class="stat"><div class="stat-label">Total coaches</div><div class="stat-value" id="stat-coaches">{{ stats.coaches.total }}</div><div class="stat-foot"><a href="{% url 'myfit:manage_coaches' %}">{{ stats.coaches.active }} active · manage →</a></div></article>
+      <article class="stat"><div class="stat-label">Branches</div><div class="stat-value" id="stat-branches">{{ stats.branches.total }}</div><div class="stat-foot"><a href="{% url 'myfit:manage_branches' %}">{{ stats.branches.active }} active · manage →</a></div></article>
+      <article class="stat"><div class="stat-label">Today's attendance</div><div class="stat-value" id="stat-attendance">{{ stats.attendance.today }}</div><div class="stat-foot">check-ins today</div></article>
     </section>
 
     <h2 class="section-title">Memberships</h2>
     <section class="stats" aria-label="Memberships">
-      <article class="stat"><div class="stat-label">Active memberships</div>
-        {% if stats.memberships.active is None %}<div class="stat-value na" id="stat-mem-active">—</div><div class="stat-foot na">Not connected yet</div>
-        {% else %}<div class="stat-value" id="stat-mem-active">{{ stats.memberships.active }}</div><div class="stat-foot">currently valid</div>{% endif %}
-      </article>
-      <article class="stat"><div class="stat-label">Expired memberships</div>
-        {% if stats.memberships.expired is None %}<div class="stat-value na" id="stat-mem-expired">—</div><div class="stat-foot na">Not connected yet</div>
-        {% else %}<div class="stat-value" id="stat-mem-expired">{{ stats.memberships.expired }}</div><div class="stat-foot">need renewal</div>{% endif %}
-      </article>
-      <article class="stat accent"><div class="stat-label">Pending membership requests</div>
-        {% if stats.memberships.pending_requests is None %}<div class="stat-value na" id="stat-mem-pending">—</div><div class="stat-foot na">Not connected yet</div>
-        {% else %}<div class="stat-value" id="stat-mem-pending">{{ stats.memberships.pending_requests }}</div><div class="stat-foot"><a href="{% url 'myfit:membership_requests' %}">Review requests →</a></div>{% endif %}
-      </article>
+      <article class="stat"><div class="stat-label">Active memberships</div><div class="stat-value" id="stat-mem-active">{{ stats.memberships.active }}</div><div class="stat-foot">valid today</div></article>
+      <article class="stat"><div class="stat-label">Expired memberships</div><div class="stat-value" id="stat-mem-expired">{{ stats.memberships.expired }}</div><div class="stat-foot">need renewal</div></article>
+      <article class="stat"><div class="stat-label">Suspended memberships</div><div class="stat-value" id="stat-mem-suspended">{{ stats.memberships.suspended }}</div><div class="stat-foot">on hold</div></article>
+      <article class="stat accent"><div class="stat-label">Pending membership requests</div><div class="stat-value" id="stat-mem-pending">{{ stats.memberships.pending_requests }}</div><div class="stat-foot"><a href="{% url 'myfit:membership_requests' %}">Review requests →</a></div></article>
     </section>
 
-    <h2 class="section-title">Classes &amp; bookings</h2>
-    <section class="stats" aria-label="Classes and bookings">
-      <article class="stat"><div class="stat-label">Scheduled classes</div>
-        {% if stats.classes.scheduled is None %}<div class="stat-value na" id="stat-classes-scheduled">—</div><div class="stat-foot na">Not connected yet</div>
-        {% else %}<div class="stat-value" id="stat-classes-scheduled">{{ stats.classes.scheduled }}</div><div class="stat-foot">upcoming &amp; running</div>{% endif %}
-      </article>
-      <article class="stat"><div class="stat-label">Cancelled classes</div>
-        {% if stats.classes.cancelled is None %}<div class="stat-value na" id="stat-classes-cancelled">—</div><div class="stat-foot na">Not connected yet</div>
-        {% else %}<div class="stat-value" id="stat-classes-cancelled">{{ stats.classes.cancelled }}</div><div class="stat-foot">kept in history</div>{% endif %}
-      </article>
-      <article class="stat"><div class="stat-label">Total bookings</div>
-        {% if stats.bookings.total is None %}<div class="stat-value na" id="stat-bookings">—</div><div class="stat-foot na">Not connected yet</div>
-        {% else %}<div class="stat-value" id="stat-bookings">{{ stats.bookings.total }}</div><div class="stat-foot">all time</div>{% endif %}
-      </article>
+    <h2 class="section-title">Classes, bookings &amp; support</h2>
+    <section class="stats" aria-label="Classes, bookings and support">
+      <article class="stat"><div class="stat-label">Scheduled classes</div><div class="stat-value" id="stat-classes-scheduled">{{ stats.classes.scheduled }}</div><div class="stat-foot"><a href="{% url 'myfit:manage_classes' %}">Manage classes →</a></div></article>
+      <article class="stat"><div class="stat-label">Cancelled classes</div><div class="stat-value" id="stat-classes-cancelled">{{ stats.classes.cancelled }}</div><div class="stat-foot">kept in history</div></article>
+      <article class="stat"><div class="stat-label">Total bookings</div><div class="stat-value" id="stat-bookings">{{ stats.bookings.total }}</div><div class="stat-foot">{{ stats.bookings.confirmed }} confirmed</div></article>
+      <article class="stat accent"><div class="stat-label">Open support tickets</div><div class="stat-value" id="stat-support-open">{{ stats.support.open }}</div><div class="stat-foot"><a href="{% url 'myfit:support_manage' %}">Manage tickets →</a></div></article>
     </section>
 
     <h2 class="section-title">Quick links</h2>
@@ -68,12 +49,14 @@
         <a class="btn" href="{% url 'myfit:membership_requests' %}">Membership requests</a>
         <a class="btn" href="{% url 'myfit:manage_plans' %}">Membership plans</a>
         <a class="btn" href="{% url 'myfit:manage_bookings' %}">Classes &amp; bookings</a>
+        <a class="btn" href="{% url 'myfit:client_manage' %}">Clients</a>
         <a class="btn" href="{% url 'myfit:manage_coaches' %}">Coaches</a>
         <a class="btn" href="{% url 'myfit:manage_branches' %}">Branches</a>
+        <a class="btn" href="{% url 'myfit:coaching_assignments' %}">Coach assignments</a>
+        <a class="btn" href="{% url 'myfit:support_manage' %}">Support tickets</a>
         {% if request.user.is_staff %}<a class="btn" href="{% url 'admin:index' %}">Django Admin</a>{% endif %}
       </div>
     </section>
-    <p class="footer-note">Cards showing “Not connected yet” light up automatically once the matching models are merged into core.</p>
     <div class="myfit-shortcut"><a href="{% url 'myfit:manage_branches' %}">Manage branches</a> · <a href="{% url 'myfit:manage_coaches' %}">Manage coaches</a></div></main>
 </div>
 </body>

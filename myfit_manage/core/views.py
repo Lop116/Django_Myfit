@@ -596,9 +596,11 @@ def client_membership(request):
 # END TASK 2 - CLIENT MEMBERSHIP DASHBOARD
 
 
+@role_required("Admin")
 def manage_bookings(request):
     return render(request, 'myfit/manage_bookings.html')
 
+@role_required("Admin")
 def manage_payments(request):
     return render(request, 'myfit/manage_payments.html')
 
