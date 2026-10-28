@@ -4,6 +4,7 @@ from time import time
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core import signing
@@ -16,7 +17,8 @@ from .membership_tokens import (
     MEMBERSHIP_QR_SALT,
     create_membership_verification_token,
 )
-from .models import MembershipPass, Notification
+from .models import MembershipPass, Notification, SupportTicket, SupportTicketMessage
+
 
 
 class PasswordResetFlowTests(TestCase):
@@ -607,3 +609,50 @@ class NotificationTests(TestCase):
 
         self.assertNotContains(response, 'notification-menu')
         self.assertEqual(response.context['unread_notification_count'], 0)
+
+class SupportAndNotificationTests(TestCase):
+    def setUp(self):
+        self.client_user = User.objects.create_user("alice", password="pass12345")
+        self.other_user = User.objects.create_user("bob", password="pass12345")
+        self.staff = User.objects.create_user("admin1", password="pass12345", is_staff=True)
+        self.ticket = SupportTicket.objects.create(
+            client=self.client_user, subject="Help", description="Broken"
+        )
+
+    def test_client_cannot_view_other_clients_ticket(self):
+        self.client.login(username="bob", password="pass12345")
+        r = self.client.get(reverse("myfit:support_ticket_detail", args=[self.ticket.pk]))
+        self.assertEqual(r.status_code, 403)
+
+    def test_client_cannot_see_internal_messages(self):
+        SupportTicketMessage.objects.create(
+            ticket=self.ticket, sender=self.staff, message="secret", is_internal=True
+        )
+        self.client.login(username="alice", password="pass12345")
+        r = self.client.get(reverse("myfit:support_ticket_detail", args=[self.ticket.pk]))
+        self.assertNotContains(r, "secret")
+
+    def test_client_cannot_update_ticket(self):
+        self.client.login(username="alice", password="pass12345")
+        self.client.post(
+            reverse("myfit:update_support_ticket", args=[self.ticket.pk]),
+            {"status": "closed", "priority": "low"},
+        )
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.status, "open")
+
+    def test_staff_update_notifies_client(self):
+        self.client.login(username="admin1", password="pass12345")
+        self.client.post(
+            reverse("myfit:update_support_ticket", args=[self.ticket.pk]),
+            {"status": "resolved", "priority": "normal"},
+        )
+        self.assertTrue(
+            Notification.objects.filter(user=self.client_user).exists()
+        )
+
+    def test_cannot_mark_other_users_notification_read(self):
+        n = Notification.objects.create(user=self.client_user, title="t", message="m")
+        self.client.login(username="bob", password="pass12345")
+        r = self.client.post(reverse("myfit:mark_notification_read", args=[n.pk]))
+        self.assertEqual(r.status_code, 404)

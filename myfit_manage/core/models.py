@@ -104,6 +104,16 @@ class MembershipPass(models.Model):
 
 
 class Notification(models.Model):
+    class Type(models.TextChoices):
+        BOOKING_SUCCESS = "booking_success", "Booking successful"
+        CLASS_CHANGED = "class_changed", "Class changed"
+        CLASS_CANCELLED = "class_cancelled", "Class cancelled"
+        COACH_CLASS_CHANGED = "coach_class_changed", "Coach class changed"
+        CLIENT_REMOVED = "client_removed", "Removed from class"
+        MEMBERSHIP_APPROVED = "membership_approved", "Membership approved"
+        MEMBERSHIP_REJECTED = "membership_rejected", "Membership rejected"
+        SUPPORT_UPDATE = "support_update", "Support ticket update"
+        
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -111,16 +121,104 @@ class Notification(models.Model):
     )
     title = models.CharField(max_length=200)
     message = models.TextField()
-    link = models.URLField(blank=True)
+    type = models.CharField(
+        max_length=40,
+        choices=Type.choices,
+        default=Type.SUPPORT_UPDATE,
+    )
+    link = models.CharField(max_length=300, blank=True)
+
+    # Temporary references to models being developed by teammates.
+    # These must match the final model names during integration.
+    
+
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        ordering = ('-created_at',)
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(fields=["user", "is_read"]),
+            models.Index(fields=["user", "-created_at"]),
+        ]
 
     def __str__(self):
-        return f'{self.title} for {self.user}'
+        return f"{self.title} for {self.user}"
+    
+#######Wizzy############################
+class SupportTicket(models.Model):
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        IN_PROGRESS = "in_progress", "In progress"
+        WAITING_FOR_CLIENT = "waiting_for_client", "Waiting for client"
+        RESOLVED = "resolved", "Resolved"
+        CLOSED = "closed", "Closed"
+
+    class Priority(models.TextChoices):
+        LOW = "low", "Low"
+        NORMAL = "normal", "Normal"
+        HIGH = "high", "High"
+        URGENT = "urgent", "Urgent"
+
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="support_tickets",
+    )
+    subject = models.CharField(max_length=200)
+    description = models.TextField()
+    status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+        default=Status.OPEN,
+    )
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+    )
+    assigned_admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_support_tickets",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-updated_at",)
+
+    def __str__(self):
+        return f"Ticket #{self.pk}: {self.subject}"
+
+
+class SupportTicketMessage(models.Model):
+    ticket = models.ForeignKey(
+        SupportTicket,
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="support_ticket_messages",
+    )
+    message = models.TextField()
+    is_internal = models.BooleanField(
+        default=False,
+        help_text="Internal notes are visible only to authorized administrators.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("created_at",)
+
+    def __str__(self):
+        return f"Message on ticket #{self.ticket_id}"
+
 
 
 #Loick--#################################################-----22/10/26 6.52>
@@ -138,7 +236,7 @@ class Branch(models.Model): #allows Django to map this class to a database table
         verbose_name_plural = "Branches"
         ordering = ["name"] #This tells Django to sort query results by name in ascending alphabetical order by default.
 
-        def __str__(self):
+    def __str__(self):
             return self.name #This defines the human-readable text representation of a Branch object.
 
 from .validators import validate_not_future #import the contrait

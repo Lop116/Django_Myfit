@@ -14,7 +14,7 @@ app_name = 'myfit' # namespace for named URLs
 urlpatterns = [
     path('', views.home, name='home'),
     path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
-    path('login/', LoginView.as_view(template_name='myfit/login.html', next_page='myfit:home'), name='login'),
+    path('login/', LoginView.as_view(template_name='myfit/Trial_html/login.html', next_page='myfit:home'), name='login'),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('myfit:home')), name='logout'),
     path(
         'password-reset/',
@@ -49,16 +49,7 @@ urlpatterns = [
     path('membership/qr/', views.membership_qr, name='membership_qr'),
     path('membership/verify/', views.membership_verify, name='membership_verify'),
     path('staff/membership-scanner/', views.membership_scanner, name='membership_scanner'),
-    path(
-        'notifications/<int:notification_id>/read/',
-        views.mark_notification_read,
-        name='notification_read',
-    ),
-    path(
-        'notifications/read-all/',
-        views.mark_all_notifications_read,
-        name='notifications_read_all',
-    ),
+    
     path('branches/', views.branches, name='branches'),
     path('coaches/', views.coaches, name='coaches'),
     path('classes/', views.classes, name='classes'),
@@ -80,6 +71,60 @@ urlpatterns = [
     path("coach/clients/", views.coach_clients, name="coach_clients"),
     path("coach/branches/", views.manage_branches, name="manage_branches"),
     path("coach/coaches/", views.manage_coaches, name="manage_coaches"),
+    
+    
+# Notifications
+    path(
+        "notifications/",
+        views.notification_list,
+        name="notification_list",
+    ),
+    path(
+        "notifications/<int:notification_id>/read/",
+        views.mark_notification_read,
+        name="mark_notification_read",
+    ),
+    path(
+        "notifications/<int:notification_id>/unread/",
+        views.mark_notification_unread,
+        name="mark_notification_unread",
+    ),
+    path(
+        "notifications/read-all/",
+        views.mark_all_notifications_read,
+        name="notifications_read_all",
+    ),
 
+    
+    path(
+    "support/",
+    views.support_ticket_list,
+    name="support_ticket_list",
+    ),
+    
+    path(
+        "support/new/",
+        views.create_support_ticket,
+        name="create_support_ticket",
+    ),
+    
+    path(
+        "support/<int:ticket_id>/",
+        views.support_ticket_detail,
+        name="support_ticket_detail",
+    ),
+    
+    path(
+        "support/<int:ticket_id>/reply/",
+        views.reply_to_support_ticket,
+        name="reply_to_support_ticket",
+    ),
+    
+    path(
+    "support/<int:ticket_id>/update/",
+    views.update_support_ticket,
+    name="update_support_ticket",
+    ),
+    
+    ]
 
-]
