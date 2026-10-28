@@ -7,6 +7,7 @@
   <meta name="description" content="Explore sample MyFit fitness classes across Caudan Waterfront, Trianon Emerald Park and Riche Terre: strength, HIIT, yoga and Zumba.">
   <meta name="theme-color" content="#121416">
   <title>Fitness Classes | MyFit Mauritius</title>
+  <link rel="stylesheet" href="{% static 'css/website_media.css' %}">
   <style>
     /* MyFit public Classes page. Page-specific styling is self-contained. */
     :root{--yellow:#ffc324;--yellow-soft:#ffda66;--pink:#d52375;--purple:#4839a5;--cyan:#08a5cb;--coral:#df6848;--ink:#121416;--ink2:#17191c;--panel:#202328;--muted:#adb2b9;--line:rgba(255,255,255,.12);--font:Inter,"Arial Narrow",Arial,Helvetica,sans-serif}
@@ -26,7 +27,7 @@
     .sprite{position:absolute;width:0;height:0;overflow:hidden}
     .skip-link{position:fixed;left:14px;top:-70px;z-index:1000;background:var(--yellow);color:var(--ink);padding:10px 15px;font-weight:800}
     .skip-link:focus{top:12px}
-
+ 
     /* Original homepage's yellow hotbar and dark navigation */
     .topbar{background:var(--yellow);color:#111;min-height:34px}
     .topbar-inner{min-height:34px;display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:.75rem;font-weight:900;letter-spacing:.10em}
@@ -51,7 +52,7 @@
     .join-btn{background:var(--pink);border:1px solid var(--pink);color:white}.join-btn:hover{background:#ed3188}
     .mobile-menu{display:none}.mobile-menu summary{list-style:none}.mobile-menu summary::-webkit-details-marker{display:none}
     .mobile-menu nav{display:grid}
-
+ 
     /* Cinematic gym hero */
     .hero{position:relative;overflow:hidden;isolation:isolate;background:#111317;border-bottom:1px solid var(--line)}
     .hero-photo{position:absolute;z-index:-2;right:0;top:0;width:69%;height:100%;object-fit:cover;object-position:60% center}
@@ -80,7 +81,7 @@
     .hero-highlights .icon{width:27px;height:27px;color:var(--yellow)}
     .hero-highlights b{display:block;font-weight:900;font-size:.88rem;letter-spacing:.03em}
     .hero-highlights small{display:block;margin-top:5px;color:#9da5ad;font-size:.77rem;line-height:1.4}
-
+ 
     /* Coach directory and filters */
     .directory{padding:92px 0 108px;background:#17191c}
     .section-intro{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:36px}
@@ -120,7 +121,7 @@
     .no-results .icon{color:var(--yellow);width:35px;height:35px;margin-bottom:15px}
     .no-results h3{margin:0 0 8px;font-size:1.25rem}.no-results p{color:#aeb5bb;margin:0 0 20px}
     .directory-note{margin:25px 0 0;font-size:.75rem;color:#8e969e;line-height:1.6}
-
+ 
     /* Why coaching and CTA */
     .statement{background:var(--purple);padding:82px 0}
     .statement-grid{display:grid;grid-template-columns:1fr 1fr;gap:85px;align-items:center}
@@ -138,7 +139,7 @@
     .closing-cta h2{font-size:clamp(3.6rem,6.5vw,7.4rem);line-height:1.04;margin:17px 0 15px}.closing-cta h2 span{color:var(--yellow)}
     .closing-cta p{color:#adb5bc;max-width:620px;margin:0 auto 27px;line-height:1.72}
     .closing-cta .cta-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
-
+ 
     /* Footer copied in spirit from public homepage */
     .footer{background:#0a0b0d;border-top:1px solid var(--line)}
     .footer-main{padding:48px 0;display:flex;align-items:center;justify-content:space-between;gap:30px}
@@ -148,7 +149,7 @@
     .footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;min-height:65px;border-top:1px solid var(--line);color:#858d93;font-size:.63rem;letter-spacing:.06em;font-weight:800}
     .footer-bottom b{color:var(--yellow)}
     .footer-bottom a:hover{color:var(--yellow)}
-
+ 
     /* Profile dialog, stays on this page rather than requiring another template */
     .profile-dialog{position:fixed;inset:0;margin:auto;padding:0;border:1px solid #555b61;background:#1b1f23;color:#fff;width:min(790px,calc(100% - 30px));max-height:min(90vh,820px);box-shadow:0 26px 90px rgba(0,0,0,.66)}
     .profile-dialog::backdrop{background:rgba(4,5,7,.83);backdrop-filter:blur(5px)}
@@ -165,7 +166,7 @@
     .profile-details strong{font-size:.87rem;line-height:1.5}
     .dialog-close{position:absolute;top:10px;right:10px;z-index:2;border:1px solid rgba(255,255,255,.42);background:rgba(8,9,11,.9);color:white;width:36px;height:36px;display:grid;place-items:center}
     .dialog-close:hover{color:var(--yellow);border-color:var(--yellow)}
-
+ 
     @media(max-width:1260px){
       .container{width:min(1170px,calc(100% - 64px))}
       .desktop-nav{gap:15px;font-size:.76rem}
@@ -334,16 +335,16 @@
     <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
   </svg>
-
+ 
   <a class="skip-link" href="#main-content">Skip to main content</a>
-
+ 
   <div class="topbar">
     <div class="container topbar-inner">
       <p><span class="topbar-dot"></span> MADE FOR MAURITIUS <span class="topbar-divider">/</span> TRAIN · TRACK · TRANSFORM</p>
       <a href="/branches/">THREE ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
-
+ 
   <header class="site-header">
     <div class="container nav-inner">
       <a href="/" class="logo" aria-label="MyFit home">
@@ -384,11 +385,11 @@
       </details>
     </div>
   </header>
-
-
+ 
+ 
   <main id="main-content">
     <section class="hero" aria-labelledby="classes-title">
-      <img class="hero-photo" src="{% static 'images/classes/classes-hero.webp' %}" alt="Illustrative group fitness session at a gym" fetchpriority="high">
+      {% if site_images.classes_hero %}<img class="hero-photo" src="{{ site_images.classes_hero.image.url }}" alt="{{ site_images.classes_hero.alt_text|default:'MyFit fitness classes' }}" fetchpriority="high">{% else %}<img class="hero-photo" src="{% static 'images/classes/classes-hero.webp' %}" alt="Illustrative group fitness session at a gym" fetchpriority="high">{% endif %}
       <div class="container hero-inner"><div class="hero-copy">
         <p class="breadcrumb"><a href="/">HOME</a> &nbsp;/&nbsp; <span>OUR CLASSES</span></p>
         <p class="eyebrow">YOUR ENERGY / YOUR WAY</p>
@@ -402,7 +403,7 @@
         <div><svg class="icon"><use href="#i-pin"/></svg><span><b>3 ACTIVE CLUBS</b><small>Caudan, Trianon and Riche Terre</small></span></div>
       </div></div>
     </section>
-
+ 
     <section class="class-directory" id="class-directory" aria-labelledby="directory-title">
       <div class="container">
         <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR ENERGY</p><h2 class="section-title" id="directory-title">CLASSES FOR <span>EVERY GOAL</span></h2><p>Find a session you would enjoy. Search by class or coach, choose your preferred location, and explore what a typical week could look like.</p></div><span class="count-badge" aria-live="polite">SHOWING <span id="class-count">4</span> PROGRAMMES</span></div>
@@ -444,19 +445,40 @@
         <aside class="class-membership-note" aria-label="Group fitness membership information"><div><strong>Group classes and your membership</strong><p>Unlimited group classes are included with <b>My Access XL</b> and <b>My Access Premium</b>. View the membership options to compare their listed benefits.</p></div><a href="/plans/">Compare memberships →</a></aside>
       </div>
     </section>
-
+ 
+    <section class="live-sessions-section" id="live-sessions" aria-labelledby="live-sessions-title">
+      <div class="container">
+        <p class="section-kicker">LIVE / UPDATED FROM ADMIN</p>
+        <h2 class="section-title" id="live-sessions-title">UPCOMING <span>SESSIONS</span></h2>
+        <p class="live-intro">These are real scheduled sessions saved in MyFit's database. Add, edit or cancel them in Django Admin.</p>
+        <div class="live-session-grid">
+          {% for session in upcoming_sessions %}
+          <article class="live-session-card">
+            {% if session.image %}<img src="{{ session.image.url }}" alt="{{ session.title }} class" loading="lazy">{% else %}<img src="{% static 'images/classes/classes-hero.webp' %}" alt="Illustrative gym session" loading="lazy">{% endif %}
+            <div class="live-session-body"><h3>{{ session.title }}</h3>
+              <p>{{ session.date|date:'D d M Y' }} · {{ session.time|time:'H:i' }}</p>
+              <p>{{ session.branch.name }} · {{ session.coach.user.get_full_name|default:session.coach.user.username }}</p>
+              <p>Places remaining: {{ session.spaces_left }}</p>
+              <a href="{% url 'myfit:class_list' %}">VIEW LIVE BOOKING LIST</a>
+            </div>
+          </article>
+          {% empty %}<p>No future scheduled sessions are published yet.</p>{% endfor %}
+        </div>
+      </div>
+    </section>
+ 
     <section class="schedule-section" id="weekly-schedule" aria-labelledby="schedule-title"><div class="container">
       <div class="schedule-head"><div><p class="section-kicker">02 / PLAN YOUR WEEK</p><h2 class="section-title" id="schedule-title">SAMPLE <span>TIMETABLE</span></h2><p style="color:#b6bdc3;line-height:1.7;max-width:670px;margin:0">Preview a typical week using the class filters above. Timings here are demonstration data, not confirmed live sessions.</p></div><a href="/contact/">QUESTIONS ABOUT THE CLASSES? <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
       <div class="schedule-table-shell"><table class="schedule-table"><thead><tr><th scope="col">DAY</th><th scope="col">TIME</th><th scope="col">CLASS</th><th scope="col">COACH</th><th scope="col">BRANCH</th><th scope="col">TYPE</th><th scope="col">ACTION</th></tr></thead><tbody id="schedule-rows"><tr class="schedule-row" data-day="monday" data-category="strength" data-branch="caudan" data-search="strength fundamentals adrian morel caudan waterfront"><td><strong>Monday</strong></td><td>07:00</td><td><strong>Strength Fundamentals</strong></td><td>Adrian Morel</td><td>Caudan Waterfront</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="monday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Monday</strong></td><td>09:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Tuesday</strong></td><td>18:00</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Tuesday</strong></td><td>18:30</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="wednesday" data-category="strength" data-branch="trianon" data-search="strength fundamentals daniel chen emerald park · trianon"><td><strong>Wednesday</strong></td><td>17:30</td><td><strong>Strength Fundamentals</strong></td><td>Daniel Chen</td><td>Emerald Park · Trianon</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="thursday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Thursday</strong></td><td>07:30</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="friday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Friday</strong></td><td>17:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="saturday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Saturday</strong></td><td>10:00</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr></tbody></table></div>
       <div class="schedule-empty" id="schedule-empty" hidden>No sample sessions match the selected filters.</div>
     </div></section>
-
+ 
     <section class="class-steps" aria-labelledby="steps-title"><div class="container"><p class="eyebrow">03 / HOW IT WORKS</p><h2 id="steps-title">YOUR NEXT CLASS<br><span>STARTS HERE.</span></h2><div class="steps-grid">
       <div class="step"><span class="step-num">01</span><h3>FIND YOUR FIT</h3><p>Browse the programme styles, review their focus and find a class that suits your goals.</p></div>
       <div class="step"><span class="step-num">02</span><h3>SIGN IN TO BOOK</h3><p>When online bookings are implemented, log in to select and manage your training sessions.</p></div>
       <div class="step"><span class="step-num">03</span><h3>SHOW UP AND MOVE</h3><p>Bring your motivation to your selected branch and let the MyFit community support your progress.</p></div>
     </div></div></section>
-
+ 
     <section class="closing-cta" aria-labelledby="cta-title"><div class="container"><p class="eyebrow">ONE MORE REASON TO GET MOVING</p><h2 id="cta-title">FIND YOUR <span>MOMENTUM.</span></h2><p>Ready to train your way? Explore membership options, meet our coaches and get started with MyFit.</p><div class="cta-actions"><a class="btn btn-pink" href="/plans/">VIEW MEMBERSHIPS <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="/coaches/">MEET THE COACHES <svg class="icon"><use href="#i-arrow"/></svg></a></div></div></section>
   </main>
   <footer class="footer">
@@ -467,8 +489,8 @@
     </div>
     <div class="container footer-bottom"><span>© {% now "Y" %} MYFIT MAURITIUS</span><a href="#main-content">BACK TO TOP ↑</a><span>MADE TO MOVE. <b>BUILT TO LAST.</b></span></div>
   </footer>
-
-
+ 
+ 
   <dialog class="class-dialog" id="class-dialog" aria-labelledby="dialog-class-name">
     <button type="button" class="class-dialog-close" id="class-dialog-close" aria-label="Close class details"><svg class="icon"><use href="#i-close"/></svg></button>
     <div class="class-dialog-grid">
@@ -481,7 +503,7 @@
       </div>
     </div>
   </dialog>
-
+ 
   <script>
   (() => {
     'use strict';

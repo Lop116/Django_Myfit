@@ -14,9 +14,28 @@ from . import coaching_views
 app_name = 'myfit' # namespace for named URLs
 
 urlpatterns = [
+    #<------------------------Loick
+    path('staff/specialties/', views.specialty_manage, name='specialty_manage'),
+    path('staff/specialties/add/', views.specialty_edit, name='specialty_add'),
+    path('staff/specialties/<int:specialty_id>/edit/', views.specialty_edit, name='specialty_edit'),
+    path('staff/support/', views.support_manage, name='support_manage'),
+    path('staff/support/<int:ticket_id>/status/', views.support_update, name='support_update'),
+    path('staff/branches/', views.manage_branches, name='manage_branches'),
+    path('staff/coaches/', views.manage_coaches, name='manage_coaches'),
+    # Public management, profiles and private support tickets.
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('staff/branches/add/', views.branch_edit, name='branch_add'),
+    path('staff/branches/<int:branch_id>/edit/', views.branch_edit, name='branch_edit'),
+    path('staff/branches/<int:branch_id>/toggle/', views.branch_toggle, name='branch_toggle'),
+    path('staff/coaches/add/', views.coach_edit, name='coach_add'),
+    path('staff/coaches/<int:coach_id>/edit/', views.coach_edit, name='coach_edit'),
+    path('staff/coaches/<int:coach_id>/toggle/', views.coach_toggle, name='coach_toggle'),
+    path('support/tickets/<int:ticket_id>/', views.support_ticket_detail, name='support_ticket_detail'),
+#<------------------------
     path('', views.home, name='home'),
     path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('login/', LoginView.as_view(template_name='myfit/login.html', next_page='myfit:home'), name='login'),
+    path('login/', views.RoleAwareLoginView.as_view(template_name='myfit/login.html'), name='login'),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('myfit:home')), name='logout'),
     path(
         'password-reset/',
@@ -78,6 +97,8 @@ urlpatterns = [
     path('client-bookings/', views.client_bookings, name='client_bookings'),
 
     path('membership/', views.client_membership, name='client_membership'),
+    
+    
     # Developer: Deshrao Saccaram
     path(
         'attendance/history/',
@@ -138,9 +159,8 @@ path(
     #path for the coaches pages
     path("coach/dashboard/", views.coach_dashboard, name="coach_dashboard"),
     path("coach/clients/", views.coach_clients, name="coach_clients"),
-    path("coach/branches/", views.manage_branches, name="manage_branches"),
-    path("coach/coaches/", views.manage_coaches, name="manage_coaches"),
-
+    path("coach/branches/", views.manage_branches, name="manage_branches_legacy"),
+    path("coach/coaches/", views.manage_coaches, name="manage_coaches_legacy"),
 
     #jush
     path('class-list/', views.class_list, name='class_list'),
