@@ -1,0 +1,55 @@
+
+/* MyFit data-driven class listing */
+
+.live-sessions-section {
+    padding: 78px 0;
+    background: #16191d;
+}
+
+.live-intro {
+    color: #bdc0c5;
+    margin-bottom: 28px;
+    line-height: 1.7;
+}
+
+.live-session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 22px;
+}
+
+.live-session-card {
+    background: #24272b;
+    border: 1px solid #43494f;
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.live-session-card > img {
+    height: 180px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.live-session-body {
+    padding: 22px;
+}
+
+.live-session-body h3 {
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+}
+
+.live-session-body p {
+    color: #d4d9dd;
+    line-height: 1.5;
+    margin: 7px 0;
+}
+
+.live-session-body a {
+    display: inline-block;
+    color: #ffc324;
+    font-weight: 800;
+    margin-top: 12px;
+}

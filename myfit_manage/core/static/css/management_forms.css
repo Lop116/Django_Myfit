@@ -1,0 +1,135 @@
+
+/* MyFit MyFit management, profile and ticket styling; no inline CSS */
+
+.myfit-form-card {
+    max-width: 750px;
+}
+
+.myfit-form-field {
+    margin-bottom: 20px;
+}
+
+.myfit-form-field input:not([type=checkbox]),
+.myfit-form-field select,
+.myfit-form-field textarea {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    background: #080808;
+    border: 1px solid #555;
+    border-radius: 9px;
+    color: #fff;
+    padding: 11px;
+}
+
+.myfit-form-field input[type=checkbox] {
+    accent-color: #ffd21f;
+}
+
+.myfit-form-field input:focus,
+.myfit-form-field select:focus,
+.myfit-form-field textarea:focus {
+    outline: 2px solid #ffd21f;
+}
+
+.myfit-errors {
+    color: #ffaaa8;
+    margin: 8px 0;
+    font-size: 13px;
+}
+
+.row-actions form {
+    display: inline;
+}
+
+.tag {
+    display: inline-block;
+    margin: 2px;
+    padding: 4px 8px;
+    background: #343434;
+    border-radius: 5px;
+}
+
+.myfit-public-page {
+    margin: 0;
+    background: #101214;
+    color: #f7f7f7;
+    font: 16px/1.6 system-ui, sans-serif;
+}
+
+.myfit-public-panel {
+    max-width: 730px;
+    margin: 4vh auto;
+    padding: 35px;
+    background: #1d2023;
+    border-radius: 15px;
+}
+
+.myfit-public-panel h1 {
+    color: #ffd21f;
+}
+
+.myfit-public-panel h2 {
+    margin-top: 25px;
+}
+
+.myfit-field {
+    margin: 14px 0;
+}
+
+.myfit-field label {
+    display: block;
+    margin: 6px 0;
+}
+
+.myfit-field input,
+.myfit-field textarea,
+.myfit-field select {
+    background: #080a0d;
+    color: #fff;
+    border: 1px solid #777;
+    border-radius: 6px;
+    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.myfit-public-panel input[type=checkbox] {
+    width: auto;
+}
+
+.myfit-back {
+    color: #ffd21f;
+}
+
+.myfit-save {
+    margin-top: 15px;
+    background: #ffd21f;
+    border: 0;
+    border-radius: 6px;
+    color: #111;
+    padding: 12px 22px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.myfit-success {
+    background: #283b27;
+    border: 1px solid #3d6746;
+    padding: 10px;
+}
+
+.myfit-message {
+    white-space: normal;
+    border-left: 3px solid #ffd21f;
+    padding-left: 17px;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+    .myfit-public-panel {
+        margin: 0;
+        padding: 22px;
+        border-radius: 0;
+    }
+}
