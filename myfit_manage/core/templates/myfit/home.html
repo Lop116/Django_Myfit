@@ -49,7 +49,7 @@
       <div class="nav-actions">
         {% if user.is_authenticated %}
           <span class="account-label">Hi, {{ user.first_name|default:user.username }}</span>
-          {% include 'myfit/partials/notification_dropdown.html' %} <a class="myfit-profile-link" href="{% url 'myfit:edit_profile' %}">Edit profile</a>
+          {% include 'myfit/partials/notification_dropdown.html' %}
           <a class="join-btn" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
           <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="login-btn logout-button" type="submit">Log out</button></form>
         {% else %}
@@ -75,8 +75,8 @@
   </header>
  
   <main id="main-content">
-    <section class="hero{% if site_images.home_hero %} hero-has-upload{% endif %}" id="home">
-      {% if site_images.home_hero %}<img class="hero-uploaded-photo" src="{{ site_images.home_hero.image.url }}" alt="{{ site_images.home_hero.alt_text }}" fetchpriority="high">{% endif %}
+    <!-- HERO IMAGE: core/static/images/homepage_images/hero-myfit.webp -->
+    <section class="hero" id="home">
       <div class="container hero-layout">
         <div class="hero-copy">
           <p class="overline hero-kicker"><span class="yellow-square"></span> MYFIT MAURITIUS / TRAIN WITH PURPOSE</p>
@@ -87,10 +87,10 @@
         <div class="hero-side-label" aria-hidden="true">EST. MAURITIUS &nbsp; — &nbsp; MOVE WITH INTENT</div>
       </div>
       <div class="container hero-stats" aria-label="MyFit assessment sample statistics">
-        <div><span class="stat-num">{{ home_client_count }}</span><small>REGISTERED CLIENTS</small></div>
-        <div><span class="stat-num">{{ home_branch_count|stringformat:'02d' }}</span><small>ACTIVE CLUBS</small></div>
-        <div><span class="stat-num">{{ home_class_count }}</span><small>UPCOMING CLASSES</small></div>
-        <div><span class="stat-num">{{ home_coach_count }}</span><small>ACTIVE COACHES</small></div>
+        <div><span class="stat-num">5,000<span>+</span></span><small>HAPPY MEMBERS</small></div>
+        <div><span class="stat-num">03</span><small>ACTIVE CLUBS</small></div>
+        <div><span class="stat-num">50<span>+</span></span><small>CLASSES / WEEK</small></div>
+        <div><span class="stat-num">20<span>+</span></span><small>EXPERT COACHES</small></div>
       </div>
     </section>
  
@@ -107,7 +107,7 @@
     <section class="about-section" id="about">
       <div class="container about-grid">
         <div class="about-copy"><p class="overline light-overline">01 / WHAT WE STAND FOR</p><h2>MORE THAN<br>JUST A <span>GYM</span></h2><p>MyFit brings training, coaching and your digital fitness life into one connected experience. Whether you are here to build strength, move better or start fresh, there is a place for you.</p><a class="text-link on-purple" href="{% url 'myfit:coaches' %}">MEET THE PEOPLE BEHIND MYFIT <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
-        <div class="about-visual">{% if site_images.home_about %}<img src="{{ site_images.home_about.image.url }}" alt="{{ site_images.home_about.alt_text|default:'Training at MyFit' }}" loading="lazy">{% else %}<img src="{% static 'images/homepage_images/coaching-myfit.webp' %}" alt="Strength training in a modern gym" loading="lazy">{% endif %}<span class="about-visual-tag">STRONGER<br><b>TOGETHER</b></span></div>
+        <div class="about-visual"><img src="{% static 'images/homepage_images/coaching-myfit.webp' %}" alt="Strength training in a modern gym" loading="lazy"><span class="about-visual-tag">STRONGER<br><b>TOGETHER</b></span></div>
       </div>
     </section>
  
@@ -115,19 +115,10 @@
       <div class="container">
         <div class="section-heading dark-heading"><div><p class="overline cyan-text">02 / FIND YOUR ENERGY</p><h2>MOVE YOUR WAY</h2><p>Different goals. One place to show up, push yourself and enjoy the process.</p></div><a href="{% url 'myfit:classes' %}" class="link-arrow">VIEW ALL CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
         <div class="classes-grid">
-          {% for session in home_classes %}
-          <article class="class-card">
-            <div class="class-card-number">{{ forloop.counter|stringformat:'02d' }}</div>
-            {% if session.image %}<div class="class-photo"><img src="{{ session.image.url }}" alt="{{ session.title }} session" loading="lazy"></div>
-            {% else %}<div class="class-illustration class-illustration-strength"><svg class="icon"><use href="#i-dumbbell"/></svg></div>{% endif %}
-            <span class="class-tag">{{ session.branch.name|upper }}</span>
-            <h3>{{ session.title|upper }}</h3>
-            <p>{{ session.date|date:'D d M Y' }} at {{ session.time|time:'H:i' }} · Coach {{ session.coach.user.get_full_name|default:session.coach.user.username }}</p>
-            <a href="{% url 'myfit:class_list' %}">SEE LIVE SCHEDULE <svg class="icon sm"><use href="#i-arrow"/></svg></a>
-          </article>
-          {% empty %}
-          <p class="directory-empty">No scheduled classes are available yet. Add a future Class Session in Admin to display it here.</p>
-          {% endfor %}
+          <article class="class-card"><div class="class-card-number">01</div><div class="class-illustration class-illustration-strength"><svg class="icon"><use href="#i-dumbbell"/></svg></div><span class="class-tag">STRENGTH</span><h3>STRENGTH<br>FUNDAMENTALS</h3><p>Build a foundation with technique, control and consistency.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">02</div><div class="class-illustration class-illustration-hiit"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">CONDITIONING</span><h3>HIIT<br>TRAINING</h3><p>Challenge your endurance with energising interval sessions.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">03</div><div class="class-illustration class-illustration-yoga"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">MOBILITY</span><h3>YOGA &amp;<br>RECOVERY</h3><p>Improve flexibility, mobility and the way you feel.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          <article class="class-card"><div class="class-card-number">04</div><div class="class-illustration class-illustration-zumba"><svg class="icon"><use href="#i-dance"/></svg></div><span class="class-tag">GROUP FITNESS</span><h3>ZUMBA<br>FITNESS</h3><p>Music, movement and good energy in every session.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
         </div>
         
       </div>
@@ -137,52 +128,69 @@
       <div class="container">
         <div class="section-heading membership-heading">
           <div><p class="overline dark-overline">03 / INVEST IN YOURSELF</p><h2>YOUR PLAN<br>YOUR PROGRESS</h2><p>Compare MyFit memberships and choose the benefits that suit you.</p></div>
-          <span class="membership-badge">CURRENT MEMBERSHIP PLANS <svg class="icon"><use href="#i-activity"/></svg></span>
+          <span class="membership-badge">THREE MEMBERSHIP PLANS <svg class="icon"><use href="#i-activity"/></svg></span>
         </div>
         <div class="plan-grid">
-{% for plan in home_plans %}
-<article class="plan-card{% if forloop.counter == 2 %} plan-featured{% endif %}">
-{% if forloop.counter == 2 %}<div class="plan-featured-ribbon">EXPLORE MORE</div>{% endif %}
-<div class="plan-upper"><span>MEMBERSHIP OPTION</span><span>{{ forloop.counter|stringformat:'02d' }}</span></div>
-<h3>{{ plan.name|upper }}</h3>
-<div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">{{ plan.price|floatformat:0 }}</strong><small class="price-period">/ {{ plan.duration_days }} DAYS</small></div>
-<p class="plan-description">{{ plan.name }} membership benefits</p>
-<ul>{% for benefit in plan.benefits.splitlines %}{% if benefit.strip %}<li>{{ benefit }}</li>{% endif %}{% empty %}<li>Contact MyFit for full benefits</li>{% endfor %}</ul>
-<a href="{% url 'myfit:contact' %}?topic=Membership&amp;plan_name={{ plan.name|urlencode }}" class="plan-button">ENQUIRE ABOUT {{ plan.name|upper }} <svg class="icon sm"><use href="#i-arrow"/></svg></a>
-</article>
-{% empty %}<p class="directory-empty">Membership options will appear once activated by MyFit management.</p>{% endfor %}
-</div>
+          <article class="plan-card">
+            <div class="plan-upper"><span>THE ESSENTIALS</span><span>01</span></div>
+            <h3>MY ACCESS</h3>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,249</strong><small class="price-period">/ MONTH</small></div>
+            <p class="plan-description">My Access membership benefits</p>
+            <ul>
+              <li>Unlimited gym access</li>
+              <li>One free trial session for friends/family</li>
+            </ul>
+            <a href="{% url 'myfit:register' %}?plan=access" class="plan-button">CHOOSE MY ACCESS <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+          </article>
+          <article class="plan-card plan-featured">
+            <div class="plan-featured-ribbon">POPULAR CHOICE</div>
+            <div class="plan-upper"><span>MORE MOMENTUM</span><span>02</span></div>
+            <h3>MY ACCESS XL</h3>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,399</strong><small class="price-period">/ MONTH</small></div>
+            <p class="plan-description">Includes My Access benefits</p>
+            <ul>
+              <li>My Access benefits</li>
+              <li>Access to the MYGYM360 network (Réunion, Mauritius, France)</li>
+              <li>Membership suspension</li>
+              <li>Unlimited group classes</li>
+            </ul>
+            <a href="{% url 'myfit:register' %}?plan=xl" class="plan-button">CHOOSE MY ACCESS XL <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+          </article>
+          <article class="plan-card">
+            <div class="plan-upper"><span>GO ALL IN</span><span>03</span></div>
+            <h3>MY ACCESS PREMIUM</h3>
+            <div class="plan-price"><span class="price-currency">Rs</span><strong class="price-amount">1,549</strong><small class="price-period">/ MONTH</small></div>
+            <p class="plan-description">Includes My Access XL benefits</p>
+            <ul>
+              <li>My Access XL benefits</li>
+              <li>Unlimited My Drink</li>
+              <li>Unlimited My Sismo</li>
+            </ul>
+            <a href="{% url 'myfit:register' %}?plan=premium" class="plan-button">CHOOSE PREMIUM <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+          </article>
+        </div>
     
       </div>
     </section>
  
     <section class="coaches-section section-pad" id="coaches">
-      <div class="container coach-layout"><div class="coach-visual">{% if site_images.home_coaching %}<img src="{{ site_images.home_coaching.image.url }}" alt="{{ site_images.home_coaching.alt_text|default:'MyFit coaching' }}" loading="lazy">{% else %}<img src="{% static 'images/homepage_images/training-myfit.webp' %}" alt="Athlete training with weights in the gym" loading="lazy">{% endif %}<div class="coach-image-stamp">GUIDED BY<br><strong>EXPERTS</strong></div></div><div class="coach-content"><p class="overline yellow-text">04 / TRAIN WITH THE BEST</p><h2>PEOPLE WHO<br><span>MOVE YOU</span><br>FORWARD</h2><p>Our coaches help you train smarter and stay accountable. Explore strength, HIIT, mobility and conditioning guidance from the MyFit team.</p><div class="coach-pills">{% for spec in home_specialties %}<span>{{ spec.name|upper }}</span>{% empty %}<span>DISCOVER OUR COACHES</span>{% endfor %}</div><a class="btn btn-yellow" href="{% url 'myfit:contact' %}">ASK ABOUT COACHING <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
+      <div class="container coach-layout"><div class="coach-visual"><img src="{% static 'images/homepage_images/training-myfit.webp' %}" alt="Athlete training with weights in the gym" loading="lazy"><div class="coach-image-stamp">GUIDED BY<br><strong>EXPERTS</strong></div></div><div class="coach-content"><p class="overline yellow-text">04 / TRAIN WITH THE BEST</p><h2>PEOPLE WHO<br><span>MOVE YOU</span><br>FORWARD</h2><p>Our coaches help you train smarter and stay accountable. Explore strength, HIIT, mobility and conditioning guidance from the MyFit team.</p><div class="coach-pills"><span>STRENGTH &amp; CONDITIONING</span><span>FUNCTIONAL TRAINING</span><span>YOGA &amp; MOBILITY</span><span>WEIGHT MANAGEMENT</span></div><a class="btn btn-yellow" href="{% url 'myfit:contact' %}">ASK ABOUT COACHING <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
     </section>
  
     <section class="branches-section section-pad" id="branches">
       <div class="container">
-        <div class="section-heading branch-heading"><div><p class="overline dark-overline">05 / ONE MYFIT COMMUNITY.</p><h2>FIND YOUR<br>NEXT SESSION</h2><p>Explore MyFit across Mauritius. Your next workout could be closer than you think.</p></div><span class="branch-decoration">MYFIT<br><b>360</b></span></div>
+        <div class="section-heading branch-heading"><div><p class="overline dark-overline">05 / THREE CLUBS. ONE COMMUNITY.</p><h2>FIND YOUR<br>NEXT SESSION</h2><p>Explore MyFit across Mauritius. Your next workout could be closer than you think.</p></div><span class="branch-decoration">MYFIT<br><b>360</b></span></div>
         <div class="branches-grid">
-{% for branch in home_branches %}
-<a class="branch-card" href="{% url 'myfit:branches' %}" aria-label="Explore {{ branch.name }} branch">
- <div class="branch-img">{% if branch.image %}<img src="{{ branch.image.url }}" alt="Photo of {{ branch.name }}" loading="lazy">{% else %}{% with branch.name|lower as lower_name %}
- {% if 'caudan' in lower_name %}<img src="{% static 'images/homepage_images/branch-caudan.webp' %}" alt="Illustrative gym concept" loading="lazy">
- {% elif 'trianon' in lower_name or 'emerald' in lower_name %}<img src="{% static 'images/homepage_images/branch-trianon.webp' %}" alt="Illustrative gym concept" loading="lazy">
- {% elif 'riche' in lower_name %}<img src="{% static 'images/homepage_images/branch-riche-terre.webp' %}" alt="Illustrative gym concept" loading="lazy">
- {% elif 'plaisance' in lower_name %}<img src="{% static 'images/homepage_images/branch-plaisance.webp' %}" alt="Illustrative gym concept" loading="lazy">
- {% else %}<img src="{% static 'images/branches/branches-hero.webp' %}" alt="Illustrative gym concept" loading="lazy">{% endif %}
- {% endwith %}{% endif %}<span class="branch-index">{{ forloop.counter|stringformat:'02d' }}</span></div>
- <div class="branch-body"><div><p>ACTIVE MYFIT BRANCH</p><h3>{{ branch.name|upper }}</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div>
- <div class="branch-bottom">{{ branch.address|truncatechars:55 }} <svg class="icon sm"><use href="#i-arrow"/></svg></div>
-</a>
-{% empty %}<p class="directory-empty">Active branches will appear when the directory is updated.</p>{% endfor %}
-</div>
+          <a class="branch-card" href="{% url 'myfit:branches' %}" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-caudan.webp' %}" alt="Illustrative architecture for Caudan Waterfront branch" loading="lazy"><span class="branch-index">01</span></div><div class="branch-body"><div><p>PORT LOUIS</p><h3>CAUDAN<br>WATERFRONT</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom">CURRENT LOCATION <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+          <a class="branch-card" href="{% url 'myfit:branches' %}" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-trianon.webp' %}" alt="Illustrative architecture for Trianon fitness club" loading="lazy"><span class="branch-index">02</span></div><div class="branch-body"><div><p>TRIANON</p><h3>EMERALD<br>PARK</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom">CURRENT LOCATION <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+          <a class="branch-card" href="{% url 'myfit:branches' %}" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-riche-terre.webp' %}" alt="Illustrative architecture for Riche Terre fitness club" loading="lazy"><span class="branch-index">03</span></div><div class="branch-body"><div><p>PORT LOUIS</p><h3>RICHE<br>TERRE</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom">CURRENT LOCATION <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+          <a class="branch-card" href="{% url 'myfit:branches' %}" aria-label="View all MyFit branches"><div class="branch-img"><img src="{% static 'images/homepage_images/branch-plaisance.webp' %}" alt="Illustrative architecture for upcoming Plaisance Mall fitness club" loading="lazy"><span class="branch-index soon">SOON</span></div><div class="branch-body"><div><p>ROSE BELLE</p><h3>PLAISANCE<br>MALL</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div><div class="branch-bottom coming-soon">COMING SOON <svg class="icon sm"><use href="#i-arrow"/></svg></div></a>
+        </div>
       </div>
     </section>
  
     <section class="support-section" id="support">
-      <div class="container support-grid"><div><p class="overline yellow-text">06 / WE'RE HERE TO HELP</p><h2>QUESTIONS?<br><span>LET'S TALK</span></h2><p>Membership enquiries, classes, coaching and account support — MyFit keeps it simple to find your next step.</p></div><div class="support-panel"><div class="support-panel-icon"><svg class="icon"><use href="#i-message"/></svg></div><strong>SUPPORT THAT MOVES WITH YOU.</strong><p>Send an enquiry or track your support requests through our connected MyFit support page.</p><a class="btn btn-yellow" href="{% url 'myfit:contact' %}">EMAIL MYFIT SUPPORT <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
+      <div class="container support-grid"><div><p class="overline yellow-text">06 / WE'RE HERE TO HELP</p><h2>QUESTIONS?<br><span>LET'S TALK</span></h2><p>Membership enquiries, classes, coaching and account support — MyFit keeps it simple to find your next step.</p></div><div class="support-panel"><div class="support-panel-icon"><svg class="icon"><use href="#i-message"/></svg></div><strong>SUPPORT THAT MOVES WITH YOU.</strong><p>Our MyFit project includes support tickets, a contact page and member assistance. These will be linked here as your Django pages are built.</p><a class="btn btn-yellow" href="{% url 'myfit:contact' %}" title="Support/contact page will be added later">EMAIL MYFIT SUPPORT <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
     </section>
   </main>
   <footer class="site-footer"><div class="container footer-main"><a href="{% url 'myfit:home' %}" class="logo footer-logo" aria-label="Back to MyFit home"><img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42"><span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small></a><p>TRAIN HARD. TRACK SMARTER.<br>BUILD SOMETHING BETTER</p><nav aria-label="Footer links"><a href="{% url 'myfit:home' %}">HOME</a><a href="{% url 'myfit:coaches' %}">COACHES</a><a href="{% url 'myfit:classes' %}">CLASSES</a><a href="{% url 'myfit:plans' %}">MEMBERSHIP</a><a href="{% url 'myfit:branches' %}">BRANCHES</a><a href="{% url 'myfit:contact' %}">SUPPORT</a></nav></div><div class="container footer-bottom"><span>© {% now "Y" %} MYFIT MAURITIUS </span><a href="#home">BACK TO TOP ↑</a><span>MADE TO MOVE. <b>BUILT TO LAST.</b></span></div></footer>

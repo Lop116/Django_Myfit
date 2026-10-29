@@ -1,108 +1,545 @@
-#Loick
+
 {% load static %}
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>MyFit Management</title>
-    <link rel="stylesheet" href="{% static 'css/manage_branches.css' %}">
-    <link rel="stylesheet" href="{% static 'css/management_forms.css' %}">
-  </head>
-  <body>
-    <div class="shell">
-      <aside class="sidebar">
-        <a class="brand" href="{% url 'myfit:admin_dashboard' %}">
-          <span class="brand-mark">M</span>
-          <span>MY<span>FIT</span></span>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage Coaches | MyFit</title>
+    <link rel="stylesheet" href="{% static 'css/manage_coaches.css' %}">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <a class="brand" href="{% url 'myfit:coach_dashboard' %}">
+            <span class="brand-mark">M</span>
+            <span>MY<span>FIT</span></span>
         </a>
-        <div class="nav-label">MANAGEMENT</div>
-        <a class="nav-link" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
-        <a class="nav-link" href="{% url 'myfit:manage_branches' %}">Manage branches</a>
-        <a class="nav-link" href="{% url 'myfit:manage_coaches' %}">Manage coaches</a>
-        <a class="nav-link" href="{% url 'myfit:specialty_manage' %}">Coach specialties</a>
-        <a class="nav-link" href="{% url 'myfit:support_manage' %}">Support requests</a>
-        <a class="nav-link" href="{% url 'myfit:home' %}">Public website</a>
+        <div class="nav-label">WORKSPACE</div>
+        <a class="nav-link" href="{% url 'myfit:coach_dashboard' %}">
+            <span class="nav-icon">▦</span>Dashboard
+        </a>
+        <a class="nav-link" href="{% url 'myfit:coach_clients' %}">
+            <span class="nav-icon">♙</span>My clients
+        </a>
+        <a class="nav-link" href="{% url 'myfit:manage_branches' %}">
+            <span class="nav-icon">⌖</span>Manage branches
+        </a>
+        <a class="nav-link active" href="{% url 'myfit:manage_coaches' %}">
+            <span class="nav-icon">♧</span>Manage coaches
+        </a>
         <div class="sidebar-note">
-          <strong>MYFIT MANAGEMENT</strong>Changes are saved in the Django database.
+            <strong>MYFIT MANAGEMENT</strong>
+            Manage coach specialties and the branches where each coach works.
         </div>
-      </aside>
-      <main class="main">
+    </aside>
+    <main class="main">
         <header class="topbar">
-          <div>
-            <p class="eyebrow">Admin / Coaches</p>
-            <h1 class="page-title">Manage coaches</h1>
-            <p class="subtitle">Add a real user account and assign a branch and specialties.</p>
-          </div>
-          <a class="btn btn-primary" href="{% url 'myfit:coach_add' %}"> + Add coach</a>
+            <div>
+                <p class="eyebrow">MyFit / Management</p>
+                <h1 class="page-title">
+                    Manage coaches<span class="page-inline-1">.</span>
+                </h1>
+                <p class="subtitle">
+                    Keep coach profiles, specialties and branch assignments organised.
+                </p>
+            </div>
+            <div class="user-chip">
+                <span class="user-avatar">M</span>
+                <span>
+                    <strong>{{ request.user.get_full_name|default:request.user.username|default:"MyFit Admin" }}</strong>
+                    <div class="secondary-text">Management</div>
+                </span>
+            </div>
         </header>
-        {% if messages %}
-        {% for message in messages %}
-        <div class="notice show" role="status">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        <section class="panel">
-          <div class="panel-head">
-            <h2 class="panel-title">Coach accounts</h2>
-            <a class="btn btn-secondary" href="{% url 'myfit:specialty_manage' %}">Manage specialties</a>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>COACH</th>
-                  <th>SPECIALTIES</th>
-                  <th>BRANCH</th>
-                  <th>STATUS</th>
-                  <th>ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for coach in coaches %}
-                <tr>
-                  <td>
-                    <div class="primary-text">{{ coach.user.get_full_name|default:coach.user.username }}</div>
-                    <div class="secondary-text">{{ coach.user.email }}</div>
-                  </td>
-                  <td>
-                    {% for spec in coach.specialties.all %}
-                    <span class="tag">{{ spec.name }}</span>
-                    {% empty %}—
-                    {% endfor %}
-                  </td>
-                  <td>{{ coach.branch.name|default:'Unassigned' }}</td>
-                  <td>{% if coach.user.is_active %}
-                    <span class="status status-active">Active</span>
-                    {% else %}
-                    <span class="status status-inactive">Inactive</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <div class="row-actions">
-                      <a class="text-btn" href="{% url 'myfit:coach_edit' coach.pk %}">Edit</a>
-                      <form method="post" action="{% url 'myfit:coach_toggle' coach.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="text-btn">
-                          {% if coach.user.is_active %}
-                          Deactivate
-                          {% else %}
-                          Activate
-                          {% endif %}
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="5">No coach profiles. Create a coach to make them appear on the public directory.</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+
+        <section class="stats" aria-label="Coach summary">
+            <article class="stat">
+                <div class="stat-label">Total coaches</div>
+                <div class="stat-value" id="totalCoaches">3</div>
+                <div class="stat-foot">Listed coach profiles</div>
+            </article>
+            <article class="stat">
+                <div class="stat-label">Active coaches</div>
+                <div class="stat-value" id="activeCoaches">2</div>
+                <div class="stat-foot">Available for assignments</div>
+            </article>
+            <article class="stat">
+                <div class="stat-label">Specialties</div>
+                <div class="stat-value" id="specialtyCount">6</div>
+                <div class="stat-foot">Across the coaching team</div>
+            </article>
         </section>
-      </main>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2 class="panel-title">Coach directory</h2>
+                    <p class="panel-subtitle">
+                        Create and edit coach profiles, specialties and assigned branches.
+                    </p>
+                </div>
+                <button class="btn btn-primary" type="button" onclick="openCoachModal()">
+                    ＋ Add coach
+                </button>
+            </div>
+            <div id="coachNotice" class="notice" role="status">
+                Demo only: edits affect this browser table.
+                Connect the form to a Django view to save changes permanently.
+            </div>
+            <div class="toolbar">
+                <input
+                    class="control search"
+                    id="coachSearch"
+                    type="search"
+                    placeholder="Search name, email, specialty or branch…"
+                    aria-label="Search coaches"
+                >
+                <select class="control" id="coachStatusFilter" aria-label="Filter by status">
+                    <option value="">All statuses</option>
+                    <option>Active</option>
+                    <option>Inactive</option>
+                </select>
+                <button type="button" class="btn btn-secondary" onclick="window.print()">
+                    Print directory
+                </button>
+            </div>
+            <div class="table-wrap">
+                <table id="coachTable">
+                    <thead>
+                        <tr>
+                            <th>COACH</th>
+                            <th>SPECIALTIES</th>
+                            <th>ASSIGNED BRANCHES</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            data-status="Active"
+                            data-specialties="Strength training,Weight management"
+                            data-branches="Port Louis Central,Ebène Fitness"
+                        >
+                            <td>
+                                <div class="coach-cell">
+                                    <span class="avatar">MR</span>
+                                    <div>
+                                        <div class="primary-text">Maya Roberts</div>
+                                        <div class="secondary-text">maya.roberts@example.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tags">
+                                    <span class="tag">Strength training</span>
+                                    <span class="tag">Weight management</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tags branch-tags">
+                                    <span class="tag">Port Louis Central</span>
+                                    <span class="tag">Ebène Fitness</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status status-active">Active</span>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="text-btn" onclick="editCoach(this)">Edit</button>
+                                    <button class="text-btn" onclick="toggleCoach(this)">Deactivate</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr
+                            data-status="Active"
+                            data-specialties="Cardio,Endurance"
+                            data-branches="Ebène Fitness"
+                        >
+                            <td>
+                                <div class="coach-cell">
+                                    <span class="avatar">DK</span>
+                                    <div>
+                                        <div class="primary-text">Daniel Kim</div>
+                                        <div class="secondary-text">daniel.kim@example.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tags">
+                                    <span class="tag">Cardio</span>
+                                    <span class="tag">Endurance</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tags branch-tags">
+                                    <span class="tag">Ebène Fitness</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status status-active">Active</span>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="text-btn" onclick="editCoach(this)">Edit</button>
+                                    <button class="text-btn" onclick="toggleCoach(this)">Deactivate</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr
+                            data-status="Inactive"
+                            data-specialties="Mobility,Recovery"
+                            data-branches="Quatre Bornes Club"
+                        >
+                            <td>
+                                <div class="coach-cell">
+                                    <span class="avatar">AF</span>
+                                    <div>
+                                        <div class="primary-text">Amira Farouk</div>
+                                        <div class="secondary-text">amira.farouk@example.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tags">
+                                    <span class="tag">Mobility</span>
+                                    <span class="tag">Recovery</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="tags branch-tags">
+                                    <span class="tag">Quatre Bornes Club</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status status-inactive">Inactive</span>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="text-btn" onclick="editCoach(this)">Edit</button>
+                                    <button class="text-btn" onclick="toggleCoach(this)">Activate</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="coachCount">Showing 3 coaches</span>
+                <span>Specialties and branches are shown as tags.</span>
+            </div>
+        </section>
+        <p class="footer-note">
+            MyFit management · Coach records shown here are sample data
+            until connected to your Django models.
+        </p>
+    </main>
+</div>
+
+<div
+    class="modal-backdrop"
+    id="coachModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="coachModalTitle"
+>
+    <div class="modal">
+        <div class="modal-head">
+            <h2 id="coachModalTitle">Add coach</h2>
+            <button
+                class="close"
+                type="button"
+                onclick="closeCoachModal()"
+                aria-label="Close form"
+            >✕</button>
+        </div>
+        <form id="coachForm">
+            <input type="hidden" id="coachEditRow">
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="coachName">Full name *</label>
+                    <input id="coachName" required placeholder="Coach full name">
+                </div>
+                <div class="form-field">
+                    <label for="coachEmail">Email address *</label>
+                    <input id="coachEmail" type="email" required placeholder="coach@example.com">
+                </div>
+                <div class="form-field full">
+                    <span class="group-label">Specialties *</span>
+                    <div class="check-grid">
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="Strength training">
+                            Strength training
+                        </label>
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="Cardio">
+                            Cardio
+                        </label>
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="Endurance">
+                            Endurance
+                        </label>
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="Weight management">
+                            Weight management
+                        </label>
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="Mobility">
+                            Mobility
+                        </label>
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="Recovery">
+                            Recovery
+                        </label>
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="General fitness">
+                            General fitness
+                        </label>
+                        <label class="check-option">
+                            <input type="checkbox" name="specialty" value="Nutrition">
+                            Nutrition
+                        </label>
+                    </div>
+                </div>
+                <div class="form-field full">
+                    <label for="coachBranches">Assigned branches *</label>
+                    <select id="coachBranches" multiple size="3" required>
+                        <option>Port Louis Central</option>
+                        <option>Ebène Fitness</option>
+                        <option>Quatre Bornes Club</option>
+                        <option>Curepipe Fitness</option>
+                        <option>Tamarin Fitness</option>
+                    </select>
+                    <span class="secondary-text">
+                        On Windows, hold Ctrl to select more than one branch.
+                    </span>
+                </div>
+                <div class="form-field">
+                    <label for="coachFormStatus">Account status</label>
+                    <select id="coachFormStatus">
+                        <option>Active</option>
+                        <option>Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" type="button" onclick="closeCoachModal()">
+                    Cancel
+                </button>
+                <button class="btn btn-primary" type="submit">Save coach</button>
+            </div>
+        </form>
     </div>
-  </body>
+</div>
+
+<script>
+const coachModal = document.getElementById('coachModal'),
+      coachForm = document.getElementById('coachForm');
+
+function openCoachModal() {
+    coachForm.reset();
+    document.getElementById('coachEditRow').value = '';
+    document.getElementById('coachModalTitle').textContent = 'Add coach';
+    coachModal.classList.add('open');
+}
+
+function closeCoachModal() {
+    coachModal.classList.remove('open');
+}
+
+function selectedValues() {
+    return Array.from(
+        document.querySelectorAll('input[name="specialty"]:checked')
+    ).map(x => x.value);
+}
+
+function setSelectedValues(values) {
+    document.querySelectorAll('input[name="specialty"]').forEach(
+        x => x.checked = values.includes(x.value)
+    );
+}
+
+function editCoach(btn) {
+    const row = btn.closest('tr'),
+          cells = row.cells;
+
+    document.getElementById('coachEditRow').value =
+        Array.from(row.parentNode.children).indexOf(row);
+
+    document.getElementById('coachName').value =
+        cells[0].querySelector('.primary-text').textContent;
+
+    document.getElementById('coachEmail').value =
+        cells[0].querySelector('.secondary-text').textContent;
+
+    setSelectedValues(
+        (row.dataset.specialties || '').split(',').filter(Boolean)
+    );
+
+    Array.from(document.getElementById('coachBranches').options).forEach(
+        o => o.selected = (row.dataset.branches || '').split(',').includes(o.value)
+    );
+
+    document.getElementById('coachFormStatus').value = row.dataset.status;
+    document.getElementById('coachModalTitle').textContent = 'Edit coach';
+    coachModal.classList.add('open');
+}
+
+function escapeText(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[c]));
+}
+
+function initials(s) {
+    return s.split(/\s+/).map(x => x[0]).join('').slice(0, 2).toUpperCase();
+}
+
+coachForm.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const name = document.getElementById('coachName').value.trim(),
+          email = document.getElementById('coachEmail').value.trim(),
+          specialties = selectedValues(),
+          branches = Array.from(
+              document.getElementById('coachBranches').selectedOptions
+          ).map(o => o.value),
+          status = document.getElementById('coachFormStatus').value,
+          idx = document.getElementById('coachEditRow').value;
+
+    if (!specialties.length) {
+        alert('Please choose at least one specialty.');
+        return;
+    }
+
+    if (!branches.length) {
+        alert('Please assign at least one branch.');
+        return;
+    }
+
+    let row = idx !== ''
+        ? document.querySelectorAll('#coachTable tbody tr')[Number(idx)]
+        : null;
+
+    if (!row) {
+        row = document.createElement('tr');
+        document.querySelector('#coachTable tbody').appendChild(row);
+    }
+
+    row.dataset.status = status;
+    row.dataset.specialties = specialties.join(',');
+    row.dataset.branches = branches.join(',');
+
+    row.innerHTML = `
+        <td>
+            <div class="coach-cell">
+                <span class="avatar">${escapeText(initials(name))}</span>
+                <div>
+                    <div class="primary-text">${escapeText(name)}</div>
+                    <div class="secondary-text">${escapeText(email)}</div>
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="tags">
+                ${specialties.map(s => `<span class="tag">${escapeText(s)}</span>`).join('')}
+            </div>
+        </td>
+        <td>
+            <div class="tags branch-tags">
+                ${branches.map(b => `<span class="tag">${escapeText(b)}</span>`).join('')}
+            </div>
+        </td>
+        <td>
+            <span class="status ${status === 'Active' ? 'status-active' : 'status-inactive'}">
+                ${status}
+            </span>
+        </td>
+        <td>
+            <div class="row-actions">
+                <button class="text-btn" onclick="editCoach(this)">Edit</button>
+                <button class="text-btn" onclick="toggleCoach(this)">
+                    ${status === 'Active' ? 'Deactivate' : 'Activate'}
+                </button>
+            </div>
+        </td>
+    `;
+
+    closeCoachModal();
+    document.getElementById('coachNotice').classList.add('show');
+    applyCoachFilters();
+});
+
+function toggleCoach(btn) {
+    const row = btn.closest('tr');
+
+    row.dataset.status =
+        row.dataset.status === 'Active' ? 'Inactive' : 'Active';
+
+    const status = row.dataset.status;
+
+    row.cells[3].innerHTML = `
+        <span class="status ${status === 'Active' ? 'status-active' : 'status-inactive'}">
+            ${status}
+        </span>
+    `;
+
+    btn.textContent = status === 'Active' ? 'Deactivate' : 'Activate';
+    document.getElementById('coachNotice').classList.add('show');
+    applyCoachFilters();
+}
+
+function applyCoachFilters() {
+    const q = document.getElementById('coachSearch').value.toLowerCase(),
+          s = document.getElementById('coachStatusFilter').value;
+
+    let visible = 0,
+        active = 0,
+        specialties = new Set(),
+        total = document.querySelectorAll('#coachTable tbody tr').length;
+
+    document.querySelectorAll('#coachTable tbody tr').forEach(r => {
+        const matches =
+            r.innerText.toLowerCase().includes(q) &&
+            (!s || r.dataset.status === s);
+
+        r.hidden = !matches;
+
+        if (matches) visible++;
+        if (r.dataset.status === 'Active') active++;
+
+        (r.dataset.specialties || '')
+            .split(',')
+            .filter(Boolean)
+            .forEach(x => specialties.add(x));
+    });
+
+    document.getElementById('coachCount').textContent =
+        `Showing ${visible} of ${total} coaches`;
+
+    document.getElementById('totalCoaches').textContent = total;
+    document.getElementById('activeCoaches').textContent = active;
+    document.getElementById('specialtyCount').textContent = specialties.size;
+}
+
+document.getElementById('coachSearch')
+    .addEventListener('input', applyCoachFilters);
+
+document.getElementById('coachStatusFilter')
+    .addEventListener('change', applyCoachFilters);
+
+coachModal.addEventListener('click', e => {
+    if (e.target === coachModal) closeCoachModal();
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeCoachModal();
+});
+</script>
+</body>
 </html>

@@ -31,7 +31,7 @@
 <div class="nav-actions">
 {% if user.is_authenticated %}
   <span class="account-label">Hi, {{ user.first_name|default:user.username }}</span>
-  {% include 'myfit/partials/notification_dropdown.html' %} <a class="myfit-profile-link" href="{% url 'myfit:edit_profile' %}">Edit profile</a>
+  {% include 'myfit/partials/notification_dropdown.html' %}
   <a class="join-btn" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
   <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="login-btn logout-button" type="submit">Log out</button></form>
 {% else %}
@@ -52,43 +52,101 @@
 <button type="button" class="channel-card" data-topic="Coaching"><span class="channel-icon"><svg class="icon icon-lg"><use href="#i-users"/></svg></span><span><strong>Coaching</strong><p>Find the training guidance that matches your goals.</p><span class="channel-arrow">ENQUIRE NOW →</span></span></button>
 <button type="button" class="channel-card" data-topic="Account & access"><span class="channel-icon"><svg class="icon icon-lg"><use href="#i-shield"/></svg></span><span><strong>Account & access</strong><p>Questions about signing in, membership passes and visits.</p><span class="channel-arrow">GET HELP →</span></span></button>
 </div></section>
-<section class="contact-section section-pad" id="message"><div class="container"><div class="section-head"><p>01 / GET IN TOUCH</p><h2>HOW CAN WE <span>HELP?</span></h2><p class="intro">Tell us what you need. Send an enquiry or open a support ticket; submitted messages are stored securely in MyFit.</p></div>
-<div class="contact-columns"><div class="form-card"><div class="form-header"><div><h3 class="form-title">SEND US A MESSAGE</h3><p>General enquiries are available to everyone; log in to create a trackable ticket.</p></div><span class="demo-pill">LIVE SUPPORT</span></div>
-<form id="contactForm" method="post" action="{% url 'myfit:contact' %}" autocomplete="on">{% csrf_token %}<fieldset class="type-pick page-inline-1"><legend class="sr-only page-inline-2">Message type</legend><label><input type="radio" name="kind" value="enquiry" {% if contact_form.kind.value != "ticket" %}checked{% endif %}><span>GENERAL ENQUIRY</span></label><label><input type="radio" name="kind" value="ticket" {% if contact_form.kind.value == "ticket" %}checked{% endif %}><span>SUPPORT TICKET</span></label></fieldset>
+<section class="contact-section section-pad" id="message"><div class="container"><div class="section-head"><p>01 / GET IN TOUCH</p><h2>HOW CAN WE <span>HELP?</span></h2><p class="intro">Tell us what you need. This form is a frontend demonstration for the MyFit assignment; real submissions will be connected to Django later.</p></div>
+<div class="contact-columns"><div class="form-card"><div class="form-header"><div><h3 class="form-title">SEND US A MESSAGE</h3><p>Choose a general enquiry or preview submitting a support ticket.</p></div><span class="demo-pill">FRONTEND DEMO</span></div>
+<form id="contactForm" autocomplete="on"><fieldset class="type-pick page-inline-1"><legend class="sr-only page-inline-2">Message type</legend><label><input type="radio" name="kind" value="enquiry" checked><span>GENERAL ENQUIRY</span></label><label><input type="radio" name="kind" value="ticket"><span>SUPPORT TICKET</span></label></fieldset>
 <div class="form-grid">
-<div class="field"><label for="name">Your full name <em>*</em></label><input id="name" name="name" type="text" autocomplete="name" placeholder="Enter your name" maxlength="100" required value="{{ contact_form.name.value|default_if_none:'' }}"></div>
-<div class="field"><label for="email">Email address <em>*</em></label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="160" required value="{{ contact_form.email.value|default_if_none:'' }}"></div>
-<div class="field"><label for="topic">What can we help with? <em>*</em></label><select id="topic" name="topic" required><option value="">Select a topic</option><option {% if contact_form.topic.value == "Membership" %}selected{% endif %}>Membership</option><option {% if contact_form.topic.value == "Classes & bookings" %}selected{% endif %}>Classes & bookings</option><option {% if contact_form.topic.value == "Coaching" %}selected{% endif %}>Coaching</option><option {% if contact_form.topic.value == "Account & access" %}selected{% endif %}>Account & access</option><option {% if contact_form.topic.value == "Attendance & membership pass" %}selected{% endif %}>Attendance & membership pass</option><option {% if contact_form.topic.value == "Other" %}selected{% endif %}>Other</option></select></div>
-<div class="field"><label for="branch">Preferred branch</label><select id="branch" name="branch"><option value="">Not branch-specific</option>{% for branch in contact_branches %}<option value="{{ branch.name }}" {% if contact_form.branch.value == branch.name %}selected{% endif %}>{{ branch.name }}</option>{% endfor %}</select></div>
-<div class="field full"><label for="subject">Subject <em>*</em></label><input id="subject" name="subject" placeholder="Briefly describe your question" required maxlength="130" value="{{ contact_form.subject.value|default_if_none:'' }}"></div>
-<div class="field full"><label for="messageBody">Message <em>*</em></label><textarea id="messageBody" name="message" placeholder="Tell us more about your question or issue…" minlength="10" maxlength="2000" required>{{ contact_form.message.value|default_if_none:"" }}</textarea></div>
-</div><div class="form-bottom"><p class="small-note">Fields marked * are required. Your request will be saved in the MyFit database; no automatic email is sent.</p><button type="submit" class="btn btn-pink">SEND REQUEST <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button></div>{% if contact_form.errors %}<div class="form-message" role="alert">Please check your submission: {{ contact_form.errors }}</div>{% endif %}
-{% if messages %}{% for message in messages %}<div class="form-message" role="status">{{ message }}</div>{% endfor %}{% endif %}</form></div>
-<aside class="sidebar" aria-label="Other ways to get help"><div class="info-panel accent"><svg class="icon top-icon"><use href="#i-message"/></svg><h3>WE'RE HERE TO HELP</h3><p>Need guidance before joining? Browse our coaches, compare membership plans and find the right branch for you.</p><a class="btn btn-yellow" href="{% url 'myfit:plans' %}">EXPLORE PLANS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div><div class="info-panel"><h3>QUICK LINKS</h3><nav class="useful-links" aria-label="Useful support links"><a href="{% url 'myfit:plans' %}">Membership options <span>↗</span></a><a href="{% url 'myfit:classes' %}">Class timetable <span>↗</span></a><a href="{% url 'myfit:coaches' %}">Our coaches <span>↗</span></a><a href="{% url 'myfit:login' %}">Login & account access <span>↗</span></a></nav></div><div class="info-panel last-panel"><h3>VISIT A MYFIT BRANCH</h3><p>Explore branch information and facilities. Contact details and opening hours appear when provided for the branch.</p><div class="locations-strip">{% for branch in contact_branches %}<div class="loc"><svg class="icon icon-sm pin"><use href="#i-pin"/></svg><span>{{ branch.name }}<small>{{ branch.address|truncatechars:70 }}</small></span></div>{% empty %}<p>Contact MyFit for up-to-date branch information.</p>{% endfor %}</div><p class="page-inline-3"><a href="{% url 'myfit:branches' %}" class="page-inline-4">ALL BRANCHES →</a></p></div></aside>
+<div class="field"><label for="name">Your full name <em>*</em></label><input id="name" name="name" type="text" autocomplete="name" placeholder="Enter your name" maxlength="100" required></div>
+<div class="field"><label for="email">Email address <em>*</em></label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="160" required></div>
+<div class="field"><label for="topic">What can we help with? <em>*</em></label><select id="topic" name="topic" required><option value="">Select a topic</option><option>Membership</option><option>Classes & bookings</option><option>Coaching</option><option>Account & access</option><option>Attendance & membership pass</option><option>Other</option></select></div>
+<div class="field"><label for="branch">Preferred branch</label><select id="branch" name="branch"><option value="">Not branch-specific</option><option>Caudan Waterfront — Port Louis</option><option>Emerald Park — Trianon</option><option>Riche Terre — Port Louis</option><option>Plaisance Mall — Rose Belle (coming soon)</option></select></div>
+<div class="field full"><label for="subject">Subject <em>*</em></label><input id="subject" name="subject" placeholder="Briefly describe your question" required maxlength="130"></div>
+<div class="field full"><label for="messageBody">Message <em>*</em></label><textarea id="messageBody" name="message" placeholder="Tell us more about your question or issue…" minlength="10" maxlength="2000" required></textarea></div>
+</div><div class="form-bottom"><p class="small-note">Fields marked * are required. No email is sent and no information is saved to a server in this prototype.</p><button type="submit" class="btn btn-pink">PREVIEW SUBMISSION <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button></div><p id="formMessage" class="form-message" role="status" aria-live="polite" hidden></p></form></div>
+<aside class="sidebar" aria-label="Other ways to get help"><div class="info-panel accent"><svg class="icon top-icon"><use href="#i-message"/></svg><h3>WE'RE HERE TO HELP</h3><p>Need guidance before joining? Browse our coaches, compare membership plans and find the right branch for you.</p><a class="btn btn-yellow" href="{% url 'myfit:plans' %}">EXPLORE PLANS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div><div class="info-panel"><h3>QUICK LINKS</h3><nav class="useful-links" aria-label="Useful support links"><a href="{% url 'myfit:plans' %}">Membership options <span>↗</span></a><a href="{% url 'myfit:classes' %}">Class timetable <span>↗</span></a><a href="{% url 'myfit:coaches' %}">Our coaches <span>↗</span></a><a href="{% url 'myfit:login' %}">Login & account access <span>↗</span></a></nav></div><div class="info-panel last-panel"><h3>VISIT A MYFIT BRANCH</h3><p>Explore branch information and facilities. Contact details and opening hours will be added when officially confirmed.</p><div class="locations-strip"><div class="loc"><svg class="icon icon-sm pin"><use href="#i-pin"/></svg><span>Caudan Waterfront<small>Port Louis · Active</small></span></div><div class="loc"><svg class="icon icon-sm pin"><use href="#i-pin"/></svg><span>Emerald Park<small>Trianon · Active</small></span></div><div class="loc"><svg class="icon icon-sm pin"><use href="#i-pin"/></svg><span>Riche Terre<small>Port Louis · Active</small></span></div></div><p class="page-inline-3"><a href="{% url 'myfit:branches' %}" class="page-inline-4">ALL BRANCHES →</a></p></div></aside>
 </div></div></section>
-<section class="tickets-section section-pad" id="tickets"><div class="container"><div class="tickets-bar"><div class="section-head"><p>02 / TRACK YOUR REQUESTS</p><h2>SUPPORT <span>TICKETS</span></h2><p class="intro">Logged-in members can view their own saved support requests.</p></div><div class="ticket-pills" role="group" aria-label="Filter tickets by status"><button type="button" class="ticket-filter" data-status="all" aria-pressed="true">All tickets</button><button type="button" class="ticket-filter" data-status="open" aria-pressed="false">Open</button><button type="button" class="ticket-filter" data-status="progress" aria-pressed="false">In progress</button><button type="button" class="ticket-filter" data-status="resolved" aria-pressed="false">Resolved</button></div></div>
-<div class="table-wrap"><table class="tickets-table"><thead><tr><th>Ticket ID</th><th>Subject</th><th>Category</th><th>Status</th><th>Submitted</th><th>Details</th></tr></thead><tbody id="ticketRows">
-{% for ticket in my_tickets %}<tr data-status="{{ ticket.status }}"><td>MF-{{ ticket.pk }}</td><td>{{ ticket.subject }}</td><td>{{ ticket.topic }}</td><td><span class="status-badge">{{ ticket.get_status_display }}</span></td><td>{{ ticket.created_at|date:'d M Y' }}</td><td><a class="details-btn" href="{% url 'myfit:support_ticket_detail' ticket.pk %}">View ticket</a></td></tr>{% empty %}<tr><td colspan="6">{% if user.is_authenticated %}You have no support tickets yet.{% else %}Log in to create and track tickets.{% endif %}</td></tr>{% endfor %}
-</tbody></table></div><div class="ticket-foot"><p>Ticket records are stored in Django and visible only to their owner or an administrator.</p></div></div></section>
+<section class="tickets-section section-pad" id="tickets"><div class="container"><div class="tickets-bar"><div class="section-head"><p>02 / TRACK YOUR REQUESTS</p><h2>SUPPORT <span>TICKETS</span></h2><p class="intro">Sample ticket history to demonstrate how a future logged-in member will track support requests.</p></div><div class="ticket-pills" role="group" aria-label="Filter tickets by status"><button type="button" class="ticket-filter" data-status="all" aria-pressed="true">All tickets</button><button type="button" class="ticket-filter" data-status="open" aria-pressed="false">Open</button><button type="button" class="ticket-filter" data-status="progress" aria-pressed="false">In progress</button><button type="button" class="ticket-filter" data-status="resolved" aria-pressed="false">Resolved</button></div></div>
+<div class="table-wrap"><table class="tickets-table"><thead><tr><th scope="col">Ticket ID</th><th scope="col">Subject</th><th scope="col">Category</th><th scope="col">Status</th><th scope="col">Submitted</th><th scope="col">Action</th></tr></thead><tbody id="ticketRows"></tbody></table><div class="empty-tickets" id="emptyTickets" hidden>No tickets match this filter.</div></div><div class="ticket-foot"><p>Example data only. Ticket records are not retrieved from your Django database.</p><p>In the final system, members will see only their own tickets after login.</p></div></div></section>
 <section class="faq-section section-pad" id="faq"><div class="container"><div class="section-head"><p>03 / BEFORE YOU ASK</p><h2>FREQUENTLY ASKED <span>QUESTIONS</span></h2><p class="intro">A few helpful answers about MyFit's planned membership and digital services.</p></div><div class="faq-layout"><div class="faq-art"><img src="{% static 'images/contact/contact-training.webp' %}" alt="Illustrative modern fitness studio with cardio equipment"><span>FIND YOUR<br><b>WAY FORWARD</b></span></div><div class="faq-list">
 <details><summary>How do I become a MyFit member?</summary><p>Explore the options on our <a href="{% url 'myfit:plans' %}">Membership Plans</a> page, then use the registration link to begin creating an account. Online registration is part of the planned Django integration.</p></details>
 <details><summary>Where are the MyFit gym branches?</summary><p>The project includes Caudan Waterfront in Port Louis, Emerald Park in Trianon and Riche Terre, with Plaisance Mall in Rose Belle marked as coming soon. Browse the <a href="{% url 'myfit:branches' %}">Branches page</a> for more information.</p></details>
 <details><summary>Can I explore classes before becoming a member?</summary><p>Yes. Visit <a href="{% url 'myfit:classes' %}">Classes</a> to explore sample class programmes such as Strength, HIIT, Yoga and Zumba. Actual booking will require account functionality once the backend is connected.</p></details>
 <details><summary>What is the digital membership pass?</summary><p>The planned digital pass displays your membership information and a QR/barcode for gym access and automated attendance tracking. Validation and check-in confirmation will be handled by the backend later.</p></details>
-<details><summary>How do support tickets work?</summary><p>A member will submit a question or issue, then follow its status (open, in progress or resolved). The request is saved in MyFit and linked to your account when you are logged in.</p></details>
+<details><summary>How do support tickets work?</summary><p>A member will submit a question or issue, then follow its status (open, in progress or resolved). This page currently demonstrates the interface only; the form does not submit to a server.</p></details>
 <details><summary>How can I contact a coach?</summary><p>Visit <a href="{% url 'myfit:coaches' %}">Our Coaches</a> for the public coach directory, or select "Coaching" from the enquiry form above.</p></details>
 </div></div></div></section>
 <section class="cta"><div class="container cta-inner"><div><h2>READY TO <span>MOVE FORWARD?</span></h2><p>Discover the plan that fits you, find your closest gym and start building a stronger routine with MyFit.</p></div><a class="btn" href="{% url 'myfit:register' %}">JOIN MYFIT <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div></section>
 </main>
 <footer class="footer"><div class="container footer-main"><a href="{% url 'myfit:home' %}" class="logo" aria-label="Back to MyFit home"><img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42"><span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small></a><p>TRAIN HARD. TRACK SMARTER.<br>BUILD SOMETHING BETTER</p><nav aria-label="Footer links"><a href="{% url 'myfit:home' %}">HOME</a><a href="{% url 'myfit:coaches' %}">COACHES</a><a href="{% url 'myfit:classes' %}">CLASSES</a><a href="{% url 'myfit:plans' %}">MEMBERSHIP</a><a href="{% url 'myfit:branches' %}">BRANCHES</a><a href="{% url 'myfit:contact' %}">SUPPORT</a></nav></div><div class="container footer-bottom"><span>© {% now "Y" %} MYFIT MAURITIUS</span><a href="#main-content">BACK TO TOP ↑</a><span>MADE TO MOVE. <b>BUILT TO LAST.</b></span></div></footer>
+<dialog id="ticketDialog" class="ticket-modal" aria-labelledby="ticketDialogTitle"><div class="modal-top"><div><p>SUPPORT TICKET DETAILS</p><h3 id="ticketDialogTitle">Ticket details</h3></div><button class="modal-close" id="closeTicket" type="button" aria-label="Close ticket details">×</button></div><div class="modal-body"><dl><div><dt>Ticket ID</dt><dd id="d-id"></dd></div><div><dt>Status</dt><dd id="d-status"></dd></div><div><dt>Category</dt><dd id="d-topic"></dd></div><div><dt>Submitted</dt><dd id="d-date"></dd></div></dl><p class="page-inline-5">MESSAGE</p><div class="modal-message" id="d-message"></div><p class="page-inline-6">This is a frontend demonstration; no real customer records or staff replies are displayed.</p></div></dialog>
 <script>
-(() => {
- const topic = document.getElementById('topic');
- document.querySelectorAll('[data-topic]').forEach(btn => btn.addEventListener('click', () => {topic.value = btn.dataset.topic; topic.focus()}));
- document.querySelectorAll('.ticket-filter').forEach(btn => btn.addEventListener('click', () => {
-  document.querySelectorAll('.ticket-filter').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
-  document.querySelectorAll('#ticketRows tr[data-status]').forEach(row => {row.hidden = btn.dataset.status !== 'all' && row.dataset.status !== btn.dataset.status;});
- }));
+(function(){
+  'use strict';
+  const form = document.getElementById('contactForm');
+  const topic = document.getElementById('topic');
+  const msg = document.getElementById('formMessage');
+  const rows = document.getElementById('ticketRows');
+  const empty = document.getElementById('emptyTickets');
+  const modal = document.getElementById('ticketDialog');
+  let selectedStatus = 'all';
+  let nextId = 1004;
+  const tickets = [
+    {id:'MF-1003',subject:'Membership renewal question',topic:'Membership',status:'open',date:'Sample record',message:'Hello, I would like to know how renewal options will work once memberships become available online.'},
+    {id:'MF-1002',subject:'Class booking enquiry',topic:'Classes & bookings',status:'progress',date:'Sample record',message:'I would like to find out about class booking availability at Trianon.'},
+    {id:'MF-1001',subject:'Digital pass information',topic:'Account & access',status:'resolved',date:'Sample record',message:'Where will I be able to find my digital membership pass after creating an account?'}
+  ];
+  const statusLabels = {open:'Open',progress:'In progress',resolved:'Resolved'};
+  function statusBadge(status){const el=document.createElement('span');el.className='status '+status;el.textContent=statusLabels[status]||status;return el;}
+  function td(text,className){const el=document.createElement('td');el.textContent=text;if(className)el.className=className;return el;}
+  function renderTickets(){
+    rows.replaceChildren();
+    const matches = tickets.filter(t=>selectedStatus==='all'||t.status===selectedStatus);
+    matches.forEach(t=>{
+      const tr=document.createElement('tr');tr.append(td(t.id,'ticket-id'),td(t.subject),td(t.topic));
+      const statusCell=document.createElement('td');statusCell.appendChild(statusBadge(t.status));tr.append(statusCell,td(t.date));
+      const actions=document.createElement('td');const btn=document.createElement('button');btn.type='button';btn.className='details-btn';btn.textContent='View details';btn.addEventListener('click',()=>showTicket(t));actions.appendChild(btn);tr.appendChild(actions);rows.appendChild(tr);
+    });
+    empty.hidden=matches.length!==0;
+  }
+  function showTicket(t){
+    document.getElementById('ticketDialogTitle').textContent=t.subject;
+    document.getElementById('d-id').textContent=t.id;
+    const statusEl=document.getElementById('d-status');statusEl.replaceChildren(statusBadge(t.status));
+    document.getElementById('d-topic').textContent=t.topic;
+    document.getElementById('d-date').textContent=t.date;
+    document.getElementById('d-message').textContent=t.message;
+    if(typeof modal.showModal==='function')modal.showModal();
+  }
+  document.getElementById('closeTicket').addEventListener('click',()=>modal.close());
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.close()});
+  document.querySelectorAll('.ticket-filter').forEach(btn=>btn.addEventListener('click',()=>{
+    selectedStatus=btn.dataset.status;
+    document.querySelectorAll('.ticket-filter').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+    renderTickets();
+  }));
+  document.querySelectorAll('[data-topic]').forEach(btn=>btn.addEventListener('click',()=>{
+    topic.value=btn.dataset.topic;
+    document.getElementById('message').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    topic.focus({preventScroll:true});
+  }));
+  form.addEventListener('submit',e=>{
+    e.preventDefault();
+    if(!form.reportValidity())return;
+    const data=new FormData(form);
+    const kind=data.get('kind');
+    if(kind==='ticket'){
+      const ticket={id:'MF-'+nextId++,subject:String(data.get('subject')).trim(),topic:String(data.get('topic')),status:'open',date:'Demo — current session',message:String(data.get('message')).trim()};
+      tickets.unshift(ticket);selectedStatus='all';
+      document.querySelectorAll('.ticket-filter').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.status==='all')));
+      renderTickets();
+      msg.replaceChildren(); const strong=document.createElement('strong');strong.textContent='Demo ticket '+ticket.id+' created on this page. ';msg.append(strong,'It is not saved or sent to MyFit. Open the Support Tickets section below to view it.');msg.hidden=false;
+    }else{
+      msg.replaceChildren();const strong=document.createElement('strong');strong.textContent='Message preview complete. ';msg.append(strong,'No message has been emailed or stored. Django integration will be added later.');msg.hidden=false;
+    }
+    form.reset();msg.scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+  document.querySelectorAll('.mobile-menu nav a').forEach(a=>a.addEventListener('click',()=>{const m=document.querySelector('.mobile-menu');m.open=false;}));
+  renderTickets();
 })();
 </script>
 </body>

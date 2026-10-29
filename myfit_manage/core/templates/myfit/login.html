@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#121416">
   <meta name="description" content="Log in to your MyFit account.">
   <title>Log in | MyFit Mauritius</title>
-  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  <link rel="stylesheet" href="{% static 'css/trial_login.css' %}">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -31,18 +31,20 @@
         <a href="{% url 'myfit:classes' %}">Classes</a>
         <a href="{% url 'myfit:contact' %}">Support</a>
         {% include 'myfit/partials/membership_navigation.html' %}
-      </nav>
-      <div class="nav-actions">
         {% if user.is_authenticated %}
-          <span class="account-label">Hi, {{ user.first_name|default:user.username }}</span>
           {% include 'myfit/partials/notification_dropdown.html' %}
-          <a class="join-btn" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
-          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="login-btn logout-button" type="submit">Log out</button></form>
+          <a href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+          <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
         {% else %}
-          <a class="login-btn" href="{% url 'myfit:login' %}" aria-current="page">Log in</a>
-          <a class="join-btn" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
+          <a href="{% url 'myfit:login' %}" aria-current="page">Log in</a>
         {% endif %}
-      </div>
+      </nav>
+      {% if user.is_authenticated %}
+        <a class="nav-cta" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
+        <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+      {% else %}
+        <a class="nav-cta" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
+      {% endif %}
       <details class="mobile-menu">
         <summary aria-label="Open navigation menu"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
         <nav aria-label="Mobile navigation">
@@ -62,28 +64,6 @@
     </div>
   </header>
   <main id="main-content">
-    <!-- Developer: Deshrao Saccaram -->
-    {% if user.is_authenticated %}
-      <section class="login-section" aria-labelledby="login-title">
-        <div class="container login-layout">
-          <div class="login-visual">
-            <div class="visual-copy">
-              <p class="eyebrow">MYFIT MAURITIUS / MEMBER ACCESS</p>
-              <h1>WELCOME<br><span>BACK.</span></h1>
-              <p>Your next session, your progress and your MyFit membership start here.</p>
-            </div>
-          </div>
-          <div class="login-panel">
-            <div class="login-content">
-              <p class="section-kicker">YOUR TRAINING CONTINUES</p>
-              <h2 id="login-title">YOU'RE SIGNED IN</h2>
-              <p class="intro">You're already signed in to MyFit. Continue to your membership and account tools.</p>
-              <a class="submit-button" href="{% url 'myfit:home' %}">CONTINUE TO MYFIT</a>
-            </div>
-          </div>
-        </div>
-      </section>
-    {% else %}
     <section class="login-section" aria-labelledby="login-title">
       <div class="container login-layout">
         <div class="login-visual">
@@ -129,7 +109,6 @@
         </div>
       </div>
     </section>
-    {% endif %}
   </main>
   <footer class="site-footer">
     <div class="container footer-main">
