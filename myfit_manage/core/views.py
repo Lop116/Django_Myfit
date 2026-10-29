@@ -9,9 +9,11 @@ from django.contrib.auth.views import LoginView #Loick
 from .permissions import role_required #Loick
 from .models import WebsiteImage #Loick
 
+from .notifications import notify_ticket_admin, notify_ticket_update #Wizzy
+
 
 import qrcode
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.auth import login as auth_login
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -29,6 +31,7 @@ from .forms import (
     AttendanceCheckInForm,
     ClientMembershipAssignmentForm,
     MembershipChangeRequestForm,
+    SupportTicketReplyForm,
 )
 from .membership_services import (
     assign_membership,
@@ -1290,16 +1293,352 @@ def support_manage(request):
     })
  
  
-@role_required('Admin')
+
+@role_required("Admin")
 @require_POST
 def support_update(request, ticket_id):
-    ticket = get_object_or_404(SupportTicket, pk=ticket_id)
-    status = request.POST.get('status')
-    if status not in dict(SupportTicket.STATUS_CHOICES):
-        return HttpResponseBadRequest('Invalid ticket status.')
-    ticket.status = status
-    ticket.save(update_fields=['status', 'updated_at'])
-    messages.success(request, f'Request MF-{ticket.pk} updated.')
-    return redirect('myfit:support_manage')
+    ticket = get_object_or_404(
+        SupportTicket,
+        pk=ticket_id,
+    )
+
+    new_status = request.POST.get("status")
+
+    if new_status not in dict(SupportTicket.STATUS_CHOICES):
+        return HttpResponseBadRequest("Invalid ticket status.")
+
+    old_status = ticket.status
+
+    if old_status != new_status:
+        ticket.status = new_status
+        ticket.save(update_fields=["status", "updated_at"])
+
+        if ticket.kind == "ticket" and ticket.user:
+            Notification.objects.create(
+                user=ticket.user,
+                title="Support ticket status updated",
+                message=(
+                    f"Your ticket MF-{ticket.pk} is now "
+                    f"{ticket.get_status_display()}."
+                ),
+                link=f"/support/tickets/{ticket.pk}/",
+            )
+
+    messages.success(request, f"Request MF-{ticket.pk} updated.")
+    return redirect("myfit:support_manage")
+
  
-#<<<<<<<<<<<<<<<--------------------
+#Wizzy dev TASK 5 - NOTIFICATIONS AND SUPPORT - -------------------
+
+# Display the logged-in user's notifications
+@login_required
+def notification_list(request):
+    notifications = Notification.objects.filter(
+        user=request.user
+    ).order_by("-created_at")
+
+    return render(
+        request,
+        "myfit/notifications.html",
+        {"notifications": notifications},
+    )
+    
+def _notification_redirect(request, default="myfit:notification_list"):
+    next_url = request.POST.get('next', '')
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
+    return redirect(default)
+
+
+# Mark one notification as read
+@login_required
+@require_POST
+def mark_notification_read(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        pk=notification_id,
+        user=request.user,
+    )
+
+    notification.is_read = True
+    notification.read_at = timezone.now()
+    notification.save(update_fields=["is_read", "read_at"])
+
+    return _notification_redirect(request)
+
+# Mark one notification as unread
+@login_required
+@require_POST
+def mark_notification_unread(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        pk=notification_id,
+        user=request.user,
+    )
+
+    notification.is_read = False
+    notification.read_at = None
+    notification.save(update_fields=["is_read", "read_at"])
+
+    return _notification_redirect(request)
+
+#mark all notifications as read
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    Notification.objects.filter(
+        user=request.user,
+        is_read=False,
+    ).update(
+        is_read=True,
+        read_at=timezone.now(),
+    )
+
+    messages.success(request, "All notifications marked as read.")
+    return _notification_redirect(request)
+
+#Create a support ticket
+@login_required
+def create_support_ticket(request):
+    if request.method == "POST":
+        subject = request.POST.get("subject", "").strip()
+        description = request.POST.get("description", "").strip()
+        priority = request.POST.get("priority", "normal")
+
+        valid_priorities = {
+            choice[0] for choice in SupportTicket.Priority.choices
+        }
+
+        if not subject or not description:
+            messages.error(
+                request, "Please complete the subject and description."
+            )
+        elif priority not in valid_priorities:
+            messages.error(request, "Please select a valid priority.")
+        else:
+            ticket = SupportTicket.objects.create(
+                client=request.user,
+                subject=subject,
+                description=description,
+                priority=priority,
+            )
+
+            # Store the initial description as the first conversation message.
+            SupportTicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=description,
+            )
+            notify_ticket_update(
+                ticket,
+                f"Ticket #{ticket.pk} received",
+                f"We received your request \"{ticket.subject}\". Support will reply soon.",
+            )
+
+            messages.success(request, "Your support ticket was created.")
+            return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
+
+    return render(request, "myfit/support_ticket_form.html")
+
+
+#list the user's current tickets
+@login_required
+def support_ticket_list(request):
+    if request.user.is_staff:
+        tickets = SupportTicket.objects.all()
+    else:
+        tickets = SupportTicket.objects.filter(client=request.user)
+
+    return render(
+        request,
+        "myfit/support_ticket_list.html",
+        {"tickets": tickets},
+    )
+ 
+#View a ticket and its messages
+
+@login_required(login_url="myfit:login")
+def support_ticket_detail(request, ticket_id):
+    ticket = get_object_or_404(
+        SupportTicket,
+        pk=ticket_id,
+        kind="ticket",
+    )
+
+    is_admin = has_role(request.user, "Admin")
+
+    # A client can only access their own ticket.
+    if ticket.user_id != request.user.pk and not is_admin:
+        raise PermissionDenied(
+            "You cannot access another user's support ticket."
+        )
+
+    reply_form = SupportTicketReplyForm()
+
+    if request.method == "POST":
+        reply_form = SupportTicketReplyForm(request.POST)
+
+        if reply_form.is_valid():
+            # Clients cannot reply to closed/resolved tickets.
+            if not is_admin and ticket.status == "resolved":
+                messages.error(
+                    request,
+                    "This ticket has been resolved. "
+                    "Contact support if you need further assistance.",
+                )
+                return redirect(
+                    "myfit:support_ticket_detail",
+                    ticket_id=ticket.pk,
+                )
+
+            reply = reply_form.save(commit=False)
+            reply.ticket = ticket
+            reply.sender = request.user
+
+            # Only administrators may create internal notes.
+            reply.is_internal_note = (
+                is_admin
+                and request.POST.get("is_internal_note") == "on"
+            )
+            reply.save()
+
+            # A client reply reopens a resolved ticket.
+            if not is_admin and ticket.status == "resolved":
+                ticket.status = "open"
+                ticket.save(update_fields=["status", "updated_at"])
+
+            # Notify the client when an admin sends a public reply.
+            if is_admin and not reply.is_internal_note and ticket.user:
+                Notification.objects.create(
+                    user=ticket.user,
+                    title="Support ticket updated",
+                    message=f"Your ticket MF-{ticket.pk} has a new reply.",
+                    link=f"/support/tickets/{ticket.pk}/",
+                )
+
+            messages.success(request, "Your reply has been sent.")
+            return redirect(
+                "myfit:support_ticket_detail",
+                ticket_id=ticket.pk,
+            )
+
+    conversation = ticket.messages.select_related("sender")
+
+    # Never expose private admin notes to clients.
+    if not is_admin:
+        conversation = conversation.filter(is_internal_note=False)
+
+    return render(
+        request,
+        "myfit/support_ticket_detail.html",
+        {
+            "ticket": ticket,
+            "conversation": conversation,
+            "reply_form": reply_form,
+            "is_admin": is_admin,
+        },
+    )
+
+
+#reply to a ticket
+@login_required
+@require_POST
+def reply_to_support_ticket(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, pk=ticket_id)
+
+    if not request.user.is_staff and ticket.client_id != request.user.id:
+        raise PermissionDenied
+
+    if ticket.status == SupportTicket.Status.CLOSED and not request.user.is_staff:
+        messages.error(request, "This ticket is closed and cannot be replied to.")
+        return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
+
+    message_text = request.POST.get("message", "").strip()
+
+    if not message_text:
+        messages.error(request, "Please enter a message.")
+        return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
+
+    # Only staff can write internal notes.
+    is_internal = request.user.is_staff and request.POST.get("is_internal") == "on"
+
+    SupportTicketMessage.objects.create(
+        ticket=ticket,
+        sender=request.user,
+        message=message_text,
+        is_internal=is_internal,
+    )
+
+    if request.user.is_staff:
+        # Take the ticket if nobody has it yet.
+        if ticket.assigned_admin is None:
+            ticket.assigned_admin = request.user
+        if not is_internal:
+            ticket.status = SupportTicket.Status.WAITING_FOR_CLIENT
+            notify_ticket_update(
+                ticket,
+                f"New reply on ticket #{ticket.pk}",
+                f"Support replied to \"{ticket.subject}\".",
+            )
+    else:
+        ticket.status = SupportTicket.Status.OPEN
+        notify_ticket_admin(
+            ticket,
+            f"Client replied on ticket #{ticket.pk}",
+            f"{request.user.username} replied to \"{ticket.subject}\".",
+        )
+
+    # Saves the changes above and bumps updated_at so the list reorders.
+    ticket.save()
+
+    messages.success(request, "Your reply was sent.")
+    return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
+
+
+#restricts updates to staff accounts and validates submitted values
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+@require_POST
+def update_support_ticket(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, pk=ticket_id)
+
+    status = request.POST.get("status")
+    priority = request.POST.get("priority")
+
+    valid_statuses = {
+        choice[0] for choice in SupportTicket.Status.choices
+    }
+    valid_priorities = {
+        choice[0] for choice in SupportTicket.Priority.choices
+    }
+
+    if status not in valid_statuses or priority not in valid_priorities:
+        messages.error(request, "Invalid ticket status or priority.")
+        return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
+
+    status_changed = ticket.status != status
+    priority_changed = ticket.priority != priority
+
+    ticket.status = status
+    ticket.priority = priority
+    ticket.save(update_fields=["status", "priority", "updated_at"])
+
+    # Only notify if something actually changed.
+    if status_changed or priority_changed:
+        changes = []
+        if status_changed:
+            changes.append(f"Status is now {ticket.get_status_display()}.")
+        if priority_changed:
+            changes.append(f"Priority is now {ticket.get_priority_display()}.")
+        notify_ticket_update(
+            ticket,
+            f"Ticket #{ticket.pk} updated",
+            " ".join(changes),
+        )
+
+    messages.success(request, "Ticket updated successfully.")
+    return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)

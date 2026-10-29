@@ -18,6 +18,8 @@ from .models import (
     CoachClientAssignment,
     WorkoutLog,
     ProgressEntry,
+    SupportTicket,
+    SupportTicketMessage,
 )
 
 
@@ -214,3 +216,8 @@ class SupportTicketAdmin(admin.ModelAdmin):
     search_fields = ('subject','email','name','message')
     readonly_fields = ('created_at','updated_at')
 #>--------
+# Register support ticket model in Django Admin - Wizzy
+
+class SupportTicketMessageInline(admin.TabularInline):
+    model = SupportTicketMessage
+    extra = 0

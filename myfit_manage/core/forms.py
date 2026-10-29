@@ -6,6 +6,8 @@ from .models import (
     ClientMembership,
     MembershipChangeRequest,
     MembershipPlan,
+    SupportTicket, 
+    SupportTicketMessage,
 )
 
 class RegistrationForm(UserCreationForm):
@@ -396,4 +398,26 @@ class ContactSubmissionForm(forms.ModelForm):
             raise forms.ValidationError('Please enter at least 10 characters.')
         return value
 
-#>.-----------------------------------------------
+#>. wizzy-----------------------------------------------
+
+class SupportTicketReplyForm(forms.ModelForm):
+    class Meta:
+        model = SupportTicketMessage
+        fields = ["message"]
+        widgets = {
+            "message": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Write your reply...",
+            }),
+        }
+
+    def clean_message(self):
+        message = self.cleaned_data["message"].strip()
+
+        if len(message) < 2:
+            raise forms.ValidationError(
+                "Your reply must contain at least 2 characters."
+            )
+
+        return message
+
