@@ -1,0 +1,78 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>MyFit Management</title>
+        <link rel="stylesheet" href="{% static 'css/manage_branches.css' %}">
+        <link rel="stylesheet" href="{% static 'css/management_forms.css' %}">
+    </head>
+    <body>
+        <div class="shell">
+            <aside class="sidebar">
+                <a class="brand" href="{% url 'myfit:admin_dashboard' %}">
+                    <span class="brand-mark">M</span>
+                    <span>MY<span>FIT</span></span>
+                </a>
+                <div class="nav-label">MANAGEMENT</div>
+                <a class="nav-link" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
+                <a class="nav-link" href="{% url 'myfit:manage_branches' %}">Manage branches</a>
+                <a class="nav-link" href="{% url 'myfit:manage_coaches' %}">Manage coaches</a>
+                <a class="nav-link" href="{% url 'myfit:specialty_manage' %}">Coach specialties</a>
+                <a class="nav-link" href="{% url 'myfit:support_manage' %}">Support requests</a>
+                <a class="nav-link" href="{% url 'myfit:home' %}">Public website</a>
+                <div class="sidebar-note">
+                    <strong>MYFIT MANAGEMENT
+                    </strong>Changes are saved in the Django database.
+                </div>
+            </aside>
+            <main class="main">
+                <header class="topbar">
+                    <div>
+                        <p class="eyebrow">Admin / Edit details</p>
+                        <h1 class="page-title">{{ heading }}</h1>
+                        <p class="subtitle">Fields marked as required must be completed.</p>
+                    </div>
+                </header>
+                {% if messages %}
+                {% for message in messages %}
+                <div class="notice show" role="status">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+                <section class="panel myfit-form-card">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                        <div class="myfit-errors">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+                        {% for field in form %}
+                        <div class="form-field myfit-form-field">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}{% if field.field.required %} *{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small class="help">
+                                {{ field.help_text }}
+                            </small>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="myfit-errors">
+                                {{ field.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <div class="modal-actions">
+                            <a class="btn btn-secondary" href="{{ back_url }}">Cancel</a>
+                            <button class="btn btn-primary" type="submit">Save changes</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </body>
+</html>

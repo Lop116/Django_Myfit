@@ -1,0 +1,31 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>MyFit Ticket MF-{{ ticket.pk }}</title>
+        <link rel="stylesheet" href="{% static 'css/management_forms.css' %}">
+    </head>
+    <body class="myfit-public-page">
+        <main class="myfit-public-panel">
+            <a class="myfit-back" href="{% url 'myfit:contact' %}#tickets">← Support tickets</a>
+            <h1>Ticket MF-{{ ticket.pk }}</h1>
+            <p>
+                <strong>Status:</strong> {{ ticket.get_status_display }}
+            </p>
+            <p>
+                <strong>Category:</strong> {{ ticket.topic }}
+            </p>
+            <p>
+                <strong>Branch:</strong> {{ ticket.branch|default:'Not specified' }}
+            </p>
+            <p>
+                <strong>Submitted:</strong> {{ ticket.created_at }}
+            </p>
+            <h2>{{ ticket.subject }}</h2>
+            <p class="myfit-message">{{ ticket.message|linebreaksbr }}</p>
+            <p>For updates, contact MyFit and quote your ticket number.</p>
+        </main>
+    </body>
+</html>

@@ -1,0 +1,93 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>MyFit Management</title>
+        <link rel="stylesheet" href="{% static 'css/manage_branches.css' %}">
+        <link rel="stylesheet" href="{% static 'css/management_forms.css' %}">
+    </head>
+    <body>
+        <div class="shell">
+            <aside class="sidebar">
+                <a class="brand" href="{% url 'myfit:admin_dashboard' %}">
+                    <span class="brand-mark">M</span>
+                    <span>MY<span>FIT</span></span>
+                </a>
+                <div class="nav-label">MANAGEMENT</div>
+                <a class="nav-link" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
+                <a class="nav-link" href="{% url 'myfit:manage_branches' %}">Manage branches</a>
+                <a class="nav-link" href="{% url 'myfit:manage_coaches' %}">Manage coaches</a>
+                <a class="nav-link" href="{% url 'myfit:specialty_manage' %}">Coach specialties</a>
+                <a class="nav-link" href="{% url 'myfit:support_manage' %}">Support requests</a>
+                <a class="nav-link" href="{% url 'myfit:home' %}">Public website</a>
+                <div class="sidebar-note">
+                    <strong>MYFIT MANAGEMENT</strong>Changes are saved in the Django database.
+                </div>
+            </aside>
+            <main class="main">
+                <header class="topbar">
+                    <div>
+                        <p class="eyebrow">Admin / Support</p>
+                        <h1 class="page-title">Support requests</h1>
+                        <p class="subtitle">All submitted enquiries and tickets. Update progress without deleting history.</p>
+                    </div>
+                </header>
+                {% if messages %}
+                {% for message in messages %}
+                <div class="notice show">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                <section class="panel">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>REFERENCE</th>
+                                    <th>TYPE</th>
+                                    <th>FROM</th>
+                                    <th>SUBJECT / MESSAGE</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in tickets %}
+                                <tr>
+                                    <td>MF-{{ ticket.pk }}</td>
+                                    <td>{{ ticket.get_kind_display }}</td>
+                                    <td>{{ ticket.name }}
+                                        <br>
+                                        {{ ticket.email }}
+                                    </td>
+                                    <td>
+                                        <strong>{{ ticket.subject }}</strong>
+                                        <p class="myfit-message">{{ ticket.message|linebreaksbr }}</p>
+                                    </td>
+                                    <td>
+                                        <form method="post" action="{% url 'myfit:support_update' ticket.pk %}">
+                                            {% csrf_token %}
+                                            <select class="control" name="status">
+                                                <option value="open" {% if ticket.status == 'open' %}selected{% endif %}>Open</option>
+                                                <option value="progress" {% if ticket.status == 'progress' %}selected{% endif %}>In progress</option>
+                                                <option value="resolved" {% if ticket.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                            </select>
+                                            <button type="submit" class="text-btn">Update</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No enquiries yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </body>
+</html>

@@ -1,3 +1,4 @@
+#Loick
 {% load static %}
 <!doctype html>
 <html lang="en">
@@ -7,70 +8,99 @@
     <title>MyFit Management</title>
     <link rel="stylesheet" href="{% static 'css/manage_branches.css' %}">
     <link rel="stylesheet" href="{% static 'css/management_forms.css' %}">
-  </head><body><div class="shell">
+  </head>
+  <body>
+    <div class="shell">
     <aside class="sidebar">
       <a class="brand" href="{% url 'myfit:admin_dashboard' %}">
         <span class="brand-mark">M</span>
         <span>MY<span>FIT</span></span>
       </a>
-<div class="nav-label">MANAGEMENT</div><a class="nav-link" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
-<a class="nav-link" href="{% url 'myfit:manage_branches' %}">Manage branches</a>
-<a class="nav-link" href="{% url 'myfit:manage_coaches' %}">Manage coaches</a>
-<a class="nav-link" href="{% url 'myfit:specialty_manage' %}">Coach specialties</a><a class="nav-link" href="{% url 'myfit:support_manage' %}">Support requests</a>
-<a class="nav-link" href="{% url 'myfit:home' %}">Public website</a>
-<div class="sidebar-note">
-  <strong>MYFIT MANAGEMENT</strong>Changes are saved in the Django database.</div></aside>
-  <main class="main"><header class="topbar"><div><p class="eyebrow">Admin / Locations</p><h1 class="page-title">Manage branches</h1><p class="subtitle">Active branches appear on the public directory automatically.</p></div><a class="btn btn-primary" href="{% url 'myfit:branch_add' %}">＋ Add branch</a></header>{% if messages %}{% for message in messages %}<div class="notice show" role="status">{{ message }}</div>{% endfor %}{% endif %}<section class="stats"><article class="stat"><div class="stat-label">All branches</div><div class="stat-value">{{ branches|length }}</div></article><article class="stat"><div class="stat-label">Active</div><div class="stat-value">{{ active_branch_count }}</div></article></section>
-<section class="panel">
-  <div class="panel-head">
-    <h2 class="panel-title">Branch directory</h2>
-  </div><div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>BRANCH</th>
-          <th>ADDRESS</th>
-          <th>CONTACT</th>
-          <th>STATUS</th>
-          <th>ACTIONS</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for branch in branches %}
-        <tr>
-          <td>
-            <div class="primary-text">{{ branch.name }}</div>
-          </td>
-          <td>{{ branch.address }}</td>
-          <td>{{ branch.phone|default:'—' }}</td>
-          <td>
-            {% if branch.is_active %}
-            <span class="status status-active">Active</span>
-            {% else %}
-            <span class="status status-inactive">Inactive</span>
-            {% endif %}
-          </td>
-          <td>
-            <div class="row-actions">
-              <a class="text-btn" href="{% url 'myfit:branch_edit' branch.pk %}">Edit</a>
-              <form method="post" action="{% url 'myfit:branch_toggle' branch.pk %}">
-              {% csrf_token %}
-              <button type="submit" class="text-btn">
-              {% if branch.is_active %}Deactivate{% else %}Activate{% endif %}</button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5">No branches created yet. Select Add branch to create your first branch.</td>
-        </tr>
+      <div class="nav-label">MANAGEMENT</div><a class="nav-link" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
+      <a class="nav-link" href="{% url 'myfit:manage_branches' %}">Manage branches</a>
+      <a class="nav-link" href="{% url 'myfit:manage_coaches' %}">Manage coaches</a>
+      <a class="nav-link" href="{% url 'myfit:specialty_manage' %}">Coach specialties</a><a class="nav-link" href="{% url 'myfit:support_manage' %}">Support requests</a>
+      <a class="nav-link" href="{% url 'myfit:home' %}">Public website</a>
+      <div class="sidebar-note">
+        <strong>MYFIT MANAGEMENT</strong>Changes are saved in the Django database.</div>
+      </aside>
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Admin / Locations</p>
+            <h1 class="page-title">Manage branches</h1>
+            <p class="subtitle">Active branches appear on the public directory automatically.</p>
+          </div>
+          <a class="btn btn-primary" href="{% url 'myfit:branch_add' %}"> + Add branch</a>
+        </header>
+        {% if messages %}
+        {% for message in messages %}
+        <div class="notice show" role="status">{{ message }}</div>
         {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
-</main>
-</div>
-</body>
+        {% endif %}
+        <section class="stats">
+          <article class="stat">
+            <div class="stat-label">All branches</div>
+            <div class="stat-value">
+              {{ branches|length }}
+            </div>
+          </article>
+          <article class="stat">
+            <div class="stat-label">Active</div>
+            <div class="stat-value">{{ active_branch_count }}</div>
+          </article>
+        </section>
+        <section class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Branch directory</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>BRANCH</th>
+                  <th>ADDRESS</th>
+                  <th>CONTACT</th>
+                  <th>STATUS</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for branch in branches %}
+                <tr>
+                  <td>
+                    <div class="primary-text">{{ branch.name }}</div>
+                  </td>
+                  <td>{{ branch.address }}</td>
+                  <td>{{ branch.phone|default:'—' }}</td>
+                  <td>
+                    {% if branch.is_active %}
+                    <span class="status status-active">Active</span>
+                    {% else %}
+                    <span class="status status-inactive">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="row-actions">
+                      <a class="text-btn" href="{% url 'myfit:branch_edit' branch.pk %}">Edit</a>
+                      <form method="post" action="{% url 'myfit:branch_toggle' branch.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="text-btn">
+                      {% if branch.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5">No branches created yet. Select Add branch to create your first branch.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
 </html>
