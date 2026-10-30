@@ -1,31 +1,101 @@
+
 {% load static %}
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>MyFit Ticket MF-{{ ticket.pk }}</title>
-        <link rel="stylesheet" href="{% static 'css/management_forms.css' %}">
-    </head>
-    <body class="myfit-public-page">
-        <main class="myfit-public-panel">
-            <a class="myfit-back" href="{% url 'myfit:contact' %}#tickets">← Support tickets</a>
-            <h1>Ticket MF-{{ ticket.pk }}</h1>
-            <p>
-                <strong>Status:</strong> {{ ticket.get_status_display }}
-            </p>
-            <p>
-                <strong>Category:</strong> {{ ticket.topic }}
-            </p>
-            <p>
-                <strong>Branch:</strong> {{ ticket.branch|default:'Not specified' }}
-            </p>
-            <p>
-                <strong>Submitted:</strong> {{ ticket.created_at }}
-            </p>
-            <h2>{{ ticket.subject }}</h2>
-            <p class="myfit-message">{{ ticket.message|linebreaksbr }}</p>
-            <p>For updates, contact MyFit and quote your ticket number.</p>
-        </main>
-    </body>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MyFit Ticket MF-{{ ticket.pk }}</title>
+    <link rel="stylesheet" href="{% static 'css/management_forms.css' %}">
+</head>
+<body class="myfit-public-page">
+<main class="myfit-public-panel">
+
+    <a class="myfit-back"
+       href="{% if is_admin %}{% url 'myfit:support_manage' %}{% else %}{% url 'myfit:support_ticket_list' %}{% endif %}">
+        ← Back to support
+    </a>
+
+    <h1>Ticket MF-{{ ticket.pk }}</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <p><strong>Status:</strong> {{ ticket.get_status_display }}</p>
+    <p><strong>Category:</strong> {{ ticket.topic }}</p>
+    <p><strong>Branch:</strong> {{ ticket.branch|default:"Not specified" }}</p>
+    <p><strong>Submitted:</strong> {{ ticket.created_at }}</p>
+
+    <h2>{{ ticket.subject }}</h2>
+
+    <section>
+        <h3>Original request</h3>
+        <p>{{ ticket.message|linebreaksbr }}</p>
+    </section>
+
+    <hr>
+
+    <section>
+        <h2>Conversation</h2>
+
+        {% for reply in conversation %}
+            <article>
+                <p>
+                    <strong>
+                        {{ reply.sender.get_full_name|default:reply.sender.username }}
+                    </strong>
+
+                    <small>{{ reply.created_at }}</small>
+                </p>
+
+                {% if reply.is_internal_note %}
+                    {% if is_admin %}
+                        <p><strong>Internal admin note</strong></p>
+                    {% endif %}
+                {% endif %}
+
+                <p>{{ reply.message|linebreaksbr }}</p>
+            </article>
+            <hr>
+        {% empty %}
+            <p>No replies yet.</p>
+        {% endfor %}
+    </section>
+
+    {% if is_admin or ticket.status != "resolved" %}
+        <section>
+            <h2>
+                {% if is_admin %}Reply to ticket{% else %}Send a reply{% endif %}
+            </h2>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {{ reply_form.non_field_errors }}
+
+                <div>
+                    {{ reply_form.message.label_tag }}
+                    {{ reply_form.message }}
+                    {{ reply_form.message.errors }}
+                </div>
+
+                {% if is_admin %}
+                    <label>
+                        <input type="checkbox" name="is_internal_note">
+                        Add as private administrator note
+                    </label>
+                {% endif %}
+
+                <button type="submit">Send reply</button>
+            </form>
+        </section>
+    {% else %}
+        <p>This ticket has been resolved.</p>
+    {% endif %}
+
+</main>
+</body>
 </html>

@@ -65,6 +65,13 @@
                                     <td>
                                         <strong>{{ ticket.subject }}</strong>
                                         <p class="myfit-message">{{ ticket.message|linebreaksbr }}</p>
+                                        {% if ticket.kind == "ticket" %}
+                                            <p>
+                                                <a href="{% url 'myfit:support_ticket_detail' ticket.pk %}">
+                                                    Open conversation
+                                                </a>
+                                            </p>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <form method="post" action="{% url 'myfit:support_update' ticket.pk %}">

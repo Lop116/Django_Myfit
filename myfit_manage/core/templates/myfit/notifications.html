@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFit Notifications</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #0b0b0b;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            color: #facc15;
+        }
+
+        .notification {
+            background: #171717;
+            border: 1px solid #333333;
+            border-left: 4px solid #facc15;
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+
+        .unread {
+            border-left-color: #ffffff;
+        }
+
+        .muted {
+            color: #aaaaaa;
+            font-size: 13px;
+        }
+
+        button {
+            background: #facc15;
+            color: #111111;
+            border: none;
+            padding: 9px 13px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        a {
+            color: #facc15;
+        }
+    </style>
+</head>
+<body>
+    <h1>Notifications</h1>
+
+    {% for notification in notifications %}
+        <article class="notification {% if not notification.is_read %}unread{% endif %}">
+            <h3>{{ notification.title }}</h3>
+            <p>{{ notification.message }}</p>
+
+            <p class="muted">
+                {{ notification.created_at|date:"d M Y, H:i" }}
+                {% if notification.is_read %} · Read{% else %} · Unread{% endif %}
+            </p>
+
+            {% if notification.link %}
+                <p><a href="{{ notification.link }}">View details</a></p>
+            {% endif %}
+
+            {% if notification.is_read %}
+                <form method="post" action="{% url 'myfit:mark_notification_unread' notification.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Mark as unread</button>
+                </form>
+            {% else %}
+                <form method="post" action="{% url 'myfit:mark_notification_read' notification.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Mark as read</button>
+                </form>
+            {% endif %}
+        </article>
+    {% empty %}
+        <p>You have no notifications yet.</p>
+    {% endfor %}
+</body>
+</html>
