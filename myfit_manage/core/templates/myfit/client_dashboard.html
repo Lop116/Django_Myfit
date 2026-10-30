@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{% extends "myfit/base.html" %}
 {% block title %}My Dashboard | MyFit{% endblock %}
 {% block body_class %}client-dashboard-body{% endblock %}
 
 {% block content %}
 <section class="client-dashboard-shell">
     <div class="client-dashboard-container">
-        {% include "includes/client_sidebar.html" with active_nav="overview" %}
+        {% include "myfit/partials/client_sidebar.html" with active_nav="overview" %}
 
         <div class="client-dashboard-main">
             <header class="client-dashboard-header">
@@ -41,8 +41,8 @@
                     <span>NEXT CLASS</span>
                     {% if upcoming_bookings %}
                         {% with booking=upcoming_bookings.0 %}
-                            <strong>{{ booking.scheduled_class.start_at|date:"d M" }}</strong>
-                            <p>{{ booking.scheduled_class.activity.name }}</p>
+                            <strong>{{ booking.session.date|date:"d M" }}</strong>
+                            <p>{{ booking.session.title }}</p>
                         {% endwith %}
                     {% else %}
                         <strong>—</strong>
@@ -75,7 +75,7 @@
                     {% else %}
                         <p class="client-muted-copy">Your account is ready. Select a membership plan to activate gym access and class bookings.</p>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'memberships:client' %}">Manage membership →</a>
+                    <a class="client-text-link" href="{% url 'myfit:client_membership' %}">Manage membership →</a>
                 </article>
 
                 <article class="client-pass-card">
@@ -91,10 +91,10 @@
                         <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
                     </div>
                     <div class="client-pass-footer">
-                        <div><small>MEMBER ID</small><strong>MF-{{ client.pk|stringformat:"06d" }}</strong></div>
-                        <div class="client-pass-token"><small>PASS ID</small><strong>{{ client.barcode|truncatechars:18 }}</strong></div>
+                        <div><small>MEMBER ID</small><strong>MF-{{ request.user.pk|stringformat:"06d" }}</strong></div>
+                        <div class="client-pass-token"><small>PASS ID</small><strong>{{ member_pass.membership_id|default:"Not issued"|truncatechars:18 }}</strong></div>
                     </div>
-                    <a class="client-pass-open" href="{% url 'attendance:pass' %}">Open digital pass →</a>
+                    <a class="client-pass-open" href="{% url 'myfit:membership_pass' %}">Open digital pass →</a>
                 </article>
             </section>
 
@@ -112,11 +112,11 @@
                             {% for workout in recent_workouts %}
                                 <div class="client-workout-row">
                                     <div class="client-workout-date">
-                                        <strong>{{ workout.performed_at|date:"d" }}</strong>
-                                        <span>{{ workout.performed_at|date:"M"|upper }}</span>
+                                        <strong>{{ workout.workout_date|date:"d" }}</strong>
+                                        <span>{{ workout.workout_date|date:"M"|upper }}</span>
                                     </div>
                                     <div class="client-workout-main">
-                                        <strong>{{ workout.exercise_name }}</strong>
+                                        <strong>{{ workout.exercise }}</strong>
                                         <span>
                                             {% if workout.sets %}{{ workout.sets }} sets{% endif %}
                                             {% if workout.reps %} · {{ workout.reps }} reps{% endif %}
@@ -133,7 +133,7 @@
                             <p>Your latest training sessions will appear here.</p>
                         </div>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'clients:workouts' %}">Open workout log →</a>
+                    <a class="client-text-link" href="{% url 'myfit:workouts' %}">Open workout log →</a>
                 </article>
 
                 <article class="client-panel">
@@ -149,7 +149,7 @@
                             <div>
                                 <strong>{{ coach_assignment.coach.user.get_full_name|default:coach_assignment.coach.user.username }}</strong>
                                 <p>
-                                    {% for specialty in coach_assignment.coach.specializations.all %}
+                                    {% for specialty in coach_assignment.coach.specialties.all %}
                                         {{ specialty.name }}{% if not forloop.last %} · {% endif %}
                                     {% empty %}
                                         MyFit Coach
@@ -164,7 +164,7 @@
                             <p>Browse MyFit coaches and discover the specialties available at your branch.</p>
                         </div>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'clients:coaches' %}">Browse coaches →</a>
+                    <a class="client-text-link" href="{% url 'myfit:coaches' %}">Browse coaches →</a>
                 </article>
             </section>
 
@@ -181,12 +181,12 @@
                             {% for booking in upcoming_bookings %}
                                 <div class="client-booking-row">
                                     <div class="client-booking-date">
-                                        <strong>{{ booking.scheduled_class.start_at|date:"d" }}</strong>
-                                        <span>{{ booking.scheduled_class.start_at|date:"M"|upper }}</span>
+                                        <strong>{{ booking.session.date|date:"d" }}</strong>
+                                        <span>{{ booking.session.date|date:"M"|upper }}</span>
                                     </div>
                                     <div>
-                                        <strong>{{ booking.scheduled_class.activity.name }}</strong>
-                                        <span>{{ booking.scheduled_class.start_at|date:"H:i" }} · {{ booking.scheduled_class.branch.name }}</span>
+                                        <strong>{{ booking.session.title }}</strong>
+                                        <span>{{ booking.session.time|time:"H:i" }} · {{ booking.session.branch.name }}</span>
                                     </div>
                                     <span class="client-status-pill active">BOOKED</span>
                                 </div>
@@ -198,7 +198,7 @@
                             <p>Find a class that fits your training week.</p>
                         </div>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'classes:my_bookings' %}">Manage bookings →</a>
+                    <a class="client-text-link" href="{% url 'myfit:client_bookings' %}">Manage bookings →</a>
                 </article>
 
                 <article class="client-panel" id="progress">
@@ -214,8 +214,8 @@
                                 <div>
                                     <span class="client-attendance-dot"></span>
                                     <div>
-                                        <strong>{{ record.branch.name }}</strong>
-                                        <span>{{ record.checked_in_at|date:"D, d M · H:i" }}</span>
+                                        <strong>Gym check-in</strong>
+                                        <span>{{ record.check_in|date:"D, d M · H:i" }}</span>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -226,7 +226,7 @@
                             <p>Your confirmed MyFit check-ins will appear here.</p>
                         </div>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'attendance:history' %}">View attendance →</a>
+                    <a class="client-text-link" href="{% url 'myfit:client_attendance_history' %}">View attendance →</a>
                 </article>
             </section>
 
@@ -236,7 +236,7 @@
                         <span class="client-label">MYFIT UPDATES</span>
                         <h2>For your attention</h2>
                     </div>
-                    <a class="client-text-link" href="{% url 'notifications:list' %}">View all →</a>
+                    <a class="client-text-link" href="{% url 'myfit:notification_list' %}">View all →</a>
                 </div>
                 {% if latest_notifications %}
                     <div class="client-notice-grid">
@@ -259,3 +259,5 @@
     </div>
 </section>
 {% endblock %}
+
+ 

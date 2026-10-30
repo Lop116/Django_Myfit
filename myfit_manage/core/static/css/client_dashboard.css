@@ -1,0 +1,24 @@
+body.client-dashboard-body{background:#121416;color:#f6f7f8;font:15px Arial,sans-serif}
+.client-dashboard-container{max-width:1300px;margin:auto;display:grid;grid-template-columns:225px 1fr;gap:24px;padding:30px 20px}
+.client-sidebar{background:#1b1f23;padding:25px;border-radius:14px;align-self:start;position:sticky;top:12px}
+.client-sidebar-brand{display:block;font-size:25px;color:#ffc324;margin-bottom:24px}
+.client-sidebar nav{display:grid;gap:12px}.client-sidebar a{color:#efefef;text-decoration:none;padding:8px}
+.client-sidebar a:hover,.client-label,.client-text-link{color:#ffc324}
+.client-dashboard-main{min-width:0}.client-dashboard-header{display:flex;justify-content:space-between;gap:25px;margin-bottom:25px}
+.client-dashboard-header h1{font-size:36px;line-height:1.15}.client-dashboard-header h1 span{color:#ffc324}
+.client-dashboard-kicker,.client-label{font-size:12px;letter-spacing:.1em;font-weight:bold}
+.client-stat-grid,.client-primary-grid,.client-secondary-grid,.client-notice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+.client-stat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.client-stat-grid article,.client-membership-card,.client-pass-card,.client-panel,.client-notice-grid article,.client-all-clear{background:#1b1f23;border:1px solid #363c42;border-radius:14px;padding:20px}
+.client-stat-grid strong{display:block;font-size:28px;color:#ffc324;margin:8px 0}
+.client-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.client-workout-row,.client-booking-row,.client-attendance-list>div,.client-coach-card{display:flex;align-items:center;gap:15px;border-top:1px solid #34383c;padding:12px 0}
+.client-workout-main,.client-booking-row>div:nth-child(2){flex:1}
+.client-muted-copy,.client-empty-compact,.client-stat-grid p{color:#aeb5bc}
+.client-text-link{display:inline-block;margin-top:12px;text-decoration:none;font-weight:bold}
+.client-pass-code{display:flex;gap:5px;margin:14px 0}.client-pass-code span{background:#ffc324;width:10px;height:36px}
+.client-notice-section{margin-top:24px}.client-notice-grid article p{color:#b2b9be}
+@media(max-width:950px){.client-dashboard-container{grid-template-columns:1fr}.client-sidebar{position:static}.client-sidebar nav{grid-template-columns:repeat(4,1fr)}.client-stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.client-stat-grid,.client-primary-grid,.client-secondary-grid,.client-notice-grid{grid-template-columns:1fr}.client-sidebar nav{grid-template-columns:repeat(2,1fr)}.client-dashboard-header h1{font-size:27px}}
+
+ 

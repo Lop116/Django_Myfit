@@ -30,6 +30,8 @@ urlpatterns = [
     path('staff/coaches/add/', views.coach_edit, name='coach_add'),
     path('staff/coaches/<int:coach_id>/edit/', views.coach_edit, name='coach_edit'),
     path('staff/coaches/<int:coach_id>/toggle/', views.coach_toggle, name='coach_toggle'),
+    path('support/tickets/', views.support_ticket_list, name='support_ticket_list'),
+    path('support/tickets/new/', views.create_support_ticket, name='create_support_ticket'),
     path('support/tickets/<int:ticket_id>/', views.support_ticket_detail, name='support_ticket_detail'),
 #<------------------------
     path('', views.home, name='home'),
@@ -80,6 +82,9 @@ urlpatterns = [
         views.mark_notification_read,
         name='notification_read',
     ),
+    path('notifications/', views.notification_list, name='notification_list'),
+    path('notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/<int:notification_id>/unread/', views.mark_notification_unread, name='mark_notification_unread'),
     path(
         'notifications/read-all/',
         views.mark_all_notifications_read,
@@ -165,6 +170,8 @@ path(
     path('class-list/', views.class_list, name='class_list'),
     path('classes/<int:session_id>/book/', views.book_class_view, name='book_class'),
     path('manage-classes/', views.manage_classes, name='manage_classes'),
+    path('manage-classes/new/', views.class_session_edit, name='class_session_add'),
+    path('manage-classes/<int:session_id>/edit/', views.class_session_edit, name='class_session_edit'),
     path('bookings/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
 
 

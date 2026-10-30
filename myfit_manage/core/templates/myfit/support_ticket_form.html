@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -81,18 +80,11 @@
             <textarea id="description" name="description"
                       required>{{ request.POST.description|default:'' }}</textarea>
 
-            <label for="priority">Priority</label>
-            <select id="priority" name="priority">
-                <option value="low">Low</option>
-                <option value="normal" selected>Normal</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-            </select>
-
             <button type="submit">Submit ticket</button>
         </form>
     </section>
 </main>
 </body>
 </html>
-```
+
+ 

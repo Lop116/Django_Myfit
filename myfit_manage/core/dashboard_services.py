@@ -98,9 +98,9 @@ def _class_stats():
     stats = {"scheduled": None, "cancelled": None}
     ClassSession = _get_model("ClassSession")
     if ClassSession is not None:
-        # INTEGRATION: assumes status in {"scheduled","cancelled"}
-        stats["scheduled"] = _safe(lambda: ClassSession.objects.filter(status="scheduled").count())
-        stats["cancelled"] = _safe(lambda: ClassSession.objects.filter(status="cancelled").count())
+        # ClassSession defines title-cased status choices.
+        stats["scheduled"] = _safe(lambda: ClassSession.objects.filter(status="Scheduled").count())
+        stats["cancelled"] = _safe(lambda: ClassSession.objects.filter(status="Cancelled").count())
     return stats
 
 
@@ -144,3 +144,5 @@ def get_dashboard_stats():
         "bookings": {"total": _booking_total()},
         "attendance": {"today": _attendance_today(today)},
     }
+
+ 

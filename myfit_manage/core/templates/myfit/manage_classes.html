@@ -1,6 +1,7 @@
 {% extends 'myfit/base.html' %}
 {% block content %}
 <h1>Manage Classes</h1>
+<p><a href="{% url 'myfit:class_session_add' %}">+ Create class</a></p>
 <table border="1" cellpadding="8">
     <tr>
         <th>Class</th>
@@ -30,7 +31,7 @@
             </ul>
         </td>
         <td>
-            <a href="/admin/core/classsession/{{ session.id }}/change/">Edit</a>
+            <a href="{% url 'myfit:class_session_edit' session.id %}">Edit class / cancel</a>
         </td>
     </tr>
     {% empty %}
@@ -38,3 +39,5 @@
     {% endfor %}
 </table>
 {% endblock %}
+
+ 

@@ -8,6 +8,7 @@ from .models import (
     MembershipPlan,
     SupportTicket, 
     SupportTicketMessage,
+    ClassSession,
 )
 
 class RegistrationForm(UserCreationForm):
@@ -421,3 +422,24 @@ class SupportTicketReplyForm(forms.ModelForm):
 
         return message
 
+
+
+class ClassSessionForm(forms.ModelForm):
+    """Class form for the existing ClassSession schema."""
+    class Meta:
+        model = ClassSession
+        fields = ('title', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image')
+        widgets = {'date': forms.DateInput(attrs={'type': 'date'}),
+                   'time': forms.TimeInput(attrs={'type': 'time'})}
+
+    def clean_capacity(self):
+        capacity = self.cleaned_data['capacity']
+        if capacity < 1:
+            raise forms.ValidationError('Capacity must be at least one.')
+        if self.instance.pk:
+            confirmed = self.instance.bookings.filter(status='Confirmed').count()
+            if capacity < confirmed:
+                raise forms.ValidationError('Capacity cannot be below confirmed bookings.')
+        return capacity
+
+ 

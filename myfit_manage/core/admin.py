@@ -1,4 +1,8 @@
 from django.contrib import admin
+from django.db import transaction
+from django.urls import reverse
+from .notifications import notify
+from .forms import ClassSessionForm
 from django.utils.html import format_html#<---Loick
 
 from .models import (
@@ -148,8 +152,29 @@ class CoachProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ClassSession)
 class ClassSessionAdmin(admin.ModelAdmin):
+    form = ClassSessionForm
     list_display = ('title', 'date', 'time', 'coach', 'spaces_left', 'status')
-    fields = ('title', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image') #<----------------
+    fields = ('title', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image')
+
+    @transaction.atomic
+    def save_model(self, request, obj, form, change):
+        previous = ClassSession.objects.filter(pk=obj.pk).select_related('coach__user').first() if change else None
+        super().save_model(request, obj, form, change)
+        notify(
+            obj.coach.user, 'Class schedule updated',
+            f'Your assigned class {obj.title} on {obj.date:%d %b %Y} is {obj.status.lower()}.',
+            reverse('myfit:manage_classes'),
+        )
+        if previous and previous.coach_id != obj.coach_id:
+            notify(previous.coach.user, 'Class reassigned',
+                   f'{obj.title} is no longer assigned to you.', reverse('myfit:manage_classes'))
+        if obj.status == 'Cancelled' and (previous is None or previous.status != 'Cancelled'):
+            for booking in ClassBooking.objects.filter(session=obj, status='Confirmed').select_related('client__user'):
+                booking.status = 'Cancelled'
+                booking.save(update_fields=['status'])
+                notify(booking.client.user, 'Class cancelled',
+                       f'{obj.title} on {obj.date:%d %b %Y} has been cancelled.',
+                       reverse('myfit:client_bookings'))
 
 @admin.register(ClassBooking)
 class ClassBookingAdmin(admin.ModelAdmin):
@@ -221,3 +246,5 @@ class SupportTicketAdmin(admin.ModelAdmin):
 class SupportTicketMessageInline(admin.TabularInline):
     model = SupportTicketMessage
     extra = 0
+
+ 

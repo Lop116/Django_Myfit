@@ -29,7 +29,7 @@
   <div class="topbar">
     <div class="container topbar-inner">
       <p><span class="topbar-dot"></span> MADE FOR MAURITIUS <span class="topbar-divider">/</span> TRAIN · TRACK · TRANSFORM</p>
-      <a href="{% url 'myfit:branches' %}">THREE ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+      <a href="{% url 'myfit:branches' %}">{{ filter_branches.count }} ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
  
@@ -93,14 +93,14 @@
       <div class="hero-bottom"><div class="container hero-highlights">
         <div><svg class="icon"><use href="#i-users"/></svg><span><b>PERSONAL ATTENTION</b><small>Support built around your goals</small></span></div>
         <div><svg class="icon"><use href="#i-activity"/></svg><span><b>DIFFERENT SPECIALTIES</b><small>Strength, HIIT, mobility and more</small></span></div>
-        <div><svg class="icon"><use href="#i-pin"/></svg><span><b>THREE ACTIVE CLUBS</b><small>Caudan, Trianon and Riche Terre</small></span></div>
+        <div><svg class="icon"><use href="#i-pin"/></svg><span><b>{{ filter_branches.count }} ACTIVE CLUBS</b><small>Caudan, Trianon and Riche Terre</small></span></div>
       </div></div>
     </section>
  
     <section class="directory" id="coach-directory" aria-labelledby="directory-title"><div class="container">
       <div class="section-intro">
         <div><p class="section-kicker">01 / YOUR TEAM. YOUR GOALS.</p><h2 class="section-title" id="directory-title">FIND YOUR COACH</h2><p>Explore training specialties and find someone who fits your rhythm. Filter by coaching focus or branch, then open a profile to learn more.</p></div>
-        <span class="count-badge" aria-live="polite">SHOWING <span id="visible-count">8</span> COACHES</span>
+        <span class="count-badge" aria-live="polite">SHOWING <span id="visible-count">{{ coaches|length }}</span> COACHES</span>
       </div>
       <div class="filter-panel" aria-label="Filter coaches">
         <label class="filter-field">
@@ -109,55 +109,45 @@
         </label>
         <label class="filter-field">
           <select id="specialty-filter" aria-label="Filter by specialty">
-            <option value="all">All specialties</option><option value="strength">Strength</option><option value="hiit">HIIT &amp; conditioning</option>
-            <option value="mobility">Yoga &amp; mobility</option><option value="pilates">Pilates</option><option value="boxing">Boxing</option>
-            <option value="group">Group fitness</option><option value="wellness">Wellness</option>
+            <option value="all">All specialties</option>
+            {% for specialty in filter_specialties %}<option value="{{ specialty.pk }}">{{ specialty.name }}</option>{% endfor %}
           </select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg>
         </label>
         <label class="filter-field">
           <select id="branch-filter" aria-label="Filter by branch">
-            <option value="all">All branches</option><option value="caudan">Caudan Waterfront</option><option value="trianon">Trianon</option><option value="riche-terre">Riche Terre</option>
+            <option value="all">All branches</option>
+            {% for branch in filter_branches %}<option value="{{ branch.pk }}">{{ branch.name }}</option>{% endfor %}
           </select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg>
         </label>
         <button class="filter-reset" type="button" id="reset-filters">RESET FILTERS</button>
       </div>
  
-      <!-- Illustrative sample profiles. Replace with real MyFit coach records later. -->
       <div class="coach-grid" id="coach-grid">
-        <article class="coach-card" data-name="Adrian Morel" data-specialty="strength" data-focus="Strength, resistance training, muscle building" data-branch="caudan" data-branch-label="Caudan Waterfront" data-about="A focused, technique-first approach to building strength and confidence in the gym. Adrian helps members build sustainable routines and track their progression.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-adrian.webp' %}" alt="Illustrative portrait of a male fitness trainer" loading="lazy"><span class="branch-label">CAUDAN WATERFRONT</span><span class="coach-number">01</span></div>
-          <div class="coach-body"><span class="coach-role">STRENGTH &amp; CONDITIONING</span><h3>ADRIAN MOREL</h3><p class="coach-description">Build your foundation, own your technique and get stronger with every session.</p><div class="coach-tags"><span>STRENGTH</span><span>WEIGHTS</span><span>FORM</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Adrian Morel"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
+        {% for coach in coaches %}
+        <article class="coach-card" data-name="{{ coach.user.get_full_name|default:coach.user.username }}"
+            data-specialty=",{% for spec in coach.specialties.all %}{{ spec.pk }},{% endfor %}"
+            data-focus="{% for spec in coach.specialties.all %}{{ spec.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+            data-branch="{{ coach.branch_id|default:'' }}"
+            data-branch-label="{{ coach.branch.name|default:'Not assigned' }}"
+            data-about="{{ coach.bio|default:'Ask our team about the coaching sessions available.' }}">
+          <div class="coach-image-wrap">
+            {% if coach.image %}<img class="coach-image" src="{{ coach.image.url }}" alt="Portrait of {{ coach.user.get_full_name|default:coach.user.username }}" loading="lazy">
+            {% else %}<img class="coach-image" src="{% static 'images/coaches/coach-adrian.webp' %}" alt="Illustrative coach portrait" loading="lazy">{% endif %}
+            <span class="branch-label">{{ coach.branch.name|default:'MYFIT COACH'|upper }}</span>
+            <span class="coach-number">{{ forloop.counter|stringformat:'02d' }}</span>
+          </div>
+          <div class="coach-body">
+            <span class="coach-role">{{ coach.specialties.first.name|default:'PERSONAL TRAINING'|upper }}</span>
+            <h3>{{ coach.user.get_full_name|default:coach.user.username|upper }}</h3>
+            <p class="coach-description">{{ coach.bio|default:'Ask our team about the coaching sessions available.'|truncatewords:24 }}</p>
+            <div class="coach-tags">{% for spec in coach.specialties.all %}<span>{{ spec.name|upper }}</span>{% empty %}<span>FITNESS</span>{% endfor %}</div>
+            <div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button>
+            <a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about {{ coach.user.get_full_name|default:coach.user.username }}"><svg class="icon"><use href="#i-message"/></svg></a></div>
+          </div>
         </article>
-        <article class="coach-card" data-name="Amina Rahman" data-specialty="mobility" data-focus="Yoga, flexibility, balance, mobility" data-branch="trianon" data-branch-label="Trianon Emerald Park" data-about="Amina focuses on mindful movement, mobility and recovery, making training approachable for all ability levels with balanced routines.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-amina.webp' %}" alt="Illustrative portrait of a female fitness trainer" loading="lazy"><span class="branch-label">TRIANON</span><span class="coach-number">02</span></div>
-          <div class="coach-body"><span class="coach-role">YOGA &amp; MOBILITY</span><h3>AMINA RAHMAN</h3><p class="coach-description">Move with purpose, improve flexibility and make recovery part of the plan.</p><div class="coach-tags"><span>YOGA</span><span>MOBILITY</span><span>BALANCE</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Amina Rahman"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
-        </article>
-        <article class="coach-card" data-name="Ryan Patel" data-specialty="hiit" data-focus="HIIT, conditioning, functional training, endurance" data-branch="riche-terre" data-branch-label="Riche Terre" data-about="Ryan brings upbeat sessions and structured conditioning to help members build endurance, confidence and consistency at their own pace.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-ryan.webp' %}" alt="Illustrative portrait of a male fitness trainer" loading="lazy"><span class="branch-label">RICHE TERRE</span><span class="coach-number">03</span></div>
-          <div class="coach-body"><span class="coach-role">HIIT &amp; FUNCTIONAL TRAINING</span><h3>RYAN PATEL</h3><p class="coach-description">Push your endurance with energising sessions and smart progression.</p><div class="coach-tags"><span>HIIT</span><span>CARDIO</span><span>ENDURANCE</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Ryan Patel"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
-        </article>
-        <article class="coach-card" data-name="Nadia Wong" data-specialty="pilates" data-focus="Pilates, core strength, posture, stability" data-branch="trianon" data-branch-label="Trianon Emerald Park" data-about="Nadia emphasises core strength, control and good posture through progressive and accessible movement sessions.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-nadia.webp' %}" alt="Illustrative portrait of a female fitness trainer" loading="lazy"><span class="branch-label">TRIANON</span><span class="coach-number">04</span></div>
-          <div class="coach-body"><span class="coach-role">PILATES &amp; CORE</span><h3>NADIA WONG</h3><p class="coach-description">Find more control, core stability and better movement in daily life.</p><div class="coach-tags"><span>PILATES</span><span>CORE</span><span>POSTURE</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Nadia Wong"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
-        </article>
-        <article class="coach-card" data-name="Khalil Pierre" data-specialty="boxing" data-focus="Boxing, boxing fitness, cardio, conditioning" data-branch="caudan" data-branch-label="Caudan Waterfront" data-about="Khalil combines boxing-inspired fitness with practical movement drills to develop coordination, stamina and discipline in a welcoming setting.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-khalil.webp' %}" alt="Illustrative portrait of a male fitness trainer" loading="lazy"><span class="branch-label">CAUDAN WATERFRONT</span><span class="coach-number">05</span></div>
-          <div class="coach-body"><span class="coach-role">BOXING &amp; FITNESS</span><h3>KHALIL PIERRE</h3><p class="coach-description">Sharper movements, stronger conditioning and a new way to train.</p><div class="coach-tags"><span>BOXING</span><span>CARDIO</span><span>FOCUS</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Khalil Pierre"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
-        </article>
-        <article class="coach-card" data-name="Maya Naidoo" data-specialty="group" data-focus="Group fitness, Zumba, dance fitness, cardio" data-branch="riche-terre" data-branch-label="Riche Terre" data-about="Maya loves high-energy classes that bring people together. Expect rhythm, movement and an encouraging environment that celebrates effort.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-maya.webp' %}" alt="Illustrative portrait of a female fitness trainer" loading="lazy"><span class="branch-label">RICHE TERRE</span><span class="coach-number">06</span></div>
-          <div class="coach-body"><span class="coach-role">ZUMBA &amp; GROUP FITNESS</span><h3>MAYA NAIDOO</h3><p class="coach-description">Music, movement and good energy to keep your workouts exciting.</p><div class="coach-tags"><span>ZUMBA</span><span>DANCE</span><span>GROUP</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Maya Naidoo"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
-        </article>
-        <article class="coach-card" data-name="Daniel Chen" data-specialty="strength" data-focus="Hypertrophy, resistance training, weights, muscle development" data-branch="trianon" data-branch-label="Trianon Emerald Park" data-about="Daniel helps members develop sustainable strength plans with careful technique, measured progress and sessions tailored to individual goals.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-daniel.webp' %}" alt="Illustrative portrait of a male fitness trainer" loading="lazy"><span class="branch-label">TRIANON</span><span class="coach-number">07</span></div>
-          <div class="coach-body"><span class="coach-role">STRENGTH DEVELOPMENT</span><h3>DANIEL CHEN</h3><p class="coach-description">Train with structure, sharpen your technique and track your strength.</p><div class="coach-tags"><span>STRENGTH</span><span>MUSCLE</span><span>PROGRESS</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Daniel Chen"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
-        </article>
-        <article class="coach-card" data-name="Sarah Duval" data-specialty="wellness" data-focus="Wellness, mobility, fitness habits, beginner training" data-branch="caudan" data-branch-label="Caudan Waterfront" data-about="Sarah takes a patient, beginner-friendly approach focused on movement confidence, healthy routines, adaptability and long-term consistency.">
-          <div class="coach-image-wrap"><img class="coach-image" src="{% static 'images/coaches/coach-sarah.webp' %}" alt="Illustrative portrait of a female fitness trainer" loading="lazy"><span class="branch-label">CAUDAN WATERFRONT</span><span class="coach-number">08</span></div>
-          <div class="coach-body"><span class="coach-role">WELLNESS &amp; MOBILITY</span><h3>SARAH DUVAL</h3><p class="coach-description">Build confidence through consistent habits and comfortable movement.</p><div class="coach-tags"><span>WELLNESS</span><span>MOBILITY</span><span>BEGINNERS</span></div><div class="coach-actions"><button class="view-profile" type="button">VIEW PROFILE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="contact-coach" href="{% url 'myfit:contact' %}?topic=coaching" aria-label="Enquire about Sarah Duval"><svg class="icon"><use href="#i-message"/></svg></a></div></div>
-        </article>
+        {% empty %}<p>No active coaches are registered yet.</p>{% endfor %}
       </div>
- 
+
       <div class="no-results" id="no-results" hidden>
         <svg class="icon"><use href="#i-search"/></svg><h3>NO MATCHING COACHES</h3><p>Try a different name, specialty or branch.</p><button type="button" class="btn btn-yellow" id="empty-reset">CLEAR FILTERS <svg class="icon"><use href="#i-arrow"/></svg></button>
       </div>
@@ -211,7 +201,7 @@
         let shown = 0;
         cards.forEach(card => {
           const matchesText = `${card.dataset.name} ${card.dataset.focus} ${card.querySelector('.coach-role').textContent}`.toLowerCase().includes(query);
-          const matchesSpecialty = specialty.value === 'all' || card.dataset.specialty === specialty.value;
+          const matchesSpecialty = specialty.value === 'all' || card.dataset.specialty.includes(',' + specialty.value + ',');
           const matchesBranch = branch.value === 'all' || card.dataset.branch === branch.value;
           const visible = matchesText && matchesSpecialty && matchesBranch;
           card.hidden = !visible;
@@ -260,3 +250,5 @@
   </script>
 </body>
 </html>
+
+ 

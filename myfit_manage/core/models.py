@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, FileExtensionValidator #< ---Loick 10/27
+from django.core.validators import MinValueValidator, FileExtensionValidator
 from django.db import models
 from django.utils import timezone
 
@@ -13,40 +13,17 @@ from django.utils import timezone
 # - media/ contains pictures uploaded by administrators while the site runs.
 # ImageField saves the picture's filename/path in the database, not its bytes.
 # File-type and size checks below are small optional safeguards.
-from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, FileExtensionValidator
-from django.db import models
-from django.utils import timezone
-
-# Check that uploaded images do not exceed 5 MB
+# Uploaded images: both the extension and file size are checked by Django forms.
+# Preserve this function name: existing migrations reference core.models.validate_myfit_image_size.
 def validate_myfit_image_size(file):
     if file.size > 5 * 1024 * 1024:
         raise ValidationError("Images must be 5 MB or smaller.")
 
 
-# Reusable validation rules for uploaded images
-MYFIT_IMAGE_VALIDATORS = [
-    FileExtensionValidator(
-        allowed_extensions=['jpg', 'jpeg', 'png', 'webp']
-    ),
-    validate_myfit_image_size,
-]
-# MEDIA (simplest Django approach):---------------------------------------------------------
-# - static/images/ contains artwork shipped with the project;
-# - media/ contains pictures uploaded by administrators while the site runs.
-# ImageField saves the picture's filename/path in the database, not its bytes.
-# File-type and size checks below are small optional safeguards.
-def validate_myfit_image_size(file):
-    from django.core.exceptions import ValidationError
-    if file.size > 5 * 1024 * 1024:
-        raise ValidationError('Images must be 5 MB or smaller.')
- 
- 
 MYFIT_IMAGE_VALIDATORS = [
     FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp']),
     validate_myfit_image_size,
 ]
- 
 
 
 class WorkoutRecord(models.Model):
@@ -709,3 +686,4 @@ class SupportTicketMessage(models.Model):
 
     def __str__(self):
         return f"Message on ticket MF-{self.ticket_id}"
+ 

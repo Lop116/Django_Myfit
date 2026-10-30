@@ -1,0 +1,19 @@
+{% extends 'myfit/base.html' %}
+{% block title %}Class Management | MyFit{% endblock %}
+{% block content %}
+<main style="max-width:700px;margin:35px auto;padding:25px;background:#202327;color:#fff;border-radius:14px">
+<h1>{% if session %}Edit class{% else %}Create class{% endif %}</h1>
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+{{ form.non_field_errors }}
+{% for field in form %}
+<div style="margin:15px 0"><label for="{{ field.id_for_label }}">{{ field.label }}</label>
+<div>{{ field }}</div>{{ field.errors }}</div>
+{% endfor %}
+<button type="submit">Save class</button>
+<a style="margin-left:14px" href="{% url 'myfit:manage_classes' %}">Cancel</a>
+</form>
+</main>
+{% endblock %}
+
+ 

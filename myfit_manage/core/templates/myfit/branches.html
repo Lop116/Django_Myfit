@@ -87,27 +87,45 @@
         <p class="hero-desc">Your next great session could be closer than you think. Explore MyFit locations around Mauritius and find the place that fits your routine.</p>
         <div class="hero-actions"><a class="btn btn-pink" href="#branch-directory">EXPLORE BRANCHES <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="{% url 'myfit:plans' %}">VIEW MEMBERSHIPS <svg class="icon"><use href="#i-arrow"/></svg></a></div>
       </div></div>
-      <div class="hero-bottom"><div class="container hero-highlights"><div><span class="count">03</span><span><b>ACTIVE CLUBS</b><small>Across Mauritius</small></span></div><div><span class="count">01</span><span><b>COMING SOON</b><small>Plaisance Mall · Rose Belle</small></span></div><div><svg class="icon"><use href="#i-users"/></svg><span><b>STRONGER TOGETHER</b><small>Train · Track · Transform</small></span></div></div></div>
+      <div class="hero-bottom"><div class="container hero-highlights"><div><span class="count">{{ branches|length|stringformat:'02d' }}</span><span><b>ACTIVE CLUBS</b><small>Across Mauritius</small></span></div><div><span class="count">{% if show_plaisance_card %}01{% else %}00{% endif %}</span><span><b>COMING SOON</b><small>Plaisance Mall · Rose Belle</small></span></div><div><svg class="icon"><use href="#i-users"/></svg><span><b>STRONGER TOGETHER</b><small>Train · Track · Transform</small></span></div></div></div>
     </section>
     <section class="directory" id="branch-directory" aria-labelledby="directory-title"><div class="container">
-      <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR CLUB</p><h2 class="section-title" id="directory-title">MADE FOR <span>YOUR MOVE</span></h2><p>Discover the three existing locations in our MyFit project, plus our upcoming Rose Belle branch.</p></div><span class="count-badge"><span id="visible-count">4</span> LOCATIONS SHOWN</span></div>
-      <div class="branch-controls"><div class="inputs"><label for="status-filter">Club status</label><select id="status-filter"><option value="all">All locations</option><option value="open">Active clubs</option><option value="soon">Coming soon</option></select><label for="region-filter">Area</label><select id="region-filter"><option value="all">All areas</option><option value="port-louis">Port Louis / Riche Terre</option><option value="trianon">Trianon</option><option value="rose-belle">Rose Belle</option></select></div><button type="button" id="clear-filters">CLEAR FILTERS</button></div>
-      <div class="branch-grid"><article class="branch-card" data-status="open" data-region="port-louis" data-name="Caudan Waterfront" data-area="Caudan Waterfront, Port Louis, Mauritius" data-desc="Explore the MyFit concept at Caudan Waterfront in the heart of Port Louis. A place to build consistency and stay connected to your goals." data-features="Strength, Cardio, Coaching" data-hours="Hours to be confirmed by MyFit" data-map="https://www.google.com/maps/search/?api=1&amp;query=Caudan+Waterfront+Port+Louis+Mauritius">
-  <div class="branch-photo"><img src="{% static 'images/branches/branch-caudan.webp' %}" alt="Illustrative Caudan Waterfront gym concept image, not a photo of an actual MyFit facility" loading="lazy"><span class="branch-status ">ACTIVE CLUB</span><span class="branch-number" aria-hidden="true">01</span></div>
-  <div class="branch-copy"><span class="branch-location"><svg class="icon icon-sm"><use href="#i-pin"/></svg>PORT LOUIS</span><h3>Caudan Waterfront</h3><p>Your city-centre MyFit training destination, with the energy of the waterfront and room to move with purpose.</p><ul class="branch-tags"><li>Strength</li><li>Cardio</li><li>Coaching</li></ul><div class="branch-actions"><button type="button" class="branch-info-btn branch-open">EXPLORE BRANCH <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="branch-directions" href="https://www.google.com/maps/search/?api=1&amp;query=Caudan+Waterfront+Port+Louis+Mauritius" target="_blank" rel="noopener noreferrer">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div></div>
-</article>
-<article class="branch-card" data-status="open" data-region="trianon" data-name="Emerald Park" data-area="Emerald Park, Trianon, Mauritius" data-desc="The MyFit Emerald Park gym concept brings training, classes and fitness guidance together in the Trianon area." data-features="Cardio, Group Fitness, Strength" data-hours="Hours to be confirmed by MyFit" data-map="https://www.google.com/maps/search/?api=1&amp;query=Emerald+Park+Trianon+Mauritius">
-  <div class="branch-photo"><img src="{% static 'images/branches/branch-trianon.webp' %}" alt="Illustrative Emerald Park gym concept image, not a photo of an actual MyFit facility" loading="lazy"><span class="branch-status ">ACTIVE CLUB</span><span class="branch-number" aria-hidden="true">02</span></div>
-  <div class="branch-copy"><span class="branch-location"><svg class="icon icon-sm"><use href="#i-pin"/></svg>TRIANON</span><h3>Emerald Park</h3><p>Find your rhythm in Trianon with an inviting training environment built around movement and variety.</p><ul class="branch-tags"><li>Cardio</li><li>Group Fitness</li><li>Strength</li></ul><div class="branch-actions"><button type="button" class="branch-info-btn branch-open">EXPLORE BRANCH <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="branch-directions" href="https://www.google.com/maps/search/?api=1&amp;query=Emerald+Park+Trianon+Mauritius" target="_blank" rel="noopener noreferrer">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div></div>
-</article>
-<article class="branch-card" data-status="open" data-region="port-louis" data-name="Riche Terre" data-area="Riche Terre, Mauritius" data-desc="Our Riche Terre gym concept celebrates hard work, consistency and a welcoming place to train." data-features="Weights, Functional, Cardio" data-hours="Hours to be confirmed by MyFit" data-map="https://www.google.com/maps/search/?api=1&amp;query=Riche+Terre+Mauritius">
-  <div class="branch-photo"><img src="{% static 'images/branches/branch-riche-terre.webp' %}" alt="Illustrative Riche Terre gym concept image, not a photo of an actual MyFit facility" loading="lazy"><span class="branch-status ">ACTIVE CLUB</span><span class="branch-number" aria-hidden="true">03</span></div>
-  <div class="branch-copy"><span class="branch-location"><svg class="icon icon-sm"><use href="#i-pin"/></svg>RICHE TERRE</span><h3>Riche Terre</h3><p>Push yourself further in a workout space imagined for strength, conditioning and real progress.</p><ul class="branch-tags"><li>Weights</li><li>Functional</li><li>Cardio</li></ul><div class="branch-actions"><button type="button" class="branch-info-btn branch-open">EXPLORE BRANCH <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="branch-directions" href="https://www.google.com/maps/search/?api=1&amp;query=Riche+Terre+Mauritius" target="_blank" rel="noopener noreferrer">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div></div>
-</article>
-<article class="branch-card" data-status="soon" data-region="rose-belle" data-name="Plaisance Mall" data-area="Plaisance Mall, Rose Belle, Mauritius" data-desc="Plaisance Mall is the planned new MyFit branch. Facilities and opening information will be announced in the future." data-features="Opening Soon, New Location" data-hours="Opening date to be announced" data-map="">
-  <div class="branch-photo"><img src="{% static 'images/branches/branch-plaisance.webp' %}" alt="Illustrative Plaisance Mall gym concept image, not a photo of an actual MyFit facility" loading="lazy"><span class="branch-status coming">COMING SOON</span><span class="branch-number" aria-hidden="true">04</span></div>
-  <div class="branch-copy"><span class="branch-location"><svg class="icon icon-sm"><use href="#i-pin"/></svg>ROSE BELLE</span><h3>Plaisance Mall</h3><p>A new MyFit destination is on the way to Rose Belle. Watch this space for the next chapter.</p><ul class="branch-tags"><li>Opening Soon</li><li>New Location</li></ul><div class="branch-actions"><button type="button" class="branch-info-btn branch-open">MORE INFORMATION <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><span class="branch-coming-label">OPENING DATE TO BE ANNOUNCED</span></div></div>
-</article></div>
+      <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR CLUB</p><h2 class="section-title" id="directory-title">MADE FOR <span>YOUR MOVE</span></h2><p>Explore registered MyFit locations plus the planned Plaisance Mall branch.</p></div><span class="count-badge"><span id="visible-count">{{ branches|length|add:show_plaisance_card }}</span> LOCATIONS SHOWN</span></div>
+      <div class="branch-controls"><div class="inputs"><label for="status-filter">Club status</label><select id="status-filter"><option value="all">All locations</option><option value="open">Active clubs</option><option value="soon">Coming soon</option></select><label for="region-filter">Area</label><select id="region-filter"><option value="all">All areas</option>
+          {% for branch in branches %}<option value="{{ branch.pk }}">{{ branch.name }}</option>{% endfor %}
+          {% if show_plaisance_card %}<option value="rose-belle">Rose Belle</option>{% endif %}</select></div><button type="button" id="clear-filters">CLEAR FILTERS</button></div>
+      <div class="branch-grid">
+      {% for branch in branches %}
+      <article class="branch-card" data-status="open" data-region="{{ branch.pk }}"
+          data-name="{{ branch.name }}" data-area="{{ branch.address }}"
+          data-desc="Visit {{ branch.name }} to explore MyFit training options."
+          data-features="Training, Fitness, Coaching"
+          data-hours="{{ branch.opening_hours|default:'Contact MyFit for opening hours' }}"
+          data-map="https://www.google.com/maps/search/?api=1&amp;query={{ branch.address|urlencode }}">
+        <div class="branch-photo">
+          {% if branch.image %}<img src="{{ branch.image.url }}" alt="{{ branch.name }} branch" loading="lazy">
+          {% else %}<img src="{% static 'images/branches/branch-caudan.webp' %}" alt="Illustrative gym interior" loading="lazy">{% endif %}
+          <span class="branch-status">ACTIVE CLUB</span><span class="branch-number" aria-hidden="true">{{ forloop.counter|stringformat:'02d' }}</span>
+        </div>
+        <div class="branch-copy"><span class="branch-location"><svg class="icon icon-sm"><use href="#i-pin"/></svg>{{ branch.address|truncatechars:38 }}</span>
+          <h3>{{ branch.name }}</h3><p>{{ branch.address }}</p>
+          <ul class="branch-tags"><li>Fitness</li><li>Coaching</li></ul>
+          <div class="branch-actions"><button type="button" class="branch-info-btn branch-open">EXPLORE BRANCH <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button>
+          <a class="branch-directions" href="https://www.google.com/maps/search/?api=1&amp;query={{ branch.address|urlencode }}" target="_blank" rel="noopener noreferrer">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
+        </div>
+      </article>
+      {% endfor %}
+      {% if show_plaisance_card %}
+      <article class="branch-card" data-status="soon" data-region="rose-belle" data-name="Plaisance Mall"
+          data-area="Plaisance Mall, Rose Belle, Mauritius" data-desc="The Plaisance Mall branch is planned; an opening date has not been confirmed."
+          data-features="Coming soon" data-hours="Opening date to be announced" data-map="">
+        <div class="branch-photo"><img src="{% static 'images/branches/branch-plaisance.webp' %}" alt="Illustrative Plaisance Mall gym concept image" loading="lazy"><span class="branch-status coming">COMING SOON</span></div>
+        <div class="branch-copy"><span class="branch-location">ROSE BELLE</span><h3>Plaisance Mall</h3><p>Opening date to be announced.</p>
+          <div class="branch-actions"><button type="button" class="branch-info-btn branch-open">MORE INFORMATION</button></div>
+        </div>
+      </article>
+      {% endif %}
+      </div>
       <div class="branch-empty" id="branch-empty" hidden><strong>NO MATCHING BRANCHES</strong><p>Try a different area or club status.</p><button type="button" id="clear-empty">SHOW ALL BRANCHES</button></div>
       
     </div></section>
@@ -156,3 +174,5 @@
   </script>
 </body>
 </html>
+
+ 

@@ -9,7 +9,7 @@ from django.contrib.auth.views import LoginView #Loick
 from .permissions import role_required #Loick
 from .models import WebsiteImage #Loick
 
-from .notifications import notify_ticket_admin, notify_ticket_update #Wizzy
+from .notifications import notify, notify_ticket_update
 
 
 import qrcode
@@ -403,14 +403,42 @@ def membership_qr_check_in(request):
 # END TASK 2 - QR SCANNER AND ATTENDANCE INTEGRATION
 
 
-def contact(request):
-    return render(request, 'myfit/contact.html')
 def workouts(request):
     return render(request, 'myfit/workouts.html')
 
-@login_required
+@role_required('Client')
 def client_dashboard(request):
-    return render(request, 'myfit/client_dashboard.html')
+    from datetime import timedelta
+    from .models import CoachClientAssignment
+
+    today = timezone.localdate()
+    week_start = today - timedelta(days=today.weekday())
+    month_start = today.replace(day=1)
+    attendance = AttendanceVisit.objects.filter(membership__user=request.user)
+    membership = ClientMembership.objects.filter(
+        user=request.user, status__in=('active', 'scheduled'),
+        start_date__lte=today, end_date__gte=today,
+    ).select_related('plan').first()
+    bookings = ClassBooking.objects.filter(
+        client__user=request.user, status='Confirmed',
+        session__status='Scheduled', session__date__gte=today,
+    ).select_related('session__branch').order_by('session__date', 'session__time')
+    coach_assignment = CoachClientAssignment.objects.filter(
+        client__user=request.user,
+    ).select_related('coach__user').prefetch_related('coach__specialties').first()
+    return render(request, 'myfit/client_dashboard.html', {
+        'member_pass': MembershipPass.objects.filter(user=request.user).first(),
+        'membership': membership, 'current_membership': membership,
+        'visits_this_week': attendance.filter(check_in__date__gte=week_start).count(),
+        'visits_this_month': attendance.filter(check_in__date__gte=month_start).count(),
+        'total_visits': attendance.count(),
+        'upcoming_bookings': bookings[:5],
+        'recent_workouts': WorkoutRecord.objects.filter(user=request.user).order_by('-workout_date')[:5],
+        'recent_attendance': attendance.order_by('-check_in')[:5],
+        'coach_assignment': coach_assignment,
+        'latest_notifications': Notification.objects.filter(user=request.user)[:5],
+        'client': ClientProfile.objects.filter(user=request.user).first(),
+    })
 
 @login_required
 def progress(request):
@@ -434,111 +462,73 @@ def progress(request):
         'visit_data': []
     })
 
-@login_required
+@role_required('Client')
 def client_bookings(request):
-
+    """Show both booking generations; new bookings use real ClassSession records."""
     if request.method == 'POST':
-        action = request.POST.get('action')
-
-        if action == 'cancel':
-            booking = get_object_or_404(
-                ClientBooking,
-                id=request.POST.get('booking_id'),
-                user=request.user
-            )
-
-            today = timezone.localdate()
-
-            if (booking.status == 'confirmed'
-                    and booking.class_date >= today):
-
-                booking.status = 'cancelled'
-                booking.save(update_fields=['status'])
-
-                messages.success(
-                    request,
-                    'Your booking has been cancelled.'
-                )
+        if request.POST.get('action') == 'cancel':
+            ident = request.POST.get('booking_id', '')
+            source = request.POST.get('booking_source', 'legacy')
+            if not ident.isdecimal():
+                messages.error(request, 'Invalid booking reference.')
+            elif source == 'session':
+                try:
+                    cancel_booking(int(ident), request.user)
+                except ClassBooking.DoesNotExist:
+                    messages.error(request, 'Booking not found.')
+                except ValidationError as exc:
+                    messages.error(request, '; '.join(exc.messages))
+                else:
+                    messages.success(request, 'Booking cancelled.')
+            elif source == 'legacy':
+                booking = get_object_or_404(ClientBooking, pk=int(ident), user=request.user)
+                today = timezone.localdate()
+                if booking.status == 'confirmed' and booking.class_date >= today:
+                    booking.status = 'cancelled'
+                    booking.save(update_fields=['status'])
+                    messages.success(request, 'Booking cancelled.')
+                else:
+                    messages.error(request, 'This booking cannot be cancelled.')
             else:
-                messages.error(
-                    request,
-                    'This booking cannot be cancelled.'
-                )
-
+                messages.error(request, 'Unknown booking type.')
         return redirect('myfit:client_bookings')
 
     today = timezone.localdate()
-    current_time = timezone.localtime().time()
-
-    bookings = ClientBooking.objects.filter(
-        user=request.user
-    )
-
-    upcoming = bookings.filter(
-        status='confirmed'
-    ).filter(
-        Q(class_date__gt=today) |
-        Q(class_date=today, start_time__gt=current_time)
-    ).order_by('class_date', 'start_time')
-
-    past = bookings.exclude(
-        id__in=upcoming.values('id')
-    ).order_by('-class_date', '-start_time')
-
-    context = {
-        'upcoming_bookings': upcoming,
-        'past_bookings': past,
-        'upcoming_count': upcoming.count(),
-        'completed_count': past.filter(
-            status='confirmed'
-        ).count(),
-        'cancelled_count': bookings.filter(
-            status='cancelled'
-        ).count(),
-    }
-
-    return render(
-        request,
-        'myfit/client_bookings.html',
-        context
-    )
-
-
-def _notification_redirect(request):
-    next_url = request.POST.get('next', '')
-    if url_has_allowed_host_and_scheme(
-        next_url,
-        allowed_hosts={request.get_host()},
-        require_https=request.is_secure(),
+    now = timezone.localtime().time()
+    entries = []
+    for booking in ClientBooking.objects.filter(user=request.user):
+        entries.append({
+            'id': booking.pk, 'booking_source': 'legacy',
+            'class_name': booking.class_name, 'class_date': booking.class_date,
+            'start_time': booking.start_time, 'trainer': booking.trainer,
+            'location': booking.location, 'duration_minutes': booking.duration_minutes,
+            'status': booking.status,
+        })
+    for booking in ClassBooking.objects.filter(client__user=request.user).select_related(
+        'session__coach__user', 'session__branch',
     ):
-        return redirect(next_url)
-    return redirect('myfit:home')
-
-
-@login_required(login_url='myfit:login')
-@require_POST
-def mark_notification_read(request, notification_id):
-    notification = get_object_or_404(
-        Notification,
-        pk=notification_id,
-        user=request.user,
-    )
-    if not notification.is_read or notification.read_at is None:
-        notification.is_read = True
-        notification.read_at = timezone.now()
-        notification.save(update_fields=('is_read', 'read_at'))
-    return _notification_redirect(request)
-
-
-@login_required(login_url='myfit:login')
-@require_POST
-def mark_all_notifications_read(request):
-    request.user.notifications.filter(is_read=False).update(
-        is_read=True,
-        read_at=timezone.now(),
-    )
-    return _notification_redirect(request)
-
+        session = booking.session
+        entries.append({
+            'id': booking.pk, 'booking_source': 'session',
+            'class_name': session.title, 'class_date': session.date,
+            'start_time': session.time,
+            'trainer': session.coach.user.get_full_name() or session.coach.user.username,
+            'location': session.branch.name,
+            'duration_minutes': None,
+            'status': booking.status.lower() if session.status != 'Cancelled' else 'cancelled',
+        })
+    upcoming = [b for b in entries if b['status'] == 'confirmed' and (
+        b['class_date'] > today or (b['class_date'] == today and b['start_time'] > now)
+    )]
+    upcoming.sort(key=lambda b: (b['class_date'], b['start_time']))
+    past = [b for b in entries if b not in upcoming]
+    past.sort(key=lambda b: (b['class_date'], b['start_time']), reverse=True)
+    return render(request, 'myfit/client_bookings.html', {
+        'upcoming_bookings': upcoming, 'past_bookings': past,
+        'upcoming_count': len(upcoming),
+        'completed_count': sum(b['status'] == 'confirmed' for b in past),
+        'cancelled_count': sum(b['status'] == 'cancelled' for b in entries),
+    })
 
 
 # ==========================================================
@@ -599,10 +589,17 @@ def client_membership(request):
 # END TASK 2 - CLIENT MEMBERSHIP DASHBOARD
 
 
+@role_required('Admin')
 def manage_bookings(request):
-    return render(request, 'myfit/manage_bookings.html')
+    bookings = ClassBooking.objects.select_related(
+        'session__branch', 'client__user',
+    ).order_by('-booked_at')
+    return render(request, 'myfit/manage_bookings.html', {'bookings': bookings})
 
+
+@role_required('Admin')
 def manage_payments(request):
+    # There is no Payment model: never present fabricated transaction rows.
     return render(request, 'myfit/manage_payments.html')
 
 
@@ -952,54 +949,73 @@ def edit_membership_plan(request, plan_id):
 
 # END TASK 2 - MEMBERSHIP PLAN MANAGEMENT
 
-@role_required("Coach")
+def _coach_directory(user, query=''):
+    from datetime import timedelta
+    from .models import CoachClientAssignment
+    today = timezone.localdate()
+    week_start = today - timedelta(days=today.weekday())
+    assignments = CoachClientAssignment.objects.filter(
+        coach__user=user,
+    ).select_related('client__user')
+    if query:
+        assignments = assignments.filter(
+            Q(client__user__first_name__icontains=query)
+            | Q(client__user__last_name__icontains=query)
+            | Q(client__user__username__icontains=query)
+            | Q(client__user__email__icontains=query)
+        )
+    rows = []
+    for assignment in assignments:
+        member = assignment.client.user
+        latest = ClientMembership.objects.filter(user=member).select_related('plan').order_by('-start_date').first()
+        last_workout = WorkoutRecord.objects.filter(user=member).order_by('-workout_date').first()
+        visits = AttendanceVisit.objects.filter(
+            membership__user=member, check_in__date__gte=week_start,
+        ).count()
+        rows.append({
+            'name': member.get_full_name() or member.username,
+            'email': member.email,
+            'membership': latest.plan.name if latest else 'No membership',
+            'plan': latest.plan.name if latest else 'No membership',
+            'last_session': last_workout.workout_date.strftime('%d %b %Y') if last_workout else 'Not recorded',
+            'visits_this_week': visits,
+            'status': 'Active' if member.is_active else 'Inactive',
+        })
+    return rows
+
+
+@role_required('Coach')
 def coach_dashboard(request):
-    context = {
-        "active_client_count": 6,
-        "sessions_this_week": 12,
-        "avg_visits_per_week": 3,
-        "classes_this_month": 8,
-        "clients": [
-            {"name": "Ava Mitchell", "email": "ava.m@example.com", "membership": "Weight Loss", "visits_this_week": 3},
-            {"name": "Liam Carter", "email": "liam.c@example.com", "membership": "Strength", "visits_this_week": 2},
-            {"name": "Sofia Patel", "email": "sofia.p@example.com", "membership": "Endurance", "visits_this_week": 4},
-            {"name": "Noah Johnson", "email": "noah.j@example.com", "membership": "General Fitness", "visits_this_week": 0},
-            {"name": "Ella Chen", "email": "ella.c@example.com", "membership": "Strength", "visits_this_week": 1},
-            {"name": "Oliver Brown", "email": "oliver.b@example.com", "membership": "Weight Loss", "visits_this_week": 2},
-        ]
-    }
-    return render(request, "myfit/coach_dashboard.html", context)
+    from datetime import timedelta
+    today = timezone.localdate()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    month_end = (today.replace(day=28) + timedelta(days=4)).replace(day=1)
+    clients = _coach_directory(request.user)
+    visits = sum(row['visits_this_week'] for row in clients)
+    coach = CoachProfile.objects.filter(user=request.user).first()
+    sessions = ClassSession.objects.filter(coach=coach) if coach else ClassSession.objects.none()
+    return render(request, 'myfit/coach_dashboard.html', {
+        'active_client_count': len(clients),
+        'sessions_this_week': sessions.filter(date__range=(week_start, week_end)).count(),
+        'avg_visits_per_week': round(visits / len(clients), 1) if clients else 0,
+        'classes_this_month': sessions.filter(date__gte=today.replace(day=1), date__lt=month_end).count(),
+        'clients': clients,
+    })
 
-@role_required("Coach")
+
+@role_required('Coach')
 def coach_clients(request):
-    context = {
-        "total_clients": 12,
-        "active_this_week": 8,
-        "active_percent": 67,
-        "need_attention": 3,
-        "goals_achieved": 5,
-        "clients": [
-            {"name": "Ava Mitchell", "email": "ava.m@example.com", "plan": "Weight Loss", "last_session": "Today, 9:00 AM", "status": "On track"},
-            {"name": "Liam Carter", "email": "liam.c@example.com", "plan": "Strength", "last_session": "Yesterday", "status": "In progress"},
-            {"name": "Sofia Patel", "email": "sofia.p@example.com", "plan": "Endurance", "last_session": "Today, 8:15 AM", "status": "On track"},
-            {"name": "Noah Johnson", "email": "noah.j@example.com", "plan": "General Fitness", "last_session": "12 days ago", "status": "Needs attention"},
-            {"name": "Ella Chen", "email": "ella.c@example.com", "plan": "Strength", "last_session": "3 days ago", "status": "In progress"},
-            {"name": "Oliver Brown", "email": "oliver.b@example.com", "plan": "Weight Loss", "last_session": "Yesterday", "status": "On track"},
-            {"name": "Mia Lopez", "email": "mia.l@example.com", "plan": "Yoga", "last_session": "5 days ago", "status": "Needs attention"},
-            {"name": "Ethan Wright", "email": "ethan.w@example.com", "plan": "CrossFit", "last_session": "Today, 7:30 AM", "status": "On track"},
-            {"name": "Grace Kim", "email": "grace.k@example.com", "plan": "Pilates", "last_session": "2 days ago", "status": "In progress"},
-            {"name": "Daniel Smith", "email": "daniel.s@example.com", "plan": "Cardio", "last_session": "Yesterday", "status": "On track"},
-            {"name": "Isabella Rossi", "email": "isabella.r@example.com", "plan": "Strength", "last_session": "10 days ago", "status": "Needs attention"},
-            {"name": "James Okafor", "email": "james.o@example.com", "plan": "General Fitness", "last_session": "Today, 6:45 AM", "status": "On track"},
-        ]
-    }
-    return render(request, "myfit/coach_clients.html", context)
+    clients = _coach_directory(request.user, request.GET.get('q', '').strip()[:100])
+    active = sum(client['visits_this_week'] > 0 for client in clients)
+    return render(request, 'myfit/coach_clients.html', {
+        'clients': clients, 'total_clients': len(clients),
+        'active_this_week': active,
+        'active_percent': round(100 * active / len(clients)) if clients else 0,
+        'need_attention': sum(client['visits_this_week'] == 0 for client in clients),
+        'goals_achieved': 0,  # no goal achievement model exists yet
+    })
 
-def manage_branches(request):
-    return render(request, "myfit/manage_branches.html")
-
-def manage_coaches(request):
-    return render(request, "myfit/manage_coaches.html")
 #jush=====
 from .models import ClassSession, ClassBooking
 from .services import book_client_into_class, cancel_booking
@@ -1055,39 +1071,118 @@ def assign_client_membership(request):
 # END TASK 2 - CLIENT MEMBERSHIP ASSIGNMENT
 
 def class_list(request):
-    classes = ClassSession.objects.filter(status='Scheduled').order_by('date', 'time')
+    today = timezone.localdate()
+    classes = ClassSession.objects.filter(status='Scheduled', date__gte=today).order_by('date', 'time')
     return render(request, 'myfit/class_list.html', {'classes': classes})
 
-@login_required
+@login_required(login_url='myfit:login')
+@require_POST
 def book_class_view(request, session_id):
-    if request.method == 'POST':
-        try:
-            book_client_into_class(session_id, request.user.client_profile)
-            messages.success(request, "Class booked successfully!")
-        except ValidationError as e:
-            messages.error(request, str(e.message))
+    if not has_role(request.user, 'Client') or not hasattr(request.user, 'client_profile'):
+        raise PermissionDenied('Only registered clients can book classes.')
+    try:
+        book_client_into_class(session_id, request.user.client_profile)
+    except ClassSession.DoesNotExist:
+        raise Http404('Class not found.')
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    else:
+        messages.success(request, 'Class booked successfully!')
     return redirect('myfit:class_list')
 
-@login_required
+
+@login_required(login_url='myfit:login')
 def manage_classes(request):
-    if request.user.groups.filter(name='Admin').exists() or request.user.is_superuser:
+    if has_role(request.user, 'Admin'):
         classes = ClassSession.objects.all().order_by('-date')
-    elif hasattr(request.user, 'coach_profile'):
+    elif has_role(request.user, 'Coach') and hasattr(request.user, 'coach_profile'):
         classes = ClassSession.objects.filter(coach=request.user.coach_profile).order_by('-date')
     else:
-        messages.error(request, "Unauthorized")
-        return redirect('myfit:home')
-    return render(request, 'myfit/manage_classes.html', {'classes': classes})
+        raise PermissionDenied('Only Admin and Coach accounts can manage classes.')
+    return render(request, 'myfit/manage_classes.html', {
+        'classes': classes.select_related('coach__user', 'branch').prefetch_related('bookings__client__user'),
+    })
 
-@login_required
+
+@login_required(login_url='myfit:login')
+@transaction.atomic
+def class_session_edit(request, session_id=None):
+    """Admin manages any class; Coach creates/edits their own classes."""
+    from .forms import ClassSessionForm
+
+    is_admin = has_role(request.user, 'Admin')
+    is_coach = has_role(request.user, 'Coach')
+    if not (is_admin or is_coach):
+        raise PermissionDenied('Only gym managers and coaches can edit classes.')
+    session = get_object_or_404(ClassSession, pk=session_id) if session_id else None
+    if not is_admin and (
+        not hasattr(request.user, 'coach_profile')
+        or (session and session.coach_id != request.user.coach_profile.pk)
+    ):
+        raise PermissionDenied('You may edit only your own classes.')
+
+    original_status = session.status if session else None
+    original_coach = session.coach if session else None
+    form = ClassSessionForm(request.POST or None, request.FILES or None, instance=session)
+    if not is_admin:
+        form.fields['coach'].queryset = CoachProfile.objects.filter(user=request.user)
+        form.fields['coach'].initial = request.user.coach_profile
+    if request.method == 'POST' and form.is_valid():
+        obj = form.save(commit=False)
+        if not is_admin:
+            obj.coach = request.user.coach_profile
+        already_booked = (
+            ClassBooking.objects.filter(session=session, status='Confirmed').count()
+            if session else 0
+        )
+        if obj.capacity < already_booked:
+            form.add_error('capacity', 'Capacity cannot be below the number of confirmed bookings.')
+        else:
+            obj.save()
+            if obj.status == 'Cancelled' and original_status != 'Cancelled':
+                # Keep booking records for history instead of deleting them.
+                for booking in ClassBooking.objects.filter(
+                    session=obj, status='Confirmed',
+                ).select_related('client__user'):
+                    booking.status = 'Cancelled'
+                    booking.save(update_fields=['status'])
+                    notify(
+                        booking.client.user, 'Class cancelled',
+                        f'{obj.title} on {obj.date:%d %b %Y} has been cancelled.',
+                        reverse('myfit:client_bookings'),
+                    )
+            if is_admin:
+                notify(
+                    obj.coach.user, 'Class schedule updated',
+                    f'Your assigned class {obj.title} on {obj.date:%d %b %Y} is {obj.status.lower()}.',
+                    reverse('myfit:manage_classes'),
+                )
+                if original_coach and original_coach.pk != obj.coach_id:
+                    notify(
+                        original_coach.user, 'Class reassigned',
+                        f'{obj.title} is no longer assigned to you.',
+                        reverse('myfit:manage_classes'),
+                    )
+            messages.success(request, 'Class saved successfully.')
+            return redirect('myfit:manage_classes')
+    return render(request, 'myfit/class_session_form.html', {
+        'form': form, 'session': session,
+    })
+
+@login_required(login_url='myfit:login')
+@require_POST
 def cancel_booking_view(request, booking_id):
-    if request.method == 'POST':
-        try:
-            cancel_booking(booking_id, request.user)
-            messages.success(request, "Booking cancelled.")
-        except ValidationError as e:
-            messages.error(request, str(e.message))
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+    try:
+        cancel_booking(booking_id, request.user)
+    except ClassBooking.DoesNotExist:
+        raise Http404('Booking not found.')
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    else:
+        messages.success(request, 'Booking cancelled.')
+    if has_role(request.user, 'Admin') or has_role(request.user, 'Coach'):
+        return redirect('myfit:manage_classes')
+    return redirect('myfit:client_bookings')
 #<----
 
 
@@ -1104,6 +1199,9 @@ def branches(request):
     return render(request, 'myfit/branches.html', {
         'branches': Branch.objects.filter(is_active=True),
         'site_images': website_images(),
+        'show_plaisance_card': not Branch.objects.filter(
+            name__icontains='Plaisance', is_active=True,
+        ).exists(),
     })
  
  
@@ -1147,14 +1245,6 @@ def contact(request):
         'contact_form': form, 'my_tickets': my_tickets,
         'contact_branches': Branch.objects.filter(is_active=True),
     })
- 
- 
-@login_required(login_url='myfit:login')
-def support_ticket_detail(request, ticket_id):
-    ticket = get_object_or_404(SupportTicket, pk=ticket_id, kind='ticket')
-    if ticket.user_id != request.user.pk and not has_role(request.user, 'Admin'):
-        raise PermissionDenied
-    return render(request, 'myfit/support_ticket_detail.html', {'ticket': ticket})
  
  
 @role_required('Admin')
@@ -1343,7 +1433,7 @@ def notification_list(request):
         {"notifications": notifications},
     )
     
-def _notification_redirect(request, default="myfit:notification_list"):
+def _notification_redirect(request, default="myfit:home"):
     next_url = request.POST.get('next', '')
     if url_has_allowed_host_and_scheme(
         next_url,
@@ -1402,63 +1492,43 @@ def mark_all_notifications_read(request):
     return _notification_redirect(request)
 
 #Create a support ticket
-@login_required
+@login_required(login_url='myfit:login')
 def create_support_ticket(request):
-    if request.method == "POST":
-        subject = request.POST.get("subject", "").strip()
-        description = request.POST.get("description", "").strip()
-        priority = request.POST.get("priority", "normal")
-
-        valid_priorities = {
-            choice[0] for choice in SupportTicket.Priority.choices
-        }
-
-        if not subject or not description:
-            messages.error(
-                request, "Please complete the subject and description."
-            )
-        elif priority not in valid_priorities:
-            messages.error(request, "Please select a valid priority.")
+    """Create a ticket using fields that really exist on SupportTicket."""
+    if request.method == 'POST':
+        subject = request.POST.get('subject', '').strip()[:130]
+        description = request.POST.get('description', '').strip()[:2000]
+        if not subject or len(description) < 10:
+            messages.error(request, 'Enter a subject and a description of at least 10 characters.')
+        elif not request.user.email:
+            messages.error(request, 'Add an email address to your account before opening a ticket.')
         else:
-            ticket = SupportTicket.objects.create(
-                client=request.user,
-                subject=subject,
-                description=description,
-                priority=priority,
-            )
-
-            # Store the initial description as the first conversation message.
-            SupportTicketMessage.objects.create(
-                ticket=ticket,
-                sender=request.user,
-                message=description,
-            )
-            notify_ticket_update(
-                ticket,
-                f"Ticket #{ticket.pk} received",
-                f"We received your request \"{ticket.subject}\". Support will reply soon.",
-            )
-
-            messages.success(request, "Your support ticket was created.")
-            return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
-
-    return render(request, "myfit/support_ticket_form.html")
+            with transaction.atomic():
+                ticket = SupportTicket.objects.create(
+                    user=request.user, kind='ticket',
+                    name=request.user.get_full_name() or request.user.username,
+                    email=request.user.email, topic='Support',
+                    subject=subject, message=description,
+                )
+                notify_ticket_update(ticket, 'Support ticket received',
+                                     f'Your request MF-{ticket.pk} was received.')
+            messages.success(request, 'Your support ticket was created.')
+            return redirect('myfit:support_ticket_detail', ticket_id=ticket.pk)
+    return render(request, 'myfit/support_ticket_form.html')
 
 
 #list the user's current tickets
-@login_required
+@login_required(login_url='myfit:login')
 def support_ticket_list(request):
-    if request.user.is_staff:
-        tickets = SupportTicket.objects.all()
-    else:
-        tickets = SupportTicket.objects.filter(client=request.user)
+    tickets = SupportTicket.objects.filter(kind='ticket')
+    if not has_role(request.user, 'Admin'):
+        tickets = tickets.filter(user=request.user)
+    return render(request, 'myfit/support_ticket_list.html', {
+        'tickets': tickets.order_by('-updated_at'),
+        'is_admin': has_role(request.user, 'Admin'),
+    })
 
-    return render(
-        request,
-        "myfit/support_ticket_list.html",
-        {"tickets": tickets},
-    )
- 
+
 #View a ticket and its messages
 
 @login_required(login_url="myfit:login")
@@ -1506,11 +1576,6 @@ def support_ticket_detail(request, ticket_id):
             )
             reply.save()
 
-            # A client reply reopens a resolved ticket.
-            if not is_admin and ticket.status == "resolved":
-                ticket.status = "open"
-                ticket.save(update_fields=["status", "updated_at"])
-
             # Notify the client when an admin sends a public reply.
             if is_admin and not reply.is_internal_note and ticket.user:
                 Notification.objects.create(
@@ -1543,102 +1608,4 @@ def support_ticket_detail(request, ticket_id):
         },
     )
 
-
-#reply to a ticket
-@login_required
-@require_POST
-def reply_to_support_ticket(request, ticket_id):
-    ticket = get_object_or_404(SupportTicket, pk=ticket_id)
-
-    if not request.user.is_staff and ticket.client_id != request.user.id:
-        raise PermissionDenied
-
-    if ticket.status == SupportTicket.Status.CLOSED and not request.user.is_staff:
-        messages.error(request, "This ticket is closed and cannot be replied to.")
-        return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
-
-    message_text = request.POST.get("message", "").strip()
-
-    if not message_text:
-        messages.error(request, "Please enter a message.")
-        return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
-
-    # Only staff can write internal notes.
-    is_internal = request.user.is_staff and request.POST.get("is_internal") == "on"
-
-    SupportTicketMessage.objects.create(
-        ticket=ticket,
-        sender=request.user,
-        message=message_text,
-        is_internal=is_internal,
-    )
-
-    if request.user.is_staff:
-        # Take the ticket if nobody has it yet.
-        if ticket.assigned_admin is None:
-            ticket.assigned_admin = request.user
-        if not is_internal:
-            ticket.status = SupportTicket.Status.WAITING_FOR_CLIENT
-            notify_ticket_update(
-                ticket,
-                f"New reply on ticket #{ticket.pk}",
-                f"Support replied to \"{ticket.subject}\".",
-            )
-    else:
-        ticket.status = SupportTicket.Status.OPEN
-        notify_ticket_admin(
-            ticket,
-            f"Client replied on ticket #{ticket.pk}",
-            f"{request.user.username} replied to \"{ticket.subject}\".",
-        )
-
-    # Saves the changes above and bumps updated_at so the list reorders.
-    ticket.save()
-
-    messages.success(request, "Your reply was sent.")
-    return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
-
-
-#restricts updates to staff accounts and validates submitted values
-@login_required
-@user_passes_test(lambda user: user.is_staff)
-@require_POST
-def update_support_ticket(request, ticket_id):
-    ticket = get_object_or_404(SupportTicket, pk=ticket_id)
-
-    status = request.POST.get("status")
-    priority = request.POST.get("priority")
-
-    valid_statuses = {
-        choice[0] for choice in SupportTicket.Status.choices
-    }
-    valid_priorities = {
-        choice[0] for choice in SupportTicket.Priority.choices
-    }
-
-    if status not in valid_statuses or priority not in valid_priorities:
-        messages.error(request, "Invalid ticket status or priority.")
-        return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
-
-    status_changed = ticket.status != status
-    priority_changed = ticket.priority != priority
-
-    ticket.status = status
-    ticket.priority = priority
-    ticket.save(update_fields=["status", "priority", "updated_at"])
-
-    # Only notify if something actually changed.
-    if status_changed or priority_changed:
-        changes = []
-        if status_changed:
-            changes.append(f"Status is now {ticket.get_status_display()}.")
-        if priority_changed:
-            changes.append(f"Priority is now {ticket.get_priority_display()}.")
-        notify_ticket_update(
-            ticket,
-            f"Ticket #{ticket.pk} updated",
-            " ".join(changes),
-        )
-
-    messages.success(request, "Ticket updated successfully.")
-    return redirect("myfit:support_ticket_detail", ticket_id=ticket.pk)
+ 
