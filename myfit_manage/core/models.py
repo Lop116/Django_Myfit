@@ -8,6 +8,46 @@ from django.core.validators import MinValueValidator, FileExtensionValidator #< 
 from django.db import models
 from django.utils import timezone
 
+# MEDIA (simplest Django approach):---------------------------------------------------------
+# - static/images/ contains artwork shipped with the project;
+# - media/ contains pictures uploaded by administrators while the site runs.
+# ImageField saves the picture's filename/path in the database, not its bytes.
+# File-type and size checks below are small optional safeguards.
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, FileExtensionValidator
+from django.db import models
+from django.utils import timezone
+
+# Check that uploaded images do not exceed 5 MB
+def validate_myfit_image_size(file):
+    if file.size > 5 * 1024 * 1024:
+        raise ValidationError("Images must be 5 MB or smaller.")
+
+
+# Reusable validation rules for uploaded images
+MYFIT_IMAGE_VALIDATORS = [
+    FileExtensionValidator(
+        allowed_extensions=['jpg', 'jpeg', 'png', 'webp']
+    ),
+    validate_myfit_image_size,
+]
+# MEDIA (simplest Django approach):---------------------------------------------------------
+# - static/images/ contains artwork shipped with the project;
+# - media/ contains pictures uploaded by administrators while the site runs.
+# ImageField saves the picture's filename/path in the database, not its bytes.
+# File-type and size checks below are small optional safeguards.
+def validate_myfit_image_size(file):
+    from django.core.exceptions import ValidationError
+    if file.size > 5 * 1024 * 1024:
+        raise ValidationError('Images must be 5 MB or smaller.')
+ 
+ 
+MYFIT_IMAGE_VALIDATORS = [
+    FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp']),
+    validate_myfit_image_size,
+]
+ 
+
 
 class WorkoutRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -590,16 +630,7 @@ class ProgressEntry(models.Model):
 # - media/ contains pictures uploaded by administrators while the site runs.
 # ImageField saves the picture's filename/path in the database, not its bytes.
 # File-type and size checks below are small optional safeguards.
-def validate_myfit_image_size(file):
-    from django.core.exceptions import ValidationError
-    if file.size > 5 * 1024 * 1024:
-        raise ValidationError('Images must be 5 MB or smaller.')
- 
- 
-MYFIT_IMAGE_VALIDATORS = [
-    FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp']),
-    validate_myfit_image_size,
-]
+
  
  
 class WebsiteImage(models.Model):
