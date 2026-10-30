@@ -34,7 +34,6 @@ urlpatterns = [
 #<------------------------
     path('', views.home, name='home'),
     path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
-    path('login/', LoginView.as_view(template_name='myfit/login.html', next_page='myfit:home'), name='login'),
     path('login/', views.RoleAwareLoginView.as_view(template_name='myfit/login.html'), name='login'),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('myfit:home')), name='logout'),
     path(
