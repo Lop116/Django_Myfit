@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Explore sample MyFit fitness classes across Caudan Waterfront, Trianon Emerald Park and Riche Terre: strength, HIIT, yoga and Zumba.">
+  <meta name="description" content="Explore published classes and their live schedules at MyFit Mauritius.">
   <meta name="theme-color" content="#121416">
   <title>Fitness Classes | MyFit Mauritius</title>
   <link rel="stylesheet" href="{% static 'css/website_media.css' %}">
@@ -341,7 +341,7 @@
   <div class="topbar">
     <div class="container topbar-inner">
       <p><span class="topbar-dot"></span> MADE FOR MAURITIUS <span class="topbar-divider">/</span> TRAIN · TRACK · TRANSFORM</p>
-      <a href="/branches/">THREE ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+      <a href="/branches/">{{ open_branch_count }} ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
  
@@ -394,88 +394,64 @@
         <p class="breadcrumb"><a href="/">HOME</a> &nbsp;/&nbsp; <span>OUR CLASSES</span></p>
         <p class="eyebrow">YOUR ENERGY / YOUR WAY</p>
         <h1 id="classes-title">MOVE.<br>GROW.<br><span>REPEAT.</span></h1>
-        <p class="hero-desc">Find a workout that moves you. Explore strength, HIIT, yoga and Zumba sessions with guidance from the MyFit coaching team.</p>
-        <div class="hero-actions"><a class="btn btn-pink" href="#class-directory">EXPLORE CLASSES <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="#weekly-schedule">SAMPLE TIMETABLE <svg class="icon"><use href="#i-arrow"/></svg></a></div>
+        <p class="hero-desc">Explore the upcoming classes scheduled by the MyFit coaching team.</p>
+        <div class="hero-actions"><a class="btn btn-pink" href="#class-directory">EXPLORE CLASSES <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="#weekly-schedule">LIVE TIMETABLE <svg class="icon"><use href="#i-arrow"/></svg></a></div>
       </div></div>
       <div class="hero-bottom"><div class="container hero-highlights">
         <div><svg class="icon"><use href="#i-users"/></svg><span><b>EXPERT COACHES</b><small>Meet the instructors behind your training</small></span></div>
-        <div><svg class="icon"><use href="#i-activity"/></svg><span><b>4 TRAINING STYLES</b><small>Strength, HIIT, mobility and dance</small></span></div>
-        <div><svg class="icon"><use href="#i-pin"/></svg><span><b>3 ACTIVE CLUBS</b><small>Caudan, Trianon and Riche Terre</small></span></div>
+        <div><svg class="icon"><use href="#i-activity"/></svg><span><b>{{ upcoming_sessions|length }} UPCOMING CLASSES</b><small>Sessions updated by MyFit staff</small></span></div>
+        <div><svg class="icon"><use href="#i-pin"/></svg><span><b>{{ open_branch_count }} ACTIVE CLUBS</b><small>Locations shown on the Branches page</small></span></div>
       </div></div>
     </section>
  
     <section class="class-directory" id="class-directory" aria-labelledby="directory-title">
       <div class="container">
-        <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR ENERGY</p><h2 class="section-title" id="directory-title">CLASSES FOR <span>EVERY GOAL</span></h2><p>Find a session you would enjoy. Search by class or coach, choose your preferred location, and explore what a typical week could look like.</p></div><span class="count-badge" aria-live="polite">SHOWING <span id="class-count">4</span> PROGRAMMES</span></div>
-        <div class="class-filter-panel" role="group" aria-label="Filter class programmes and sample timetable">
-          <label class="filter-field"><svg class="icon"><use href="#i-search"/></svg><input id="class-search" type="search" placeholder="Search classes or coaches" aria-label="Search classes or coaches" autocomplete="off"></label>
-          <label class="filter-field"><select id="type-filter" aria-label="Filter by class type"><option value="all">All class types</option><option value="strength">Strength</option><option value="hiit">HIIT</option><option value="yoga">Yoga / Recovery</option><option value="zumba">Zumba</option></select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg></label>
-          <label class="filter-field"><select id="location-filter" aria-label="Filter by branch"><option value="all">All branches</option><option value="caudan">Caudan Waterfront</option><option value="trianon">Emerald Park · Trianon</option><option value="riche-terre">Riche Terre</option></select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg></label>
-          <label class="filter-field"><select id="day-filter" aria-label="Filter by day"><option value="all">All days</option><option value="monday">Monday</option><option value="tuesday">Tuesday</option><option value="wednesday">Wednesday</option><option value="thursday">Thursday</option><option value="friday">Friday</option><option value="saturday">Saturday</option></select><svg class="icon icon-sm caret"><use href="#i-chevron"/></svg></label>
+        <div class="section-intro">
+          <div><p class="section-kicker">01 / BOOK A CLASS</p><h2 class="section-title" id="directory-title">LIVE <span>CLASSES</span></h2><p>Every card below is a real upcoming session maintained in MyFit Admin.</p></div>
+          <span class="count-badge" aria-live="polite">SHOWING <span id="class-count">{{ upcoming_sessions|length }}</span> CLASSES</span>
+        </div>
+        <div class="class-filter-panel" role="group" aria-label="Filter upcoming classes">
+          <label class="filter-field"><svg class="icon"><use href="#i-search"/></svg><input id="class-search" type="search" placeholder="Search class, coach or branch" aria-label="Search classes" autocomplete="off"></label>
+          <label class="filter-field"><select id="type-filter" aria-label="Class category"><option value="all">All class types</option>{% for category in filter_categories %}<option value="{{ category }}">{{ category|title }}</option>{% endfor %}</select></label>
+          <label class="filter-field"><select id="location-filter" aria-label="Branch"><option value="all">All branches</option>{% for branch in filter_branches %}<option value="{{ branch.pk }}">{{ branch.name }}</option>{% endfor %}</select></label>
           <button type="button" class="filter-reset" id="reset-class-filters">RESET</button>
         </div>
-        <div class="category-choices" aria-label="Quick class category selection"><button type="button" class="category-choice" data-choice="all" aria-pressed="true">ALL CLASSES</button><button type="button" class="category-choice" data-choice="strength" aria-pressed="false">STRENGTH</button><button type="button" class="category-choice" data-choice="hiit" aria-pressed="false">HIIT</button><button type="button" class="category-choice" data-choice="yoga" aria-pressed="false">YOGA</button><button type="button" class="category-choice" data-choice="zumba" aria-pressed="false">ZUMBA</button></div>
-        <div class="class-grid" id="class-grid"><article class="class-card" data-category="strength" data-name="Strength Fundamentals" data-about="A practical, accessible strength session focused on movement quality, safe progress and a solid training foundation. Adaptable for first-time lifters and experienced members." data-focus="Technique, full-body strength, progressive overload" data-coaches="Adrian Morel &amp; Daniel Chen" data-duration="60 minutes" data-level="All levels" data-group="Up to 20">
-    <div class="class-card-photo"><img src="{% static 'images/classes/class-strength.webp' %}" alt="Illustrative Strength Fundamentals group session" loading="lazy"><span class="class-type-badge strength">STRENGTH</span></div>
-    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / STRENGTH</p><h3>STRENGTH FUNDAMENTALS</h3><p class="class-card-lead">Learn the basics of resistance training, build confidence and strengthen your technique with expert guidance.</p>
-      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 60 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> ALL LEVELS</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 20</span></div>
-      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for Strength Fundamentals"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
-    </div>
-  </article><article class="class-card" data-category="hiit" data-name="HIIT Training" data-about="Short bursts of movement balanced with active recovery. Expect dynamic conditioning and adaptable options, with encouragement from your instructor." data-focus="Cardio, functional training, endurance" data-coaches="Ryan Patel" data-duration="45 minutes" data-level="Moderate" data-group="Up to 24">
-    <div class="class-card-photo"><img src="{% static 'images/classes/class-hiit.webp' %}" alt="Illustrative HIIT Training group session" loading="lazy"><span class="class-type-badge hiit">HIIT</span></div>
-    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / HIIT</p><h3>HIIT TRAINING</h3><p class="class-card-lead">High-energy intervals and functional movements that challenge your conditioning at a pace you can adapt.</p>
-      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 45 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> MODERATE</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 24</span></div>
-      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for HIIT Training"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
-    </div>
-  </article><article class="class-card" data-category="yoga" data-name="Yoga &amp; Recovery" data-about="Unwind, breathe and improve your range of movement. This session focuses on flexibility, controlled movement and relaxed recovery." data-focus="Mobility, balance, stretching, recovery" data-coaches="Amina Rahman" data-duration="55 minutes" data-level="All levels" data-group="Up to 18">
-    <div class="class-card-photo"><img src="{% static 'images/classes/class-yoga.webp' %}" alt="Illustrative Yoga &amp; Recovery group session" loading="lazy"><span class="class-type-badge yoga">MOBILITY</span></div>
-    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / YOGA</p><h3>YOGA &AMP; RECOVERY</h3><p class="class-card-lead">Move more freely with mindful stretches, breathwork and gentle mobility exercises designed for recovery.</p>
-      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 55 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> ALL LEVELS</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 18</span></div>
-      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for Yoga &amp; Recovery"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
-    </div>
-  </article><article class="class-card" data-category="zumba" data-name="Zumba Fitness" data-about="Move with rhythm in a lively group workout. Easy-to-follow sequences create an energetic cardio session for a range of fitness backgrounds." data-focus="Dance fitness, coordination, aerobic exercise" data-coaches="Maya Naidoo" data-duration="55 minutes" data-level="All levels" data-group="Up to 26">
-    <div class="class-card-photo"><img src="{% static 'images/classes/class-zumba.webp' %}" alt="Illustrative Zumba Fitness group session" loading="lazy"><span class="class-type-badge zumba">GROUP FITNESS</span></div>
-    <div class="class-card-body"><p class="class-card-label">TRAINING PROGRAMME / ZUMBA</p><h3>ZUMBA FITNESS</h3><p class="class-card-lead">Music-driven dance movement that makes cardio feel fun, social and full of positive energy.</p>
-      <div class="class-properties"><span><svg class="icon icon-sm"><use href="#i-activity"/></svg> 55 MIN</span><span><svg class="icon icon-sm"><use href="#i-users"/></svg> ALL LEVELS</span><span><svg class="icon icon-sm"><use href="#i-pin"/></svg> 3 CLUB NETWORK</span><span><svg class="icon icon-sm"><use href="#i-target"/></svg> UP TO 26</span></div>
-      <div class="class-card-actions"><button type="button" class="class-detail-btn">VIEW DETAILS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button><a class="class-book-link" href="#weekly-schedule" aria-label="View schedule for Zumba Fitness"><svg class="icon icon-sm"><use href="#i-target"/></svg></a></div>
-    </div>
-  </article></div>
-        <div class="class-empty" id="class-empty" hidden><h3>NO MATCHING CLASSES</h3><p>Try another class type, branch or day in this sample timetable.</p><button type="button" id="empty-reset">CLEAR FILTERS</button></div>
-        <p class="class-guide">These programme descriptions, coach assignments and session times are <strong>illustrative frontend content</strong>. Real schedules, capacities and availability will be connected through Django later.</p>
-        <aside class="class-membership-note" aria-label="Group fitness membership information"><div><strong>Group classes and your membership</strong><p>Unlimited group classes are included with <b>My Access XL</b> and <b>My Access Premium</b>. View the membership options to compare their listed benefits.</p></div><a href="/plans/">Compare memberships →</a></aside>
-      </div>
-    </section>
- 
-    <section class="live-sessions-section" id="live-sessions" aria-labelledby="live-sessions-title">
-      <div class="container">
-        <p class="section-kicker">LIVE / UPDATED FROM ADMIN</p>
-        <h2 class="section-title" id="live-sessions-title">UPCOMING <span>SESSIONS</span></h2>
-        <p class="live-intro">These are real scheduled sessions saved in MyFit's database. Add, edit or cancel them in Django Admin.</p>
-        <div class="live-session-grid">
+        <div class="class-grid" id="class-grid">
           {% for session in upcoming_sessions %}
-          <article class="live-session-card">
-            {% if session.image %}<img src="{{ session.image.url }}" alt="{{ session.title }} class" loading="lazy">{% else %}<img src="{% static 'images/classes/classes-hero.webp' %}" alt="Illustrative gym session" loading="lazy">{% endif %}
-            <div class="live-session-body"><h3>{{ session.title }}</h3>
-              <p>{{ session.date|date:'D d M Y' }} · {{ session.time|time:'H:i' }}</p>
-              <p>{{ session.branch.name }} · {{ session.coach.user.get_full_name|default:session.coach.user.username }}</p>
-              <p>Places remaining: {{ session.spaces_left }}</p>
-              <a href="{% url 'myfit:class_list' %}">VIEW LIVE BOOKING LIST</a>
+          <article class="class-card" data-category="{{ session.category }}" data-branch="{{ session.branch_id }}" data-search="{{ session.title|lower }} {{ session.coach.user.get_full_name|default:session.coach.user.username|lower }} {{ session.branch.name|lower }} {{ session.category|lower }}">
+            <div class="class-card-photo">
+              {% if session.image %}<img src="{{ session.image.url }}" alt="{{ session.title }} class" loading="lazy">
+              {% else %}<div class="image-not-uploaded">CLASS PHOTO COMING SOON</div>{% endif %}
+              <span class="class-type-badge">{{ session.category|upper }}</span>
+            </div>
+            <div class="class-card-body">
+              <p class="class-card-label">{{ session.date|date:'D d M Y' }} · {{ session.time|time:'H:i' }}</p>
+              <h3>{{ session.title }}</h3>
+              <p class="class-card-lead">{{ session.description|default:'Join this MyFit class.' }}</p>
+              <div class="class-properties">
+                <span>{{ session.branch.name }}</span>
+                <span>{{ session.coach.user.get_full_name|default:session.coach.user.username }}</span>
+                <span>Places remaining: {{ session.spaces_left }}</span>
+              </div>
+              <div class="class-card-actions"><a class="class-detail-btn" href="{% url 'myfit:class_list' %}">VIEW BOOKING OPTIONS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
             </div>
           </article>
-          {% empty %}<p>No future scheduled sessions are published yet.</p>{% endfor %}
+          {% empty %}<p class="class-empty">No upcoming classes are published. Check back after the team schedules sessions.</p>{% endfor %}
         </div>
+        <div class="class-empty" id="class-empty" hidden>No classes match your filters.</div>
       </div>
     </section>
- 
     <section class="schedule-section" id="weekly-schedule" aria-labelledby="schedule-title"><div class="container">
-      <div class="schedule-head"><div><p class="section-kicker">02 / PLAN YOUR WEEK</p><h2 class="section-title" id="schedule-title">SAMPLE <span>TIMETABLE</span></h2><p style="color:#b6bdc3;line-height:1.7;max-width:670px;margin:0">Preview a typical week using the class filters above. Timings here are demonstration data, not confirmed live sessions.</p></div><a href="/contact/">QUESTIONS ABOUT THE CLASSES? <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
-      <div class="schedule-table-shell"><table class="schedule-table"><thead><tr><th scope="col">DAY</th><th scope="col">TIME</th><th scope="col">CLASS</th><th scope="col">COACH</th><th scope="col">BRANCH</th><th scope="col">TYPE</th><th scope="col">ACTION</th></tr></thead><tbody id="schedule-rows"><tr class="schedule-row" data-day="monday" data-category="strength" data-branch="caudan" data-search="strength fundamentals adrian morel caudan waterfront"><td><strong>Monday</strong></td><td>07:00</td><td><strong>Strength Fundamentals</strong></td><td>Adrian Morel</td><td>Caudan Waterfront</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr><tr class="schedule-row" data-day="monday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Monday</strong></td><td>09:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Tuesday</strong></td><td>18:00</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Tuesday</strong></td><td>18:30</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr><tr class="schedule-row" data-day="wednesday" data-category="strength" data-branch="trianon" data-search="strength fundamentals daniel chen emerald park · trianon"><td><strong>Wednesday</strong></td><td>17:30</td><td><strong>Strength Fundamentals</strong></td><td>Daniel Chen</td><td>Emerald Park · Trianon</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr><tr class="schedule-row" data-day="thursday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Thursday</strong></td><td>07:30</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr><tr class="schedule-row" data-day="friday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Friday</strong></td><td>17:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr><tr class="schedule-row" data-day="saturday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Saturday</strong></td><td>10:00</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">VIEW LIVE CLASSES</a></td></tr></tbody></table></div>
-      <div class="schedule-empty" id="schedule-empty" hidden>No sample sessions match the selected filters.</div>
+      <div class="schedule-head"><div><p class="section-kicker">02 / UPCOMING SESSIONS</p><h2 class="section-title" id="schedule-title">LIVE <span>TIMETABLE</span></h2><p>Dates, instructors and places come from the database; no sample timetable.</p></div></div>
+      <div class="schedule-table-shell"><table class="schedule-table"><thead><tr><th>DATE</th><th>TIME</th><th>CLASS</th><th>COACH</th><th>BRANCH</th><th>SPACES</th><th>ACTION</th></tr></thead><tbody id="schedule-rows">
+        {% for session in upcoming_sessions %}<tr class="schedule-row" data-category="{{ session.category }}" data-branch="{{ session.branch_id }}" data-search="{{ session.title|lower }} {{ session.coach.user.get_full_name|default:session.coach.user.username|lower }} {{ session.branch.name|lower }} {{ session.category|lower }}"><td>{{ session.date|date:'D d M Y' }}</td><td>{{ session.time|time:'H:i' }}</td><td><strong>{{ session.title }}</strong></td><td>{{ session.coach.user.get_full_name|default:session.coach.user.username }}</td><td>{{ session.branch.name }}</td><td>{{ session.spaces_left }}</td><td><a class="schedule-book" href="{% url 'myfit:class_list' %}">BOOK</a></td></tr>{% empty %}<tr><td colspan="7">No upcoming classes are published.</td></tr>{% endfor %}
+      </tbody></table></div>
+      <div class="schedule-empty" id="schedule-empty" hidden>No sessions match the selected filters.</div>
     </div></section>
- 
+
     <section class="class-steps" aria-labelledby="steps-title"><div class="container"><p class="eyebrow">03 / HOW IT WORKS</p><h2 id="steps-title">YOUR NEXT CLASS<br><span>STARTS HERE.</span></h2><div class="steps-grid">
-      <div class="step"><span class="step-num">01</span><h3>FIND YOUR FIT</h3><p>Browse the programme styles, review their focus and find a class that suits your goals.</p></div>
-      <div class="step"><span class="step-num">02</span><h3>SIGN IN TO BOOK</h3><p>Sign in and book from the live upcoming class list; the sample timetable above is illustrative.</p></div>
+      <div class="step"><span class="step-num">01</span><h3>FIND YOUR FIT</h3><p>Browse published sessions and read the descriptions before booking.</p></div>
+      <div class="step"><span class="step-num">02</span><h3>SIGN IN TO BOOK</h3><p>Sign in and book from the live upcoming classes list.</p></div>
       <div class="step"><span class="step-num">03</span><h3>SHOW UP AND MOVE</h3><p>Bring your motivation to your selected branch and let the MyFit community support your progress.</p></div>
     </div></div></section>
  
@@ -491,96 +467,34 @@
   </footer>
  
  
-  <dialog class="class-dialog" id="class-dialog" aria-labelledby="dialog-class-name">
-    <button type="button" class="class-dialog-close" id="class-dialog-close" aria-label="Close class details"><svg class="icon"><use href="#i-close"/></svg></button>
-    <div class="class-dialog-grid">
-      <img class="class-dialog-image" id="dialog-class-photo" src="{% static 'images/classes/class-strength.webp' %}" alt="Illustrative fitness class">
-      <div class="class-dialog-content">
-        <p class="section-kicker" id="dialog-class-label">TRAINING PROGRAMME</p><h2 id="dialog-class-name">STRENGTH FUNDAMENTALS</h2>
-        <p id="dialog-class-about"></p>
-        <dl><div><dt>Duration</dt><dd id="dialog-class-duration"></dd></div><div><dt>Suggested level</dt><dd id="dialog-class-level"></dd></div><div><dt>Example coach</dt><dd id="dialog-class-coach"></dd></div><div><dt>Illustrative group size</dt><dd id="dialog-class-group"></dd></div><div style="grid-column:1/-1"><dt>Training focus</dt><dd id="dialog-class-focus"></dd></div></dl>
-        <div class="dialog-actions"><a class="btn btn-yellow" href="#weekly-schedule" id="dialog-view-schedule">VIEW TIMETABLE <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="/contact/">ASK A QUESTION</a></div>
-      </div>
-    </div>
-  </dialog>
- 
   <script>
   (() => {
-    'use strict';
-    const search=document.getElementById('class-search');
-    const category=document.getElementById('type-filter');
-    const branch=document.getElementById('location-filter');
-    const day=document.getElementById('day-filter');
-    const classCards=[...document.querySelectorAll('.class-card')];
-    const scheduleRows=[...document.querySelectorAll('.schedule-row')];
-    const categories=[...document.querySelectorAll('.category-choice')];
-    const cardsEmpty=document.getElementById('class-empty');
-    const tableEmpty=document.getElementById('schedule-empty');
-    const count=document.getElementById('class-count');
-    const normalize=value=>value.trim().toLocaleLowerCase();
-    function updateFilters(){
-      const q=normalize(search.value);
-      let visibleRows=0;
-      scheduleRows.forEach(row=>{
-        const shown=(category.value==='all'||category.value===row.dataset.category)&&
-          (branch.value==='all'||branch.value===row.dataset.branch)&&
-          (day.value==='all'||day.value===row.dataset.day)&&
-          row.dataset.search.includes(q);
-        row.hidden=!shown;
-        if(shown) visibleRows++;
-      });
-      const matchingProgrammes=new Set(scheduleRows.filter(row=>!row.hidden).map(row=>row.dataset.category));
-      let visibleCards=0;
-      classCards.forEach(card=>{
-        const shown=matchingProgrammes.has(card.dataset.category);
-        card.hidden=!shown;
-        if(shown) visibleCards++;
-      });
-      count.textContent=String(visibleCards);
-      cardsEmpty.hidden=visibleCards!==0;
-      tableEmpty.hidden=visibleRows!==0;
-      categories.forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.choice===category.value)));
+    const search = document.getElementById('class-search');
+    const category = document.getElementById('type-filter');
+    const branch = document.getElementById('location-filter');
+    const cards = [...document.querySelectorAll('.class-card')];
+    const rows = [...document.querySelectorAll('.schedule-row')];
+    const noCards = document.getElementById('class-empty');
+    const noRows = document.getElementById('schedule-empty');
+    function filter() {
+      const query = search.value.trim().toLowerCase();
+      const show = element => (category.value === 'all' || element.dataset.category === category.value)
+        && (branch.value === 'all' || element.dataset.branch === branch.value)
+        && (element.dataset.search || '').includes(query);
+      let cardCount = 0, rowCount = 0;
+      cards.forEach(el => { el.hidden = !show(el); if (!el.hidden) cardCount++; });
+      rows.forEach(el => { el.hidden = !show(el); if (!el.hidden) rowCount++; });
+      document.getElementById('class-count').textContent = cardCount;
+      noCards.hidden = cardCount > 0 || cards.length === 0;
+      noRows.hidden = rowCount > 0 || rows.length === 0;
     }
-    function reset(){search.value='';category.value='all';branch.value='all';day.value='all';updateFilters();}
-    [category,branch,day].forEach(input=>input.addEventListener('change',updateFilters));
-    search.addEventListener('input',updateFilters);
-    document.getElementById('reset-class-filters').addEventListener('click',reset);
-    document.getElementById('empty-reset').addEventListener('click',reset);
-    categories.forEach(btn=>btn.addEventListener('click',()=>{category.value=btn.dataset.choice;updateFilters();}));
-    updateFilters();
-    // The timetable shortcut on each card filters sessions for that programme.
-    classCards.forEach(card=>{
-      const shortcut=card.querySelector('.class-book-link');
-      if(!shortcut)return;
-      shortcut.setAttribute('title','Show '+card.dataset.name+' sessions');
-      shortcut.addEventListener('click',()=>{
-        search.value='';
-        category.value=card.dataset.category;
-        branch.value='all';
-        day.value='all';
-        updateFilters();
-      });
+    search.addEventListener('input', filter);
+    category.addEventListener('change', filter);
+    branch.addEventListener('change', filter);
+    document.getElementById('reset-class-filters').addEventListener('click', () => {
+      search.value = ''; category.value = 'all'; branch.value = 'all'; filter();
     });
-    // Close the mobile dropdown after choosing another page.
-    const mobileMenu=document.querySelector('.mobile-menu');
-    if(mobileMenu){mobileMenu.querySelectorAll('nav a').forEach(link=>link.addEventListener('click',()=>{mobileMenu.open=false;}));}
-    const dialog=document.getElementById('class-dialog');
-    classCards.forEach(card=>card.querySelector('.class-detail-btn').addEventListener('click',()=>{
-      document.getElementById('dialog-class-photo').src=card.querySelector('.class-card-photo img').src;
-      document.getElementById('dialog-class-photo').alt=card.querySelector('.class-card-photo img').alt;
-      document.getElementById('dialog-class-name').textContent=card.dataset.name.toUpperCase();
-      document.getElementById('dialog-class-label').textContent='MYFIT CLASS / '+card.dataset.category.toUpperCase();
-      document.getElementById('dialog-class-about').textContent=card.dataset.about;
-      document.getElementById('dialog-class-duration').textContent=card.dataset.duration;
-      document.getElementById('dialog-class-level').textContent=card.dataset.level;
-      document.getElementById('dialog-class-coach').textContent=card.dataset.coaches;
-      document.getElementById('dialog-class-group').textContent=card.dataset.group;
-      document.getElementById('dialog-class-focus').textContent=card.dataset.focus;
-      dialog.showModal();
-    }));
-    document.getElementById('class-dialog-close').addEventListener('click',()=>dialog.close());
-    document.getElementById('dialog-view-schedule').addEventListener('click',()=>dialog.close());
-    dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+    filter();
   })();
   </script>
 </body>

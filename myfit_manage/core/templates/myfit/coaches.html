@@ -93,7 +93,7 @@
       <div class="hero-bottom"><div class="container hero-highlights">
         <div><svg class="icon"><use href="#i-users"/></svg><span><b>PERSONAL ATTENTION</b><small>Support built around your goals</small></span></div>
         <div><svg class="icon"><use href="#i-activity"/></svg><span><b>DIFFERENT SPECIALTIES</b><small>Strength, HIIT, mobility and more</small></span></div>
-        <div><svg class="icon"><use href="#i-pin"/></svg><span><b>{{ filter_branches.count }} ACTIVE CLUBS</b><small>Caudan, Trianon and Riche Terre</small></span></div>
+        <div><svg class="icon"><use href="#i-pin"/></svg><span><b>{{ filter_branches.count }} ACTIVE CLUBS</b><small>Locations updated by MyFit staff</small></span></div>
       </div></div>
     </section>
  
@@ -132,7 +132,7 @@
             data-about="{{ coach.bio|default:'Ask our team about the coaching sessions available.' }}">
           <div class="coach-image-wrap">
             {% if coach.image %}<img class="coach-image" src="{{ coach.image.url }}" alt="Portrait of {{ coach.user.get_full_name|default:coach.user.username }}" loading="lazy">
-            {% else %}<img class="coach-image" src="{% static 'images/coaches/coach-adrian.webp' %}" alt="Illustrative coach portrait" loading="lazy">{% endif %}
+            {% else %}<div class="image-not-uploaded">PHOTO COMING SOON</div>{% endif %}
             <span class="branch-label">{{ coach.branch.name|default:'MYFIT COACH'|upper }}</span>
             <span class="coach-number">{{ forloop.counter|stringformat:'02d' }}</span>
           </div>
@@ -182,8 +182,8 @@
   <dialog class="profile-dialog" id="profile-dialog" aria-labelledby="profile-name">
     <button type="button" class="dialog-close" id="dialog-close" aria-label="Close coach details"><svg class="icon"><use href="#i-close"/></svg></button>
     <div class="profile-layout">
-      <img class="profile-photo" id="profile-photo" src="{% static 'images/coaches/coach-adrian.webp' %}" alt="Illustrative coach portrait">
-      <div class="profile-copy"><p class="section-kicker">MEET YOUR COACH</p><h2 id="profile-name">ADRIAN MOREL</h2><span class="profile-specialty" id="profile-specialty">STRENGTH &amp; CONDITIONING</span><p id="profile-about"></p><div class="profile-details"><div><small>BRANCH</small><strong id="profile-branch"></strong></div><div><small>TRAINING FOCUS</small><strong id="profile-focus"></strong></div></div><a class="btn btn-yellow" id="profile-enquire" href="{% url 'myfit:contact' %}?topic=coaching">ASK ABOUT COACHING <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
+      <img class="profile-photo" id="profile-photo" alt="Selected coach portrait" hidden>
+      <div class="profile-copy"><p class="section-kicker">MEET YOUR COACH</p><h2 id="profile-name"></h2><span class="profile-specialty" id="profile-specialty"></span><p id="profile-about"></p><div class="profile-details"><div><small>BRANCH</small><strong id="profile-branch"></strong></div><div><small>TRAINING FOCUS</small><strong id="profile-focus"></strong></div></div><a class="btn btn-yellow" id="profile-enquire" href="{% url 'myfit:contact' %}?topic=coaching">ASK ABOUT COACHING <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
     </div>
   </dialog>
  
@@ -234,8 +234,8 @@
           document.getElementById('profile-focus').textContent = card.dataset.focus;
           const img = card.querySelector('.coach-image');
           const profilePhoto = document.getElementById('profile-photo');
-          profilePhoto.src = img.src;
-          profilePhoto.alt = img.alt;
+          profilePhoto.hidden = !img;
+          if (img) { profilePhoto.src = img.src; profilePhoto.alt = img.alt; } else { profilePhoto.removeAttribute('src'); }
           document.getElementById('profile-enquire').href = '/contact/?topic=coaching&coach=' + encodeURIComponent(card.dataset.name);
           dialog.showModal();
         });

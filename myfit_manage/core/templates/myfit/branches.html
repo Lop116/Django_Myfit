@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Explore the MyFit Mauritius gym branches at Caudan Waterfront, Emerald Park Trianon and Riche Terre, with Plaisance Mall coming soon.">
+  <meta name="description" content="Explore the current MyFit Mauritius branches, locations and upcoming clubs.">
   <meta name="theme-color" content="#121416">
   <title>Our Branches | MyFit Mauritius</title>
   <link rel="stylesheet" href="{% static 'css/branches.css' %}">
@@ -29,7 +29,7 @@
   <div class="topbar">
     <div class="container topbar-inner">
       <p><span class="topbar-dot"></span> MADE FOR MAURITIUS <span class="topbar-divider">/</span> TRAIN · TRACK · TRANSFORM</p>
-      <a href="{% url 'myfit:branches' %}">THREE ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
+      <a href="{% url 'myfit:branches' %}">{{ open_branch_count }} ACTIVE CLUBS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
  
@@ -82,21 +82,21 @@
       <img class="hero-photo" src="{% static 'images/branches/branches-hero.webp' %}" alt="Illustrative gym space with waterfront view" fetchpriority="high">
       <div class="container hero-inner"><div class="hero-copy">
         <p class="breadcrumb"><a href="{% url 'myfit:home' %}">HOME</a> &nbsp;/&nbsp; <span>OUR BRANCHES</span></p>
-        <p class="eyebrow">THREE CLUBS / ONE COMMUNITY</p>
+        <p class="eyebrow">MYFIT LOCATIONS / ONE COMMUNITY</p>
         <h1 id="branches-title">FIND YOUR<br><span>NEXT MOVE</span></h1>
         <p class="hero-desc">Your next great session could be closer than you think. Explore MyFit locations around Mauritius and find the place that fits your routine.</p>
         <div class="hero-actions"><a class="btn btn-pink" href="#branch-directory">EXPLORE BRANCHES <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="{% url 'myfit:plans' %}">VIEW MEMBERSHIPS <svg class="icon"><use href="#i-arrow"/></svg></a></div>
       </div></div>
-      <div class="hero-bottom"><div class="container hero-highlights"><div><span class="count">{{ branches|length|stringformat:'02d' }}</span><span><b>ACTIVE CLUBS</b><small>Across Mauritius</small></span></div><div><span class="count">{% if show_plaisance_card %}01{% else %}00{% endif %}</span><span><b>COMING SOON</b><small>Plaisance Mall · Rose Belle</small></span></div><div><svg class="icon"><use href="#i-users"/></svg><span><b>STRONGER TOGETHER</b><small>Train · Track · Transform</small></span></div></div></div>
+      <div class="hero-bottom"><div class="container hero-highlights"><div><span class="count">{{ open_branch_count|stringformat:'02d' }}</span><span><b>ACTIVE CLUBS</b><small>Across Mauritius</small></span></div><div><span class="count">{{ coming_soon_count|stringformat:'02d' }}</span><span><b>COMING SOON</b><small>Our upcoming clubs</small></span></div><div><svg class="icon"><use href="#i-users"/></svg><span><b>STRONGER TOGETHER</b><small>Train · Track · Transform</small></span></div></div></div>
     </section>
     <section class="directory" id="branch-directory" aria-labelledby="directory-title"><div class="container">
-      <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR CLUB</p><h2 class="section-title" id="directory-title">MADE FOR <span>YOUR MOVE</span></h2><p>Explore registered MyFit locations plus the planned Plaisance Mall branch.</p></div><span class="count-badge"><span id="visible-count">{{ branches|length|add:show_plaisance_card }}</span> LOCATIONS SHOWN</span></div>
+      <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR CLUB</p><h2 class="section-title" id="directory-title">MADE FOR <span>YOUR MOVE</span></h2><p>Explore all current and upcoming locations listed by our team.</p></div><span class="count-badge"><span id="visible-count">{{ branches|length }}</span> LOCATIONS SHOWN</span></div>
       <div class="branch-controls"><div class="inputs"><label for="status-filter">Club status</label><select id="status-filter"><option value="all">All locations</option><option value="open">Active clubs</option><option value="soon">Coming soon</option></select><label for="region-filter">Area</label><select id="region-filter"><option value="all">All areas</option>
           {% for branch in branches %}<option value="{{ branch.pk }}">{{ branch.name }}</option>{% endfor %}
-          {% if show_plaisance_card %}<option value="rose-belle">Rose Belle</option>{% endif %}</select></div><button type="button" id="clear-filters">CLEAR FILTERS</button></div>
+</select></div><button type="button" id="clear-filters">CLEAR FILTERS</button></div>
       <div class="branch-grid">
       {% for branch in branches %}
-      <article class="branch-card" data-status="open" data-region="{{ branch.pk }}"
+      <article class="branch-card" data-status="{{ branch.status }}" data-region="{{ branch.pk }}"
           data-name="{{ branch.name }}" data-area="{{ branch.address }}"
           data-desc="Visit {{ branch.name }} to explore MyFit training options."
           data-features="Training, Fitness, Coaching"
@@ -104,33 +104,24 @@
           data-map="https://www.google.com/maps/search/?api=1&amp;query={{ branch.address|urlencode }}">
         <div class="branch-photo">
           {% if branch.image %}<img src="{{ branch.image.url }}" alt="{{ branch.name }} branch" loading="lazy">
-          {% else %}<img src="{% static 'images/branches/branch-caudan.webp' %}" alt="Illustrative gym interior" loading="lazy">{% endif %}
-          <span class="branch-status">ACTIVE CLUB</span><span class="branch-number" aria-hidden="true">{{ forloop.counter|stringformat:'02d' }}</span>
+          {% else %}<div class="image-not-uploaded">PHOTO COMING SOON</div>{% endif %}
+          <span class="branch-status{% if branch.status == 'soon' %} coming{% endif %}">{% if branch.status == 'soon' %}COMING SOON{% else %}ACTIVE CLUB{% endif %}</span><span class="branch-number" aria-hidden="true">{{ forloop.counter|stringformat:'02d' }}</span>
         </div>
         <div class="branch-copy"><span class="branch-location"><svg class="icon icon-sm"><use href="#i-pin"/></svg>{{ branch.address|truncatechars:38 }}</span>
-          <h3>{{ branch.name }}</h3><p>{{ branch.address }}</p>
+          <h3>{{ branch.name }}</h3><p>{% if branch.status == "soon" %}Opening date to be announced.{% else %}{{ branch.address }}{% endif %}</p>
           <ul class="branch-tags"><li>Fitness</li><li>Coaching</li></ul>
           <div class="branch-actions"><button type="button" class="branch-info-btn branch-open">EXPLORE BRANCH <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button>
           <a class="branch-directions" href="https://www.google.com/maps/search/?api=1&amp;query={{ branch.address|urlencode }}" target="_blank" rel="noopener noreferrer">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
         </div>
       </article>
       {% endfor %}
-      {% if show_plaisance_card %}
-      <article class="branch-card" data-status="soon" data-region="rose-belle" data-name="Plaisance Mall"
-          data-area="Plaisance Mall, Rose Belle, Mauritius" data-desc="The Plaisance Mall branch is planned; an opening date has not been confirmed."
-          data-features="Coming soon" data-hours="Opening date to be announced" data-map="">
-        <div class="branch-photo"><img src="{% static 'images/branches/branch-plaisance.webp' %}" alt="Illustrative Plaisance Mall gym concept image" loading="lazy"><span class="branch-status coming">COMING SOON</span></div>
-        <div class="branch-copy"><span class="branch-location">ROSE BELLE</span><h3>Plaisance Mall</h3><p>Opening date to be announced.</p>
-          <div class="branch-actions"><button type="button" class="branch-info-btn branch-open">MORE INFORMATION</button></div>
-        </div>
-      </article>
-      {% endif %}
+
       </div>
       <div class="branch-empty" id="branch-empty" hidden><strong>NO MATCHING BRANCHES</strong><p>Try a different area or club status.</p><button type="button" id="clear-empty">SHOW ALL BRANCHES</button></div>
       
     </div></section>
-    <section class="branch-about"><div class="container branch-about-grid"><div><p class="eyebrow">02 / MORE THAN A LOCATION</p><h2>ONE GOAL.<br><span>MORE WAYS</span><br>TO MOVE.</h2><p>From your digital membership to expert coaches and class discovery, MyFit is built to bring your fitness experience together.</p><a href="{% url 'myfit:plans' %}" class="btn btn-yellow">DISCOVER MEMBERSHIPS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div><div class="branch-perks"><div class="branch-perk"><svg class="icon"><use href="#i-activity"/></svg><div><h3>FIND YOUR TRAINING ROUTINE</h3><p>Explore spaces for strength and conditioning, with sample facility highlights for each location.</p></div></div><div class="branch-perk"><svg class="icon"><use href="#i-users"/></svg><div><h3>MEET YOUR COACHES</h3><p>Discover the people behind your progress and learn about their specialties.</p></div></div><div class="branch-perk"><svg class="icon"><use href="#i-check"/></svg><div><h3>MAKE EVERY VISIT COUNT</h3><p>Explore MyFit's planned digital membership pass, workout history and attendance tools.</p></div></div></div></div></section>
-    <section class="branch-faq"><div class="container branch-faq-grid"><div><p class="section-kicker">03 / NEED TO KNOW</p><h2>BRANCH<br><span>QUESTIONS</span></h2><p>More information about visiting, memberships and our upcoming location.</p></div><div class="branch-faq-answers"><details><summary>Can I train at different MyFit branches?</summary><p>Access rules may depend on the membership plan you choose. The team can confirm cross-branch access before you join.</p></details><details><summary>Where can I check opening hours?</summary><p>Verified hours are not part of this frontend sample. Contact the MyFit team for each location's schedule.</p></details><details><summary>Is Plaisance Mall already open?</summary><p>No. The Plaisance Mall location is marked coming soon. We have not listed an unconfirmed opening date.</p></details><details><summary>Where can I learn about the classes or trainers?</summary><p>Visit <a href="{% url 'myfit:coaches' %}" class="page-inline-1">Coaches</a> and <a href="{% url 'myfit:classes' %}" class="page-inline-2">Classes</a> to explore what's planned for MyFit.</p></details></div></div></section>
+    <section class="branch-about"><div class="container branch-about-grid"><div><p class="eyebrow">02 / MORE THAN A LOCATION</p><h2>ONE GOAL.<br><span>MORE WAYS</span><br>TO MOVE.</h2><p>From your digital membership to expert coaches and class discovery, MyFit is built to bring your fitness experience together.</p><a href="{% url 'myfit:plans' %}" class="btn btn-yellow">DISCOVER MEMBERSHIPS <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div><div class="branch-perks"><div class="branch-perk"><svg class="icon"><use href="#i-activity"/></svg><div><h3>FIND YOUR TRAINING ROUTINE</h3><p>Explore classes, coaching and memberships at the listed clubs.</p></div></div><div class="branch-perk"><svg class="icon"><use href="#i-users"/></svg><div><h3>MEET YOUR COACHES</h3><p>Discover the people behind your progress and learn about their specialties.</p></div></div><div class="branch-perk"><svg class="icon"><use href="#i-check"/></svg><div><h3>MAKE EVERY VISIT COUNT</h3><p>Explore MyFit's planned digital membership pass, workout history and attendance tools.</p></div></div></div></div></section>
+    <section class="branch-faq"><div class="container branch-faq-grid"><div><p class="section-kicker">03 / NEED TO KNOW</p><h2>BRANCH<br><span>QUESTIONS</span></h2><p>More information about visiting, memberships and current locations.</p></div><div class="branch-faq-answers"><details><summary>Can I train at different MyFit branches?</summary><p>Access rules may depend on the membership plan you choose. The team can confirm cross-branch access before you join.</p></details><details><summary>Where can I check opening hours?</summary><p>Open a branch card to view its administrator-managed opening hours, if supplied.</p></details><details><summary>How do I know if a branch is open?</summary><p>Check the status displayed on each branch card. Coming-soon branches are not yet open.</p></details><details><summary>Where can I learn about the classes or trainers?</summary><p>Visit <a href="{% url 'myfit:coaches' %}" class="page-inline-1">Coaches</a> and <a href="{% url 'myfit:classes' %}" class="page-inline-2">Classes</a> to explore what's planned for MyFit.</p></details></div></div></section>
     <section class="closing-cta" aria-labelledby="cta-title"><div class="container"><p class="eyebrow">THE NEXT MOVE IS YOURS</p><h2 id="cta-title">YOUR CLUB. <span>YOUR JOURNEY.</span></h2><p>Choose the way you want to train, get to know our coaches and move toward your goals.</p><div class="cta-actions"><a class="btn btn-pink" href="{% url 'myfit:plans' %}">EXPLORE PLANS <svg class="icon"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="{% url 'myfit:contact' %}">CONTACT MYFIT <svg class="icon"><use href="#i-arrow"/></svg></a></div></div></section>
   </main>
  
@@ -145,7 +136,7 @@
  
   <dialog class="branch-modal" id="branch-modal" aria-labelledby="modal-title">
     <button class="branch-modal-close" id="modal-close" aria-label="Close branch details"><svg class="icon"><use href="#i-close"/></svg></button>
-    <div class="branch-modal-grid"><img class="branch-modal-img" id="modal-img" src="{% static 'images/branches/branch-caudan.webp' %}" alt="Illustrative branch visual"><div class="branch-modal-body"><p class="section-kicker" id="modal-status">ACTIVE CLUB</p><h2 id="modal-title">Caudan Waterfront</h2><p id="modal-desc"></p><dl><div><dt>Location</dt><dd id="modal-location"></dd></div><div><dt>Facility concepts</dt><dd id="modal-features"></dd></div><div><dt>Opening hours or status</dt><dd id="modal-hours"></dd></div></dl><a class="btn btn-yellow" id="modal-map" target="_blank" rel="noopener noreferrer" href="#">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="{% url 'myfit:contact' %}">ASK ABOUT THIS CLUB</a></div></div>
+    <div class="branch-modal-grid"><img class="branch-modal-img" id="modal-img" alt="Selected branch photo" hidden><div class="branch-modal-body"><p class="section-kicker" id="modal-status">ACTIVE CLUB</p><h2 id="modal-title"></h2><p id="modal-desc"></p><dl><div><dt>Location</dt><dd id="modal-location"></dd></div><div><dt>Facility concepts</dt><dd id="modal-features"></dd></div><div><dt>Opening hours or status</dt><dd id="modal-hours"></dd></div></dl><a class="btn btn-yellow" id="modal-map" target="_blank" rel="noopener noreferrer" href="#">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a><a class="btn btn-outline" href="{% url 'myfit:contact' %}">ASK ABOUT THIS CLUB</a></div></div>
   </dialog>
   <script>
     (()=>{
@@ -157,8 +148,10 @@
       document.getElementById('clear-empty').addEventListener('click',reset);
       const dialog=document.getElementById('branch-modal');
       cards.forEach(card=>card.querySelector('.branch-open').addEventListener('click',()=>{
-        document.getElementById('modal-img').src=card.querySelector('.branch-photo img').src;
-        document.getElementById('modal-img').alt=card.querySelector('.branch-photo img').alt;
+        const image=card.querySelector('.branch-photo img');
+        const modalImage=document.getElementById('modal-img');
+        modalImage.hidden=!image;
+        if(image){modalImage.src=image.src;modalImage.alt=image.alt;}else{modalImage.removeAttribute('src');}
         document.getElementById('modal-title').textContent=card.dataset.name;
         document.getElementById('modal-status').textContent=card.dataset.status==='open'?'ACTIVE CLUB':'COMING SOON';
         document.getElementById('modal-desc').textContent=card.dataset.desc;

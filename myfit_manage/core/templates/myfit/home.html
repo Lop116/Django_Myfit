@@ -30,7 +30,7 @@
   <div class="topbar">
     <div class="container topbar-inner">
       <p><span class="topbar-dot"></span> MADE FOR MAURITIUS <span class="topbar-divider">/</span> TRAIN · TRACK · TRANSFORM</p>
-      <a href="{% url 'myfit:branches' %}">THREE ACTIVE CLUBS <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+      <a href="{% url 'myfit:branches' %}">{{ home_branch_count }} ACTIVE CLUBS <svg class="icon sm"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
  
@@ -115,10 +115,20 @@
       <div class="container">
         <div class="section-heading dark-heading"><div><p class="overline cyan-text">02 / FIND YOUR ENERGY</p><h2>MOVE YOUR WAY</h2><p>Different goals. One place to show up, push yourself and enjoy the process.</p></div><a href="{% url 'myfit:classes' %}" class="link-arrow">VIEW ALL CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
         <div class="classes-grid">
-          <article class="class-card"><div class="class-card-number">01</div><div class="class-illustration class-illustration-strength"><svg class="icon"><use href="#i-dumbbell"/></svg></div><span class="class-tag">STRENGTH</span><h3>STRENGTH<br>FUNDAMENTALS</h3><p>Build a foundation with technique, control and consistency.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
-          <article class="class-card"><div class="class-card-number">02</div><div class="class-illustration class-illustration-hiit"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">CONDITIONING</span><h3>HIIT<br>TRAINING</h3><p>Challenge your endurance with energising interval sessions.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
-          <article class="class-card"><div class="class-card-number">03</div><div class="class-illustration class-illustration-yoga"><svg class="icon"><use href="#i-activity"/></svg></div><span class="class-tag">MOBILITY</span><h3>YOGA &amp;<br>RECOVERY</h3><p>Improve flexibility, mobility and the way you feel.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
-          <article class="class-card"><div class="class-card-number">04</div><div class="class-illustration class-illustration-zumba"><svg class="icon"><use href="#i-dance"/></svg></div><span class="class-tag">GROUP FITNESS</span><h3>ZUMBA<br>FITNESS</h3><p>Music, movement and good energy in every session.</p><a href="{% url 'myfit:classes' %}">VIEW CLASSES <svg class="icon sm"><use href="#i-arrow"/></svg></a></article>
+          {% for session in home_classes %}
+          <article class="class-card">
+            <div class="class-card-number">{{ forloop.counter|stringformat:'02d' }}</div>
+            <div class="class-illustration">
+              {% if session.image %}<img src="{{ session.image.url }}" alt="{{ session.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+              {% else %}<svg class="icon"><use href="#i-activity"/></svg>{% endif %}
+            </div>
+            <span class="class-tag">{{ session.category|upper }}</span>
+            <h3>{{ session.title|upper }}</h3>
+            <p>{{ session.description|default:'Discover your next class.'|truncatewords:17 }}</p>
+            <p>{{ session.branch.name }} · {{ session.date|date:'D d M' }} at {{ session.time|time:'H:i' }}</p>
+            <a href="{% url 'myfit:class_list' %}">BOOK THIS CLASS <svg class="icon sm"><use href="#i-arrow"/></svg></a>
+          </article>
+          {% empty %}<p>No upcoming classes are published right now.</p>{% endfor %}
         </div>
         
       </div>
@@ -147,7 +157,7 @@
     </section>
  
     <section class="coaches-section section-pad" id="coaches">
-      <div class="container coach-layout"><div class="coach-visual"><img src="{% static 'images/homepage_images/training-myfit.webp' %}" alt="Athlete training with weights in the gym" loading="lazy"><div class="coach-image-stamp">GUIDED BY<br><strong>EXPERTS</strong></div></div><div class="coach-content"><p class="overline yellow-text">04 / TRAIN WITH THE BEST</p><h2>PEOPLE WHO<br><span>MOVE YOU</span><br>FORWARD</h2><p>Our coaches help you train smarter and stay accountable. Explore strength, HIIT, mobility and conditioning guidance from the MyFit team.</p><div class="coach-pills"><span>STRENGTH &amp; CONDITIONING</span><span>FUNCTIONAL TRAINING</span><span>YOGA &amp; MOBILITY</span><span>WEIGHT MANAGEMENT</span></div><a class="btn btn-yellow" href="{% url 'myfit:contact' %}">ASK ABOUT COACHING <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
+      <div class="container coach-layout"><div class="coach-visual"><img src="{% static 'images/homepage_images/training-myfit.webp' %}" alt="Athlete training with weights in the gym" loading="lazy"><div class="coach-image-stamp">GUIDED BY<br><strong>EXPERTS</strong></div></div><div class="coach-content"><p class="overline yellow-text">04 / TRAIN WITH THE BEST</p><h2>PEOPLE WHO<br><span>MOVE YOU</span><br>FORWARD</h2><p>Our coaches help you train smarter and stay accountable. Explore strength, HIIT, mobility and conditioning guidance from the MyFit team.</p><div class="coach-pills">{% for specialty in home_specialties %}<span>{{ specialty.name|upper }}</span>{% empty %}<span>MEET THE COACHING TEAM</span>{% endfor %}</div><a class="btn btn-yellow" href="{% url 'myfit:contact' %}">ASK ABOUT COACHING <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
     </section>
  
     <section class="branches-section section-pad" id="branches">
@@ -158,10 +168,10 @@
           <a class="branch-card" href="{% url 'myfit:branches' %}" aria-label="Explore {{ branch.name }}">
             <div class="branch-img">
               {% if branch.image %}<img src="{{ branch.image.url }}" alt="{{ branch.name }}" loading="lazy">
-              {% else %}<img src="{% static 'images/homepage_images/branch-caudan.webp' %}" alt="Illustrative MyFit club" loading="lazy">{% endif %}
+              {% else %}<div class="image-not-uploaded">PHOTO COMING SOON</div>{% endif %}
               <span class="branch-index">{{ forloop.counter|stringformat:'02d' }}</span>
             </div>
-            <div class="branch-body"><div><p>MYFIT BRANCH</p><h3>{{ branch.name|upper }}</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div>
+            <div class="branch-body"><div><p>{% if branch.status == "soon" %}COMING SOON{% else %}MYFIT BRANCH{% endif %}</p><h3>{{ branch.name|upper }}</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div>
             <div class="branch-bottom">{{ branch.address|truncatechars:34 }} <svg class="icon sm"><use href="#i-arrow"/></svg></div>
           </a>
           {% empty %}<p>No active clubs are listed yet. Check our branches page for news.</p>{% endfor %}
@@ -176,4 +186,5 @@
   <footer class="site-footer"><div class="container footer-main"><a href="{% url 'myfit:home' %}" class="logo footer-logo" aria-label="Back to MyFit home"><img class="logo-mark" src="{% static 'images/homepage_images/logo.png' %}" alt="" width="42" height="42"><span class="logo-word">MY<span>FIT</span></span><small>STRONGER EVERY DAY</small></a><p>TRAIN HARD. TRACK SMARTER.<br>BUILD SOMETHING BETTER</p><nav aria-label="Footer links"><a href="{% url 'myfit:home' %}">HOME</a><a href="{% url 'myfit:coaches' %}">COACHES</a><a href="{% url 'myfit:classes' %}">CLASSES</a><a href="{% url 'myfit:plans' %}">MEMBERSHIP</a><a href="{% url 'myfit:branches' %}">BRANCHES</a><a href="{% url 'myfit:contact' %}">SUPPORT</a></nav></div><div class="container footer-bottom"><span>© {% now "Y" %} MYFIT MAURITIUS </span><a href="#home">BACK TO TOP ↑</a><span>MADE TO MOVE. <b>BUILT TO LAST.</b></span></div></footer>
 </body>
 </html>
+
  
