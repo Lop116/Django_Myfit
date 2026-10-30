@@ -79,7 +79,7 @@
  
   <main id="main-content">
     <section class="hero" aria-labelledby="coaches-title">
-      <img class="hero-photo" src="{% static 'images/coaches/coaches-hero.webp' %}" alt="Gym athlete training with a barbell" fetchpriority="high">
+      {% if site_images.coaches_hero %}<img class="hero-photo" src="{{ site_images.coaches_hero.image.url }}" alt="{{ site_images.coaches_hero.alt_text }}" fetchpriority="high">{% endif %}
       <div class="container hero-inner"><div class="hero-copy">
         <p class="breadcrumb"><a href="{% url 'myfit:home' %}">HOME</a> &nbsp;/&nbsp; <span>OUR COACHES</span></p>
         <p class="eyebrow">PERSONAL GUIDANCE / BIGGER GOALS</p>

@@ -652,3 +652,8 @@ tbody tr:hover {
 .page-inline-1 {
     color: var(--yellow);
 }
+
+/* ADDED: real coach portrait preview, filter visibility, inline POST action. */
+.coach-thumb { width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none; }
+#coachTable tr[hidden] { display:none!important; }
+.row-actions form { display:inline; }

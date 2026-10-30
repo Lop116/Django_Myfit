@@ -630,3 +630,9 @@ tbody tr:hover {
     color: var(--yellow);
 }
 
+
+/* ADDED: photo thumbnails for live database records, filtering visibility. */
+.branch-thumb { width:46px;height:46px;object-fit:cover;border-radius:8px;flex:none; }
+.status-pill { display:inline-block;border-radius:16px;padding:7px 11px;background:#e9ecf0;font-weight:700;font-size:.82rem;color:#1b242a; }
+#branchTable tr[hidden] { display:none!important; }
+.row-actions form { display:inline; }

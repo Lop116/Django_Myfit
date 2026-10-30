@@ -75,8 +75,9 @@
   </header>
  
   <main id="main-content">
-    <!-- HERO IMAGE: core/static/images/homepage_images/hero-myfit.webp -->
+    <!-- CHANGED: Hero photo is sourced from editable WebsiteImage database record. -->
     <section class="hero" id="home">
+      {% if site_images.home_hero %}<img class="hero-db-photo" src="{{ site_images.home_hero.image.url }}" alt="{{ site_images.home_hero.alt_text }}" fetchpriority="high">{% endif %}
       <div class="container hero-layout">
         <div class="hero-copy">
           <p class="overline hero-kicker"><span class="yellow-square"></span> MYFIT MAURITIUS / TRAIN WITH PURPOSE</p>
@@ -107,7 +108,7 @@
     <section class="about-section" id="about">
       <div class="container about-grid">
         <div class="about-copy"><p class="overline light-overline">01 / WHAT WE STAND FOR</p><h2>MORE THAN<br>JUST A <span>GYM</span></h2><p>MyFit brings training, coaching and your digital fitness life into one connected experience. Whether you are here to build strength, move better or start fresh, there is a place for you.</p><a class="text-link on-purple" href="{% url 'myfit:coaches' %}">MEET THE PEOPLE BEHIND MYFIT <svg class="icon sm"><use href="#i-arrow"/></svg></a></div>
-        <div class="about-visual"><img src="{% static 'images/homepage_images/coaching-myfit.webp' %}" alt="Strength training in a modern gym" loading="lazy"><span class="about-visual-tag">STRONGER<br><b>TOGETHER</b></span></div>
+        <div class="about-visual">{% if site_images.home_about %}<img src="{{ site_images.home_about.image.url }}" alt="{{ site_images.home_about.alt_text }}" loading="lazy">{% endif %}<span class="about-visual-tag">STRONGER<br><b>TOGETHER</b></span></div>
       </div>
     </section>
  
@@ -157,7 +158,7 @@
     </section>
  
     <section class="coaches-section section-pad" id="coaches">
-      <div class="container coach-layout"><div class="coach-visual"><img src="{% static 'images/homepage_images/training-myfit.webp' %}" alt="Athlete training with weights in the gym" loading="lazy"><div class="coach-image-stamp">GUIDED BY<br><strong>EXPERTS</strong></div></div><div class="coach-content"><p class="overline yellow-text">04 / TRAIN WITH THE BEST</p><h2>PEOPLE WHO<br><span>MOVE YOU</span><br>FORWARD</h2><p>Our coaches help you train smarter and stay accountable. Explore strength, HIIT, mobility and conditioning guidance from the MyFit team.</p><div class="coach-pills">{% for specialty in home_specialties %}<span>{{ specialty.name|upper }}</span>{% empty %}<span>MEET THE COACHING TEAM</span>{% endfor %}</div><a class="btn btn-yellow" href="{% url 'myfit:contact' %}">ASK ABOUT COACHING <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
+      <div class="container coach-layout"><div class="coach-visual">{% if site_images.home_coaching %}<img src="{{ site_images.home_coaching.image.url }}" alt="{{ site_images.home_coaching.alt_text }}" loading="lazy">{% endif %}<div class="coach-image-stamp">GUIDED BY<br><strong>EXPERTS</strong></div></div><div class="coach-content"><p class="overline yellow-text">04 / TRAIN WITH THE BEST</p><h2>PEOPLE WHO<br><span>MOVE YOU</span><br>FORWARD</h2><p>Our coaches help you train smarter and stay accountable. Explore strength, HIIT, mobility and conditioning guidance from the MyFit team.</p><div class="coach-pills">{% for specialty in home_specialties %}<span>{{ specialty.name|upper }}</span>{% empty %}<span>MEET THE COACHING TEAM</span>{% endfor %}</div><a class="btn btn-yellow" href="{% url 'myfit:contact' %}">ASK ABOUT COACHING <svg class="icon"><use href="#i-arrow"/></svg></a></div></div>
     </section>
  
     <section class="branches-section section-pad" id="branches">

@@ -1,0 +1,9 @@
+/* ADDED: Class management inherits existing coach management design. */
+#classTable tr[hidden] { display:none !important; }
+#classTable td { vertical-align:top; }
+#classTable details summary { cursor:pointer;font-weight:700; }
+#classTable .booking-list { min-width:180px;padding-left:18px;line-height:2; }
+#classTable .booking-list form { display:inline; }
+#classTable a.text-btn { display:inline-block; }
+#classTable .coach-thumb { border-radius:7px; }
+@media print { #classSearch, #classStatusFilter, .row-actions, .sidebar, #classTable form {display:none!important;} }

@@ -108,8 +108,6 @@
       <section class="hero" aria-labelledby="page-title">
         {% if site_images.plans_hero %}
         <img class="hero-bg" src="{{ site_images.plans_hero.image.url }}" alt="{{ site_images.plans_hero.alt_text }}" fetchpriority="high">
-        {% else %}
-        <img class="hero-bg" src="{% static 'images/homepage_images/hero-myfit.webp' %}" alt="" fetchpriority="high">
         {% endif %}
         <div class="container hero-inner">
           <p class="breadcrumb">

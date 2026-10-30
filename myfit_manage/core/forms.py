@@ -312,7 +312,7 @@ from .models import Branch, CoachProfile, CoachSpecialty, SupportTicket
 class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
-        fields = ['name', 'address', 'phone', 'email', 'opening_hours', 'image', 'is_active']
+        fields = ['name', 'address', 'phone', 'email', 'opening_hours', 'operational_status', 'image', 'is_active']
         widgets = {'address': forms.Textarea(attrs={'rows': 2}), 'opening_hours': forms.Textarea(attrs={'rows': 2})}
  
  
@@ -428,8 +428,9 @@ class ClassSessionForm(forms.ModelForm):
     """Class form for the existing ClassSession schema."""
     class Meta:
         model = ClassSession
-        fields = ('title', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image')
-        widgets = {'date': forms.DateInput(attrs={'type': 'date'}),
+        fields = ('title', 'category', 'description', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image')
+        widgets = {'description': forms.Textarea(attrs={'rows': 3}),
+                   'date': forms.DateInput(attrs={'type': 'date'}),
                    'time': forms.TimeInput(attrs={'type': 'time'})}
 
     def clean_capacity(self):

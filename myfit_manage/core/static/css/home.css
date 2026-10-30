@@ -336,7 +336,7 @@ summary:focus-visible {
     position: relative;
     min-height: 700px;
     background: #101215;
-    background-image: linear-gradient(90deg,rgba(13,15,17,.78) 0%,rgba(13,15,17,.35) 47%,rgba(13,15,17,.04) 75%),linear-gradient(0deg,#121416 0%,transparent 26%),var(--hero-image);
+    background-image: linear-gradient(90deg,rgba(13,15,17,.78) 0%,rgba(13,15,17,.35) 47%,rgba(13,15,17,.04) 75%),linear-gradient(0deg,#121416 0%,transparent 26%);
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
@@ -1809,11 +1809,7 @@ summary:focus-visible {
     }
 }
 
-/* Homepage hero uses the local image from static/images/homepage_images. */
-
-:root {
-    --hero-image: url("../images/homepage_images/hero-myfit.webp");
-}
+/* Homepage hero image is stored in WebsiteImage and served from media. */
 
 /* Live catalog empty state */
 
@@ -1864,3 +1860,9 @@ summary:focus-visible {
     height: 100%;
     object-fit: cover;
 }
+
+/* ADDED: the uploaded homepage hero sits behind the existing text and gradients. */
+.hero-db-photo {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.hero:has(.hero-db-photo) {background-image:linear-gradient(90deg,rgba(13,15,17,.78),rgba(13,15,17,.25)),linear-gradient(0deg,#121416,transparent 26%);}
+.hero:has(.hero-db-photo)::before {z-index:1;}
+.hero:has(.hero-db-photo) .hero-layout,.hero:has(.hero-db-photo) .hero-stats {z-index:2;}

@@ -319,6 +319,12 @@ class Branch(models.Model): #allows Django to map this class to a database table
     phone = models.CharField(max_length=20, blank=True) #Stores the number as text because someone could put a + at the start
     email = models.EmailField(blank=True) #specialized CharField that validates email formatting
     opening_hours = models.TextField(blank=True)
+    # Operational state is independent of the visibility switch below.
+    # An active, coming-soon branch stays visible on the public directory.
+    operational_status = models.CharField(max_length=20, choices=[
+        ('Open', 'Open'), ('Maintenance', 'Maintenance'),
+        ('Coming soon', 'Coming soon'), ('Closed', 'Closed'),
+    ], default='Open')
     is_active = models.BooleanField(default=True)
     image = models.ImageField(upload_to='branches/', blank=True, validators=MYFIT_IMAGE_VALIDATORS)#<------ image
     created_at = models.DateTimeField(auto_now_add=True)#Stores when the branch record was created.
@@ -388,6 +394,11 @@ class CoachProfile(models.Model):
 class ClassSession(models.Model):
     STATUS_CHOICES = [('Scheduled', 'Scheduled'), ('Cancelled', 'Cancelled'), ('Completed', 'Completed')]
     title = models.CharField(max_length=100)
+    category = models.CharField(max_length=30, choices=[
+        ('Strength', 'Strength'), ('HIIT', 'HIIT'), ('Yoga', 'Yoga'),
+        ('Zumba', 'Zumba'), ('Mobility', 'Mobility'), ('Conditioning', 'Conditioning'),
+    ], default='Strength')
+    description = models.TextField(blank=True)
     branch = models.ForeignKey('Branch', on_delete=models.CASCADE, related_name='classes')
     coach = models.ForeignKey('CoachProfile', on_delete=models.CASCADE, related_name='classes')
     date = models.DateField()
@@ -627,7 +638,7 @@ class WebsiteImage(models.Model):
     # upload_to creates the subdirectory underneath MEDIA_ROOT when uploading.
     image = models.ImageField(upload_to='website/', validators=MYFIT_IMAGE_VALIDATORS)
     alt_text = models.CharField(max_length=180, blank=True, help_text='Describe the picture for accessibility.')
-    is_active = models.BooleanField(default=True, help_text='Uncheck to restore the original static picture.')
+    is_active = models.BooleanField(default=True, help_text='Uncheck to hide this image on the public website.')
     updated_at = models.DateTimeField(auto_now=True)
  
     class Meta:

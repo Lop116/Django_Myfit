@@ -5,9 +5,10 @@
   <a class="nav-link {% if active == 'dashboard' %}active{% endif %}" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
   <a class="nav-link" href="{% url 'myfit:membership_requests' %}">Membership requests</a>
   <a class="nav-link" href="{% url 'myfit:manage_plans' %}">Membership plans</a>
+  <a class="nav-link {% if active == 'classes' %}active{% endif %}" href="{% url 'myfit:manage_classes' %}">Manage classes</a>
   <a class="nav-link" href="{% url 'myfit:manage_bookings' %}">Classes &amp; bookings</a>
-  <a class="nav-link" href="{% url 'myfit:manage_coaches' %}">Coaches</a>
-  <a class="nav-link" href="{% url 'myfit:manage_branches' %}">Branches</a>
+  <a class="nav-link {% if active == 'coaches' %}active{% endif %}" href="{% url 'myfit:manage_coaches' %}">Coaches</a>
+  <a class="nav-link {% if active == 'branches' %}active{% endif %}" href="{% url 'myfit:manage_branches' %}">Branches</a>
   {% if request.user.is_staff %}<a class="nav-link" href="{% url 'admin:index' %}">Django Admin</a>{% endif %}
   <div class="sidebar-note"><strong>MYFIT ADMIN</strong>Manage clients, coaches, memberships, classes and support.</div>
 </aside>

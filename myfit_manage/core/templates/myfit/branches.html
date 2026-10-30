@@ -79,7 +79,7 @@
  
   <main id="main-content">
     <section class="hero branches-hero" aria-labelledby="branches-title">
-      <img class="hero-photo" src="{% static 'images/branches/branches-hero.webp' %}" alt="Illustrative gym space with waterfront view" fetchpriority="high">
+      {% if site_images.branches_hero %}<img class="hero-photo" src="{{ site_images.branches_hero.image.url }}" alt="{{ site_images.branches_hero.alt_text }}" fetchpriority="high">{% endif %}
       <div class="container hero-inner"><div class="hero-copy">
         <p class="breadcrumb"><a href="{% url 'myfit:home' %}">HOME</a> &nbsp;/&nbsp; <span>OUR BRANCHES</span></p>
         <p class="eyebrow">MYFIT LOCATIONS / ONE COMMUNITY</p>
@@ -91,12 +91,12 @@
     </section>
     <section class="directory" id="branch-directory" aria-labelledby="directory-title"><div class="container">
       <div class="section-intro"><div><p class="section-kicker">01 / FIND YOUR CLUB</p><h2 class="section-title" id="directory-title">MADE FOR <span>YOUR MOVE</span></h2><p>Explore all current and upcoming locations listed by our team.</p></div><span class="count-badge"><span id="visible-count">{{ branches|length }}</span> LOCATIONS SHOWN</span></div>
-      <div class="branch-controls"><div class="inputs"><label for="status-filter">Club status</label><select id="status-filter"><option value="all">All locations</option><option value="open">Active clubs</option><option value="soon">Coming soon</option></select><label for="region-filter">Area</label><select id="region-filter"><option value="all">All areas</option>
+      <div class="branch-controls"><div class="inputs"><label for="status-filter">Club status</label><select id="status-filter"><option value="all">All locations</option><option value="open">Active clubs</option><option value="soon">Coming soon</option><option value="other">Maintenance / closed</option></select><label for="region-filter">Area</label><select id="region-filter"><option value="all">All areas</option>
           {% for branch in branches %}<option value="{{ branch.pk }}">{{ branch.name }}</option>{% endfor %}
 </select></div><button type="button" id="clear-filters">CLEAR FILTERS</button></div>
       <div class="branch-grid">
       {% for branch in branches %}
-      <article class="branch-card" data-status="{{ branch.status }}" data-region="{{ branch.pk }}"
+      <article class="branch-card" data-status="{% if branch.operational_status == 'Open' %}open{% elif branch.operational_status == 'Coming soon' %}soon{% else %}other{% endif %}" data-region="{{ branch.pk }}"
           data-name="{{ branch.name }}" data-area="{{ branch.address }}"
           data-desc="Visit {{ branch.name }} to explore MyFit training options."
           data-features="Training, Fitness, Coaching"
@@ -105,10 +105,10 @@
         <div class="branch-photo">
           {% if branch.image %}<img src="{{ branch.image.url }}" alt="{{ branch.name }} branch" loading="lazy">
           {% else %}<div class="image-not-uploaded">PHOTO COMING SOON</div>{% endif %}
-          <span class="branch-status{% if branch.status == 'soon' %} coming{% endif %}">{% if branch.status == 'soon' %}COMING SOON{% else %}ACTIVE CLUB{% endif %}</span><span class="branch-number" aria-hidden="true">{{ forloop.counter|stringformat:'02d' }}</span>
+          <span class="branch-status{% if branch.operational_status == 'Coming soon' %} coming{% endif %}">{% if branch.operational_status == 'Coming soon' %}COMING SOON{% else %}{{ branch.operational_status|upper }}{% endif %}</span><span class="branch-number" aria-hidden="true">{{ forloop.counter|stringformat:'02d' }}</span>
         </div>
         <div class="branch-copy"><span class="branch-location"><svg class="icon icon-sm"><use href="#i-pin"/></svg>{{ branch.address|truncatechars:38 }}</span>
-          <h3>{{ branch.name }}</h3><p>{% if branch.status == "soon" %}Opening date to be announced.{% else %}{{ branch.address }}{% endif %}</p>
+          <h3>{{ branch.name }}</h3><p>{% if branch.operational_status == "Coming soon" %}Opening date to be announced.{% else %}{{ branch.address }}{% endif %}</p>
           <ul class="branch-tags"><li>Fitness</li><li>Coaching</li></ul>
           <div class="branch-actions"><button type="button" class="branch-info-btn branch-open">EXPLORE BRANCH <svg class="icon icon-sm"><use href="#i-arrow"/></svg></button>
           <a class="branch-directions" href="https://www.google.com/maps/search/?api=1&amp;query={{ branch.address|urlencode }}" target="_blank" rel="noopener noreferrer">VIEW AREA <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
@@ -153,7 +153,7 @@
         modalImage.hidden=!image;
         if(image){modalImage.src=image.src;modalImage.alt=image.alt;}else{modalImage.removeAttribute('src');}
         document.getElementById('modal-title').textContent=card.dataset.name;
-        document.getElementById('modal-status').textContent=card.dataset.status==='open'?'ACTIVE CLUB':'COMING SOON';
+        document.getElementById('modal-status').textContent=card.querySelector('.branch-status').textContent;
         document.getElementById('modal-desc').textContent=card.dataset.desc;
         document.getElementById('modal-location').textContent=card.dataset.area;
         document.getElementById('modal-features').textContent=card.dataset.features;

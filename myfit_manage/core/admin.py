@@ -122,10 +122,10 @@ class WebsiteImageAdmin(admin.ModelAdmin):
 
 @admin.register(Branch) #Display name in admin panel
 class BranchAdmin(admin.ModelAdmin):
-    list_display = ("name", "phone", "is_active", "created_at")#which columns to display when viewing the Branch records.
+    list_display = ("name", "operational_status", "phone", "is_active", "created_at")#which columns to display when viewing the Branch records.
     search_fields = ("name", "address")#which fields administrators can search through using the search box.
-    list_filter = ("is_active",)
-    fields = ("name", "address", "phone", "email", "opening_hours", "image", "is_active")
+    list_filter = ("is_active", "operational_status",)
+    fields = ("name", "address", "phone", "email", "opening_hours", "operational_status", "image", "is_active")
 
 @admin.register(CoachSpecialty)
 class CoachSpecialtyAdmin(admin.ModelAdmin):
@@ -154,7 +154,7 @@ class CoachProfileAdmin(admin.ModelAdmin):
 class ClassSessionAdmin(admin.ModelAdmin):
     form = ClassSessionForm
     list_display = ('title', 'date', 'time', 'coach', 'spaces_left', 'status')
-    fields = ('title', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image')
+    fields = ('title', 'category', 'description', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image')
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):

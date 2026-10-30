@@ -22,6 +22,8 @@ def book_client_into_class(session_id, client):
     session = ClassSession.objects.select_for_update().get(pk=session_id)
     if session.status != 'Scheduled' or not _is_future(session):
         raise ValidationError('This class is no longer available.')
+    if not session.branch.is_active or not session.coach.user.is_active:
+        raise ValidationError('This class is not available for booking.')
     if not client.user.is_active:
         raise ValidationError('Your account is inactive.')
 

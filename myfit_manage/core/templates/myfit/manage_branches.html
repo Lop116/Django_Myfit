@@ -1,450 +1,163 @@
-
 {% load static %}
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Manage Branches | MyFit</title>
-    <link rel="stylesheet" href="{% static 'css/manage_branches.css' %}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Branches | MyFit</title>
+  {# CHANGED: retain original stylesheet, layout, cards, filters and print feature. #}
+  <link rel="stylesheet" href="{% static 'css/manage_branches.css' %}">
 </head>
 <body>
 <div class="shell">
-    <aside class="sidebar">
-        <a class="brand" href="{% url 'myfit:coach_dashboard' %}">
-            <span class="brand-mark">M</span>
-            <span>MY<span>FIT</span></span>
-        </a>
-        <div class="nav-label">WORKSPACE</div>
-        <a class="nav-link" href="{% url 'myfit:coach_dashboard' %}">
-            <span class="nav-icon">▦</span>Dashboard
-        </a>
-        <a class="nav-link" href="{% url 'myfit:coach_clients' %}">
-            <span class="nav-icon">♙</span>My clients
-        </a>
-        <a class="nav-link active" href="{% url 'myfit:manage_branches' %}">
-            <span class="nav-icon">⌖</span>Manage branches
-        </a>
-        <a class="nav-link" href="{% url 'myfit:manage_coaches' %}">
-            <span class="nav-icon">♧</span>Manage coaches
-        </a>
-        <div class="sidebar-note">
-            <strong>MYFIT MANAGEMENT</strong>
-            Keep branch details, opening status and contact information up to date.
-        </div>
-    </aside>
-    <main class="main">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">MyFit / Management</p>
-                <h1 class="page-title">
-                    Manage branches<span class="page-inline-1">.</span>
-                </h1>
-                <p class="subtitle">
-                    Manage your locations, branch details and operational status.
-                </p>
-            </div>
-            <div class="user-chip">
-                <span class="user-avatar">M</span>
-                <span>
-                    <strong>{{ request.user.get_full_name|default:request.user.username|default:"MyFit Admin" }}</strong>
-                    <div class="secondary-text">Management</div>
-                </span>
-            </div>
-        </header>
+  {% include 'myfit/partials/admin_sidebar.html' with active='branches' %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Management</p>
+        <h1 class="page-title">Manage branches<span class="page-inline-1">.</span></h1>
+        <p class="subtitle">Manage your locations, opening status, photos and public visibility.</p>
+      </div>
+      <div class="user-chip"><span class="user-avatar">M</span><span>
+        <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+        <div class="secondary-text">Administration</div>
+      </span></div>
+    </header>
 
-        <section class="stats" aria-label="Branch summary">
-            <article class="stat">
-                <div class="stat-label">Total branches</div>
-                <div class="stat-value" id="totalBranches">3</div>
-                <div class="stat-foot">All listed locations</div>
-            </article>
-            <article class="stat">
-                <div class="stat-label">Open branches</div>
-                <div class="stat-value" id="openBranches">2</div>
-                <div class="stat-foot">Currently operational</div>
-            </article>
-            <article class="stat">
-                <div class="stat-label">Needs attention</div>
-                <div class="stat-value" id="attentionBranches">1</div>
-                <div class="stat-foot">Maintenance or inactive</div>
-            </article>
-        </section>
+    {# CHANGED: counts are live database values, never example numbers. #}
+    <section class="stats" aria-label="Branch summary">
+      <article class="stat"><div class="stat-label">Total branches</div>
+        <div class="stat-value" id="totalBranches">{{ total_branch_count }}</div>
+        <div class="stat-foot">All database locations</div></article>
+      <article class="stat"><div class="stat-label">Open branches</div>
+        <div class="stat-value" id="openBranches">{{ active_branch_count }}</div>
+        <div class="stat-foot">Visible and operational</div></article>
+      <article class="stat"><div class="stat-label">Needs attention</div>
+        <div class="stat-value" id="attentionBranches">{{ attention_branch_count }}</div>
+        <div class="stat-foot">Coming soon, maintenance, closed or hidden</div></article>
+    </section>
 
-        <section class="panel">
-            <div class="panel-head">
-                <div>
-                    <h2 class="panel-title">Branch directory</h2>
-                    <p class="panel-subtitle">
-                        Search locations, update details or change a branch's status.
-                    </p>
-                </div>
-                <button type="button" class="btn btn-primary" onclick="openBranchModal()">
-                    ＋ Add branch
-                </button>
-            </div>
-            <div id="branchNotice" class="notice" role="status">
-                Demo only: this form updates the table in your browser.
-                Connect it to a Django view to save records permanently.
-            </div>
-            <div class="toolbar">
-                <input
-                    class="control search"
-                    id="branchSearch"
-                    type="search"
-                    placeholder="Search branch name, code or location…"
-                    aria-label="Search branches"
-                >
-                <select class="control" id="branchStatusFilter" aria-label="Filter by status">
-                    <option value="">All statuses</option>
-                    <option>Open</option>
-                    <option>Maintenance</option>
-                    <option>Closed</option>
-                </select>
-                <button type="button" class="btn btn-secondary" onclick="window.print()">
-                    Print directory
-                </button>
-            </div>
-            <div class="table-wrap">
-                <table id="branchTable">
-                    <thead>
-                        <tr>
-                            <th>BRANCH</th>
-                            <th>LOCATION</th>
-                            <th>CONTACT</th>
-                            <th>STATUS</th>
-                            <th>ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr data-status="Open">
-                            <td>
-                                <div class="branch-cell">
-                                    <span class="branch-mark">PL</span>
-                                    <div>
-                                        <div class="primary-text">Port Louis Central</div>
-                                        <div class="secondary-text">BR-001</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>Port Louis</td>
-                            <td>+230 210 0001</td>
-                            <td>
-                                <select
-                                    class="control status-control"
-                                    aria-label="Port Louis Central status"
-                                    onchange="setBranchStatus(this)"
-                                >
-                                    <option selected>Open</option>
-                                    <option>Maintenance</option>
-                                    <option>Closed</option>
-                                </select>
-                            </td>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="text-btn" onclick="editBranch(this)">Edit</button>
-                                    <button class="text-btn" onclick="deleteBranch(this)">Remove</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr data-status="Open">
-                            <td>
-                                <div class="branch-cell">
-                                    <span class="branch-mark">EB</span>
-                                    <div>
-                                        <div class="primary-text">Ebène Fitness</div>
-                                        <div class="secondary-text">BR-002</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>Ebène</td>
-                            <td>+230 465 0002</td>
-                            <td>
-                                <select
-                                    class="control status-control"
-                                    aria-label="Ebène Fitness status"
-                                    onchange="setBranchStatus(this)"
-                                >
-                                    <option selected>Open</option>
-                                    <option>Maintenance</option>
-                                    <option>Closed</option>
-                                </select>
-                            </td>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="text-btn" onclick="editBranch(this)">Edit</button>
-                                    <button class="text-btn" onclick="deleteBranch(this)">Remove</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr data-status="Maintenance">
-                            <td>
-                                <div class="branch-cell">
-                                    <span class="branch-mark">QB</span>
-                                    <div>
-                                        <div class="primary-text">Quatre Bornes Club</div>
-                                        <div class="secondary-text">BR-003</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>Quatre Bornes</td>
-                            <td>+230 427 0003</td>
-                            <td>
-                                <select
-                                    class="control status-control"
-                                    aria-label="Quatre Bornes Club status"
-                                    onchange="setBranchStatus(this)"
-                                >
-                                    <option>Open</option>
-                                    <option selected>Maintenance</option>
-                                    <option>Closed</option>
-                                </select>
-                            </td>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="text-btn" onclick="editBranch(this)">Edit</button>
-                                    <button class="text-btn" onclick="deleteBranch(this)">Remove</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="table-footer">
-                <span id="branchCount">Showing 3 branches</span>
-                <span>Yellow controls indicate editable fields.</span>
-            </div>
-        </section>
-        <p class="footer-note">
-            MyFit management · Branch records shown here are sample data
-            until connected to your Django models.
-        </p>
-    </main>
+    {% if messages %}{% for message in messages %}
+    <div class="notice show" role="status">{{ message }}</div>{% endfor %}{% endif %}
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2 class="panel-title">Branch directory</h2>
+          <p class="panel-subtitle">Search locations, edit photos and update visibility without losing database records.</p></div>
+        <button type="button" class="btn btn-primary" id="addBranchButton">＋ Add branch</button>
+      </div>
+      <div class="toolbar">
+        <input class="control search" id="branchSearch" type="search" placeholder="Search branch name or location…" aria-label="Search branches">
+        <select class="control" id="branchStatusFilter" aria-label="Filter branch status">
+          <option value="">All statuses</option><option>Open</option>
+          <option>Maintenance</option><option>Coming soon</option><option>Closed</option><option>Hidden</option>
+        </select>
+        <button type="button" class="btn btn-secondary" onclick="window.print()">Print directory</button>
+      </div>
+      <div class="table-wrap">
+        <table id="branchTable">
+          <thead><tr><th>BRANCH</th><th>LOCATION</th><th>CONTACT</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>
+          {# CHANGED: rows are rendered from the real Branch model. #}
+          {% for branch in branches %}
+          <tr data-status="{% if branch.is_active %}{{ branch.operational_status }}{% else %}Hidden{% endif %}"
+              data-name="{{ branch.name }}" data-address="{{ branch.address }}"
+              data-phone="{{ branch.phone }}" data-email="{{ branch.email }}"
+              data-hours="{{ branch.opening_hours }}" data-operation="{{ branch.operational_status }}"
+              data-active="{% if branch.is_active %}true{% else %}false{% endif %}"
+              data-edit-url="{% url 'myfit:branch_edit' branch.pk %}">
+            <td><div class="branch-cell">
+              {% if branch.image %}<img class="branch-thumb" src="{{ branch.image.url }}" alt="" loading="lazy">{% else %}<span class="branch-mark">{{ branch.name|slice:':2'|upper }}</span>{% endif %}
+              <div><div class="primary-text">{{ branch.name }}</div>
+                <div class="secondary-text">BR-{{ branch.pk|stringformat:'03d' }}</div></div>
+            </div></td>
+            <td>{{ branch.address }}</td>
+            <td>{{ branch.phone|default:'—' }}</td>
+            <td><span class="status-pill">{% if branch.is_active %}{{ branch.operational_status }}{% else %}Hidden{% endif %}</span></td>
+            <td><div class="row-actions">
+              <button type="button" class="text-btn edit-branch">Edit</button>
+              <form method="post" action="{% url 'myfit:branch_toggle' branch.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="text-btn">{% if branch.is_active %}Hide{% else %}Show{% endif %}</button>
+              </form>
+            </div></td>
+          </tr>
+          {% empty %}<tr><td colspan="5">No branches yet. Add your first location.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer"><span id="branchCount">Showing {{ total_branch_count }} branches</span>
+        <span>Hide removes a branch from the public site without deleting it.</span></div>
+    </section>
+    <p class="footer-note">MyFit management · These rows are live Django database records.</p>
+  </main>
 </div>
 
-<div
-    class="modal-backdrop"
-    id="branchModal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="branchModalTitle"
->
-    <div class="modal">
-        <div class="modal-head">
-            <h2 id="branchModalTitle">Add branch</h2>
-            <button
-                class="close"
-                type="button"
-                onclick="closeBranchModal()"
-                aria-label="Close form"
-            >✕</button>
-        </div>
-        <form id="branchForm">
-            <input type="hidden" id="branchEditRow">
-            <div class="form-grid">
-                <div class="form-field">
-                    <label for="branchName">Branch name *</label>
-                    <input id="branchName" required placeholder="e.g. Curepipe Fitness">
-                </div>
-                <div class="form-field">
-                    <label for="branchCode">Branch code *</label>
-                    <input id="branchCode" required placeholder="e.g. BR-004">
-                </div>
-                <div class="form-field">
-                    <label for="branchLocation">Location *</label>
-                    <input id="branchLocation" required placeholder="Town or district">
-                </div>
-                <div class="form-field">
-                    <label for="branchPhone">Contact number</label>
-                    <input id="branchPhone" type="tel" placeholder="+230 …">
-                </div>
-                <div class="form-field full">
-                    <label for="branchAddress">Street address</label>
-                    <textarea
-                        id="branchAddress"
-                        rows="2"
-                        placeholder="Full address (optional)"
-                    ></textarea>
-                </div>
-                <div class="form-field">
-                    <label for="branchFormStatus">Operational status</label>
-                    <select id="branchFormStatus">
-                        <option>Open</option>
-                        <option>Maintenance</option>
-                        <option>Closed</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" type="button" onclick="closeBranchModal()">
-                    Cancel
-                </button>
-                <button class="btn btn-primary" type="submit">Save branch</button>
-            </div>
-        </form>
-    </div>
+{# CHANGED: the existing modal is preserved, now with an actual POST and CSRF. #}
+<div class="modal-backdrop" id="branchModal" role="dialog" aria-modal="true" aria-labelledby="branchModalTitle">
+  <div class="modal">
+    <div class="modal-head"><h2 id="branchModalTitle">Add branch</h2>
+      <button class="close" id="closeBranch" type="button" aria-label="Close form">✕</button></div>
+    <form id="branchForm" method="post" enctype="multipart/form-data" action="{% url 'myfit:branch_add' %}">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-field"><label for="branchName">Branch name *</label>
+          <input name="name" id="branchName" maxlength="120" required></div>
+        <div class="form-field"><label for="branchPhone">Phone</label>
+          <input name="phone" id="branchPhone" type="tel" maxlength="20"></div>
+        <div class="form-field full"><label for="branchAddress">Street address *</label>
+          <textarea name="address" id="branchAddress" rows="2" required></textarea></div>
+        <div class="form-field"><label for="branchEmail">Email</label>
+          <input name="email" id="branchEmail" type="email"></div>
+        <div class="form-field"><label for="branchStatus">Operational status</label>
+          <select name="operational_status" id="branchStatus"><option>Open</option><option>Maintenance</option><option>Coming soon</option><option>Closed</option></select></div>
+        <div class="form-field full"><label for="branchHours">Opening hours</label>
+          <textarea name="opening_hours" id="branchHours" rows="2"></textarea></div>
+        <div class="form-field full"><label for="branchImage">Branch photo (upload replaces existing picture)</label>
+          <input name="image" id="branchImage" type="file" accept="image/png,image/jpeg,image/webp"></div>
+        <div class="form-field full"><label><input type="checkbox" name="is_active" id="branchActive" checked> Visible on public website</label></div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-secondary" type="button" id="cancelBranch">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save branch</button></div>
+    </form>
+  </div>
 </div>
-
 <script>
-const branchModal = document.getElementById('branchModal'),
-      branchForm = document.getElementById('branchForm');
-
-function openBranchModal() {
-    branchForm.reset();
-    document.getElementById('branchEditRow').value = '';
-    document.getElementById('branchModalTitle').textContent = 'Add branch';
-    branchModal.classList.add('open');
-}
-
-function closeBranchModal() {
-    branchModal.classList.remove('open');
-}
-
-function editBranch(btn) {
-    const row = btn.closest('tr'),
-          cells = row.cells;
-
-    document.getElementById('branchEditRow').value =
-        Array.from(row.parentNode.children).indexOf(row);
-
-    document.getElementById('branchName').value =
-        cells[0].querySelector('.primary-text').textContent;
-
-    document.getElementById('branchCode').value =
-        cells[0].querySelector('.secondary-text').textContent;
-
-    document.getElementById('branchLocation').value = cells[1].textContent;
-    document.getElementById('branchPhone').value = cells[2].textContent;
-    document.getElementById('branchFormStatus').value = row.dataset.status;
-    document.getElementById('branchModalTitle').textContent = 'Edit branch';
-    branchModal.classList.add('open');
-}
-
-branchForm.addEventListener('submit', e => {
-    e.preventDefault();
-
-    const name = document.getElementById('branchName').value.trim(),
-          code = document.getElementById('branchCode').value.trim(),
-          location = document.getElementById('branchLocation').value.trim(),
-          phone = document.getElementById('branchPhone').value.trim() || '—',
-          status = document.getElementById('branchFormStatus').value,
-          idx = document.getElementById('branchEditRow').value;
-
-    let row = idx !== ''
-        ? document.querySelectorAll('#branchTable tbody tr')[Number(idx)]
-        : null;
-
-    if (!row) {
-        row = document.createElement('tr');
-        document.querySelector('#branchTable tbody').appendChild(row);
+// CHANGED: JavaScript only filters and fills the modal; Django saves the records.
+(() => {
+  const modal = document.getElementById('branchModal');
+  const form = document.getElementById('branchForm');
+  const rows = [...document.querySelectorAll('#branchTable tbody tr[data-status]')];
+  const search = document.getElementById('branchSearch');
+  const status = document.getElementById('branchStatusFilter');
+  function showModal(row) {
+    form.reset(); form.action = row ? row.dataset.editUrl : "{% url 'myfit:branch_add' %}";
+    document.getElementById('branchModalTitle').textContent = row ? 'Edit branch' : 'Add branch';
+    if (row) {
+      for (const [field, key] of [['branchName','name'],['branchPhone','phone'],['branchAddress','address'],['branchEmail','email'],['branchHours','hours'],['branchStatus','operation']]) {
+        document.getElementById(field).value = row.dataset[key] || '';
+      }
+      document.getElementById('branchActive').checked = row.dataset.active === 'true';
     }
-
-    row.dataset.status = status;
-    row.innerHTML = `
-        <td>
-            <div class="branch-cell">
-                <span class="branch-mark">${escapeText(initials(name))}</span>
-                <div>
-                    <div class="primary-text">${escapeText(name)}</div>
-                    <div class="secondary-text">${escapeText(code)}</div>
-                </div>
-            </div>
-        </td>
-        <td>${escapeText(location)}</td>
-        <td>${escapeText(phone)}</td>
-        <td>
-            <select
-                class="control status-control"
-                aria-label="${escapeText(name)} status"
-                onchange="setBranchStatus(this)"
-            >
-                <option ${status === 'Open' ? 'selected' : ''}>Open</option>
-                <option ${status === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
-                <option ${status === 'Closed' ? 'selected' : ''}>Closed</option>
-            </select>
-        </td>
-        <td>
-            <div class="row-actions">
-                <button class="text-btn" onclick="editBranch(this)">Edit</button>
-                <button class="text-btn" onclick="deleteBranch(this)">Remove</button>
-            </div>
-        </td>
-    `;
-
-    closeBranchModal();
-    document.getElementById('branchNotice').classList.add('show');
-    applyBranchFilters();
-});
-
-function initials(s) {
-    return s.split(/\s+/).map(x => x[0]).join('').slice(0, 2).toUpperCase();
-}
-
-function escapeText(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    }[c]));
-}
-
-function setBranchStatus(sel) {
-    sel.closest('tr').dataset.status = sel.value;
-    document.getElementById('branchNotice').classList.add('show');
-    applyBranchFilters();
-}
-
-function deleteBranch(btn) {
-    if (confirm('Remove this sample branch from the table?')) {
-        btn.closest('tr').remove();
-        document.getElementById('branchNotice').classList.add('show');
-        applyBranchFilters();
+    modal.classList.add('open');
+  }
+  function closeModal() { modal.classList.remove('open'); }
+  document.getElementById('addBranchButton').addEventListener('click', () => showModal(null));
+  for (const row of rows) row.querySelector('.edit-branch').addEventListener('click', () => showModal(row));
+  document.getElementById('closeBranch').addEventListener('click', closeModal);
+  document.getElementById('cancelBranch').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => {if(e.target === modal) closeModal();});
+  document.addEventListener('keydown', e => {if(e.key === 'Escape') closeModal();});
+  function filterRows() {
+    let visible = 0;
+    for (const row of rows) {
+      row.hidden = !row.textContent.toLowerCase().includes(search.value.toLowerCase()) ||
+                   (!!status.value && row.dataset.status !== status.value);
+      if (!row.hidden) visible++;
     }
-}
-
-function applyBranchFilters() {
-    const q = document.getElementById('branchSearch').value.toLowerCase(),
-          s = document.getElementById('branchStatusFilter').value;
-
-    let visible = 0,
-        open = 0,
-        attention = 0,
-        total = document.querySelectorAll('#branchTable tbody tr').length;
-
-    document.querySelectorAll('#branchTable tbody tr').forEach(r => {
-        const matches = r.innerText.toLowerCase().includes(q) &&
-                        (!s || r.dataset.status === s);
-
-        r.hidden = !matches;
-
-        if (matches) visible++;
-        if (r.dataset.status === 'Open') open++;
-        else attention++;
-    });
-
-    document.getElementById('branchCount').textContent =
-        `Showing ${visible} of ${total} branches`;
-
-    document.getElementById('totalBranches').textContent = total;
-    document.getElementById('openBranches').textContent = open;
-    document.getElementById('attentionBranches').textContent = attention;
-}
-
-document.getElementById('branchSearch')
-    .addEventListener('input', applyBranchFilters);
-
-document.getElementById('branchStatusFilter')
-    .addEventListener('change', applyBranchFilters);
-
-branchModal.addEventListener('click', e => {
-    if (e.target === branchModal) closeBranchModal();
-});
-
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeBranchModal();
-});
+    document.getElementById('branchCount').textContent = `Showing ${visible} of ${rows.length} branches`;
+  }
+  search.addEventListener('input', filterRows);
+  status.addEventListener('change', filterRows);
+})();
 </script>
-</body>
-</html>
+</body></html>

@@ -135,10 +135,10 @@ def home(request):
     # Changes saved in Django Admin show on the site after refreshing.
     return render(request, 'myfit/home.html', {
         'site_images': website_images(),
-        'home_classes': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).select_related('branch','coach__user').order_by('date','time')[:4],
+        'home_classes': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate(), branch__is_active=True, coach__user__is_active=True).select_related('branch','coach__user').order_by('date','time')[:4],
         'home_plans': MembershipPlan.objects.filter(is_active=True).order_by('price')[:3],
         'home_branches': Branch.objects.filter(is_active=True).order_by('name')[:4],
-        'home_branch_count': Branch.objects.filter(is_active=True).count(),
+        'home_branch_count': Branch.objects.filter(is_active=True, operational_status='Open').count(),
         'home_coach_count': CoachProfile.objects.filter(user__is_active=True).count(),
         'home_client_count': ClientProfile.objects.filter(user__is_active=True).count(),
         'home_class_count': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).count(),
@@ -176,7 +176,9 @@ def register(request):
 def classes(request):
     return render(request, 'myfit/classes.html', {
         'site_images': website_images(),
-        'upcoming_sessions': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).select_related('branch','coach__user').order_by('date','time'),
+        'upcoming_sessions': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate(), branch__is_active=True, coach__user__is_active=True).select_related('branch','coach__user').order_by('date','time'),
+        'filter_branches': Branch.objects.filter(is_active=True, operational_status='Open'),
+        'filter_categories': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).values_list('category', flat=True).distinct(),
     })
 
 
@@ -1099,8 +1101,18 @@ def manage_classes(request):
         classes = ClassSession.objects.filter(coach=request.user.coach_profile).order_by('-date')
     else:
         raise PermissionDenied('Only Admin and Coach accounts can manage classes.')
+    classes = classes.select_related('coach__user', 'branch').prefetch_related('bookings__client__user')
+    from django.db.models import Count
+    totals = classes.aggregate(
+        total=Count('pk', distinct=True),
+        scheduled=Count('pk', filter=Q(status='Scheduled'), distinct=True),
+        cancelled=Count('pk', filter=Q(status='Cancelled'), distinct=True),
+    )
     return render(request, 'myfit/manage_classes.html', {
-        'classes': classes.select_related('coach__user', 'branch').prefetch_related('bookings__client__user'),
+        'classes': classes,
+        'class_totals': totals,
+        'confirmed_bookings_count': ClassBooking.objects.filter(
+            session__in=classes, status='Confirmed').count(),
     })
 
 
@@ -1199,9 +1211,7 @@ def branches(request):
     return render(request, 'myfit/branches.html', {
         'branches': Branch.objects.filter(is_active=True),
         'site_images': website_images(),
-        'show_plaisance_card': not Branch.objects.filter(
-            name__icontains='Plaisance', is_active=True,
-        ).exists(),
+        # Branch operational status is a database field; no hardcoded Plaisance exception.
     })
  
  
@@ -1211,7 +1221,7 @@ def coaches(request):
     return render(request, 'myfit/coaches.html', {
         'coaches': CoachProfile.objects.filter(user__is_active=True).select_related('user','branch').prefetch_related('specialties'),
         'site_images': website_images(),
-        'filter_branches': Branch.objects.filter(is_active=True),
+        'filter_branches': Branch.objects.filter(is_active=True, operational_status='Open'),
         'filter_specialties': CoachSpecialty.objects.filter(is_active=True),
     })
  
@@ -1249,7 +1259,12 @@ def contact(request):
  
 @role_required('Admin')
 def manage_branches(request):
-    return render(request, 'myfit/manage_branches.html', {'branches': Branch.objects.all(), 'active_branch_count': Branch.objects.filter(is_active=True).count()})
+    return render(request, 'myfit/manage_branches.html', {
+        'branches': Branch.objects.all().order_by('name'),
+        'total_branch_count': Branch.objects.count(),
+        'active_branch_count': Branch.objects.filter(is_active=True, operational_status='Open').count(),
+        'attention_branch_count': Branch.objects.exclude(is_active=True, operational_status='Open').count(),
+    })
  
  
 @role_required('Admin')
@@ -1276,7 +1291,12 @@ def branch_toggle(request, branch_id):
 @role_required('Admin')
 def manage_coaches(request):
     return render(request, 'myfit/manage_coaches.html', {
-        'coaches': CoachProfile.objects.select_related('user','branch').prefetch_related('specialties'),
+        'coaches': CoachProfile.objects.select_related('user','branch').prefetch_related('specialties').order_by('user__first_name'),
+        'total_coach_count': CoachProfile.objects.count(),
+        'active_coach_count': CoachProfile.objects.filter(user__is_active=True).count(),
+        'specialty_count': CoachSpecialty.objects.filter(coaches__isnull=False).distinct().count(),
+        'branches': Branch.objects.filter(is_active=True),
+        'specialties': CoachSpecialty.objects.filter(is_active=True),
     })
  
  
