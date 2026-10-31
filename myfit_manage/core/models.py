@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, FileExtensionValidator
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 # MEDIA (simplest Django approach):---------------------------------------------------------
@@ -156,6 +157,10 @@ class MembershipPlan(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     duration_days = models.PositiveIntegerField()
     benefits = models.TextField(blank=True)
+    allows_classes = models.BooleanField(
+        default=False,
+        help_text='Allow this plan to book group classes.'
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -396,13 +401,19 @@ class ClassSession(models.Model):
     title = models.CharField(max_length=100)
     category = models.CharField(max_length=30, choices=[
         ('Strength', 'Strength'), ('HIIT', 'HIIT'), ('Yoga', 'Yoga'),
-        ('Zumba', 'Zumba'), ('Mobility', 'Mobility'), ('Conditioning', 'Conditioning'),
+        ('Zumba', 'Zumba'), ('Mobility', 'Mobility'),
+        ('Conditioning', 'Conditioning'),
     ], default='Strength')
     description = models.TextField(blank=True)
     branch = models.ForeignKey('Branch', on_delete=models.CASCADE, related_name='classes')
     coach = models.ForeignKey('CoachProfile', on_delete=models.CASCADE, related_name='classes')
     date = models.DateField()
     time = models.TimeField()
+    end_time = models.TimeField(
+        blank=True,
+        null=True,
+        help_text='Expected class end time; must be after the start time.'
+    )
     image = models.ImageField(upload_to='classes/', blank=True, validators=MYFIT_IMAGE_VALIDATORS)#<----Loick
     capacity = models.PositiveIntegerField(default=10)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
@@ -418,6 +429,15 @@ class ClassBooking(models.Model):
     client = models.ForeignKey('ClientProfile', on_delete=models.CASCADE, related_name='bookings')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
     booked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['session', 'client'],
+                condition=Q(status='Confirmed'),
+                name='myfit_unique_confirmed_session_client',
+            ),
+        ]
     #<----
 
 #Ankush=================================

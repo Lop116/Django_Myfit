@@ -12,6 +12,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from .forms import MembershipPlanForm
 from .membership_tokens import (
     MEMBERSHIP_QR_MAX_AGE,
     MEMBERSHIP_QR_SALT,
@@ -25,6 +26,40 @@ from .models import (
     MembershipPlan,
     Notification,
 )
+
+
+class MembershipPlanFormTests(TestCase):
+    def test_allows_classes_saves_both_values_and_seeded_plan_values(self):
+        form_data = {
+            'name': 'Editable Class Plan',
+            'price': '75.00',
+            'duration_days': '30',
+            'benefits': '',
+            'allows_classes': 'on',
+            'is_active': 'on',
+        }
+        form = MembershipPlanForm(data=form_data)
+        self.assertTrue(form.is_valid(), form.errors)
+        plan = form.save()
+        self.assertTrue(plan.allows_classes)
+
+        form_data['allows_classes'] = ''
+        form = MembershipPlanForm(data=form_data, instance=plan)
+        self.assertTrue(form.is_valid(), form.errors)
+        plan = form.save()
+        self.assertFalse(plan.allows_classes)
+
+        expected_seeded_values = {
+            'My Access': False,
+            'My Access XL': True,
+            'My Access Premium': True,
+        }
+        for name, allows_classes in expected_seeded_values.items():
+            with self.subTest(plan=name):
+                self.assertEqual(
+                    MembershipPlan.objects.get(name=name).allows_classes,
+                    allows_classes,
+                )
 
 
 class PasswordResetFlowTests(TestCase):
@@ -224,6 +259,11 @@ class MembershipPassTests(TestCase):
                 'end_date': today + timedelta(days=20),
                 'status': 'suspended',
             },
+            {
+                'start_date': today - timedelta(days=1),
+                'end_date': today + timedelta(days=20),
+                'status': 'expired',
+            },
         )
         self.client_membership.delete()
         self.pass_record.delete()
@@ -237,11 +277,47 @@ class MembershipPassTests(TestCase):
                     agreed_price='70.00',
                     **case,
                 )
+                if case['status'] == 'expired':
+                    self.assertEqual(self.client_membership.current_status, 'expired')
                 response = self.client.get(reverse('myfit:membership_pass'))
                 self.assertContains(response, 'No eligible membership pass is available')
                 self.assertNotContains(response, 'Time-limited QR code')
                 self.assertFalse(MembershipPass.objects.filter(user=self.user).exists())
                 self.client_membership.delete()
+
+    def test_pass_eligibility_follows_scheduled_start_and_expiration_dates(self):
+        start_date = timezone.localdate() + timedelta(days=1)
+        end_date = start_date + timedelta(days=2)
+        self.client_membership.start_date = start_date
+        self.client_membership.end_date = end_date
+        self.client_membership.status = 'scheduled'
+        self.client_membership.save(
+            update_fields=('start_date', 'end_date', 'status')
+        )
+        self.client.force_login(self.user)
+
+        before_start = self.client.get(reverse('myfit:membership_pass'))
+
+        self.assertEqual(self.client_membership.current_status, 'scheduled')
+        self.assertContains(before_start, 'No eligible membership pass is available')
+        self.assertNotContains(before_start, 'Time-limited QR code')
+
+        with patch('django.utils.timezone.localdate', return_value=start_date):
+            on_start = self.client.get(reverse('myfit:membership_pass'))
+            self.assertEqual(self.client_membership.current_status, 'active')
+        self.assertContains(on_start, 'Time-limited QR code')
+
+        with patch(
+            'django.utils.timezone.localdate',
+            return_value=end_date + timedelta(days=1),
+        ):
+            after_expiration = self.client.get(reverse('myfit:membership_pass'))
+            self.assertEqual(self.client_membership.current_status, 'expired')
+        self.assertContains(
+            after_expiration,
+            'No eligible membership pass is available',
+        )
+        self.assertNotContains(after_expiration, 'Time-limited QR code')
 
     def test_ambiguous_active_memberships_do_not_provision_or_show_pass(self):
         self.pass_record.delete()
