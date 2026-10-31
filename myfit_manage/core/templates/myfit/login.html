@@ -39,10 +39,7 @@
           <a href="{% url 'myfit:login' %}" aria-current="page">Log in</a>
         {% endif %}
       </nav>
-      {% if user.is_authenticated %}
-        <a class="nav-cta" href="{% url 'myfit:membership_pass' %}">Membership QR Pass</a>
-        <form class="logout-form" method="post" action="{% url 'myfit:logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
-      {% else %}
+      {% if not user.is_authenticated %}
         <a class="nav-cta" href="{% url 'myfit:plans' %}">EXPLORE MEMBERSHIPS <svg class="icon" aria-hidden="true"><path d="M4 9h12m-5-5 5 5-5 5"/></svg></a>
       {% endif %}
       <details class="mobile-menu">
@@ -75,36 +72,43 @@
         </div>
         <div class="login-panel">
           <div class="login-content">
-            <p class="section-kicker">YOUR TRAINING CONTINUES</p>
-            <h2 id="login-title">LOG IN</h2>
-            <p class="intro">Enter your MyFit account details to continue.</p>
-            {% if form.errors %}
-              <div class="form-errors" role="alert" aria-live="polite">
-                <strong>We couldn't log you in.</strong>
-                <p>Check your username and password, then try again.</p>
-                {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
-              </div>
-            {% endif %}
-            <form method="post" action="{% url 'myfit:login' %}" autocomplete="on">
-              {% csrf_token %}
-              {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-              <div class="field">
-                <label for="{{ form.username.id_for_label }}">Username</label>
-                {{ form.username }}
-                {% if form.username.errors %}<ul class="field-errors" role="alert">{% for error in form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-              </div>
-              <div class="field">
-                <label for="{{ form.password.id_for_label }}">Password</label>
-                <div class="password-wrap">
-                  {{ form.password }}
-                  <button class="password-toggle" type="button" id="toggle-password" aria-controls="{{ form.password.id_for_label }}" aria-pressed="false">SHOW</button>
+            {% if user.is_authenticated %}
+              <p class="section-kicker">YOUR TRAINING CONTINUES</p>
+              <h2 id="login-title">YOU'RE SIGNED IN</h2>
+              <p class="intro">You're already signed in to MyFit. Continue to your account tools or membership details.</p>
+              <a class="submit-button" href="{% url 'myfit:home' %}">CONTINUE TO MYFIT</a>
+            {% else %}
+              <p class="section-kicker">YOUR TRAINING CONTINUES</p>
+              <h2 id="login-title">LOG IN</h2>
+              <p class="intro">Enter your MyFit account details to continue.</p>
+              {% if form.errors %}
+                <div class="form-errors" role="alert" aria-live="polite">
+                  <strong>We couldn't log you in.</strong>
+                  <p>Check your username and password, then try again.</p>
+                  {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
                 </div>
-                {% if form.password.errors %}<ul class="field-errors" role="alert">{% for error in form.password.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-              </div>
-              <p class="form-options"><a href="{% url 'myfit:password_reset' %}">Forgot Password?</a></p>
-              <button class="submit-button" type="submit">LOG IN TO MYFIT <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
-            </form>
-            <p class="form-footnote">New to MyFit? <a href="{% url 'myfit:register' %}">Register for an account</a>.</p>
+              {% endif %}
+              <form method="post" action="{% url 'myfit:login' %}" autocomplete="on">
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                <div class="field">
+                  <label for="{{ form.username.id_for_label }}">Username</label>
+                  {{ form.username }}
+                  {% if form.username.errors %}<ul class="field-errors" role="alert">{% for error in form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+                <div class="field">
+                  <label for="{{ form.password.id_for_label }}">Password</label>
+                  <div class="password-wrap">
+                    {{ form.password }}
+                    <button class="password-toggle" type="button" id="toggle-password" aria-controls="{{ form.password.id_for_label }}" aria-pressed="false">SHOW</button>
+                  </div>
+                  {% if form.password.errors %}<ul class="field-errors" role="alert">{% for error in form.password.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+                <p class="form-options"><a href="{% url 'myfit:password_reset' %}">Forgot Password?</a></p>
+                <button class="submit-button" type="submit">LOG IN TO MYFIT <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+              </form>
+              <p class="form-footnote">New to MyFit? <a href="{% url 'myfit:register' %}">Register for an account</a>.</p>
+            {% endif %}
           </div>
         </div>
       </div>

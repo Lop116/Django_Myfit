@@ -78,6 +78,7 @@ class MembershipPlanForm(forms.ModelForm):
             'price',
             'duration_days',
             'benefits',
+            'allows_classes',
             'is_active',
         ]
 
