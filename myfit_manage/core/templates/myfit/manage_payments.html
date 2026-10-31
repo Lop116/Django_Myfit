@@ -1,11 +1,72 @@
-{% extends 'myfit/base.html' %}
-{% block title %}Payments | MyFit{% endblock %}
-{% block content %}
-<main style="max-width:750px;margin:40px auto;padding:25px">
-    <h1>Payments</h1>
-    <p>Payment tracking is not yet implemented. No transactions are shown because the project does not contain a Payment model.</p>
-    <p><a href="{% url 'myfit:admin_dashboard' %}">Back to admin dashboard</a></p>
-</main>
-{% endblock %}
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Payments | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="payments" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Finance</p>
+        <h1 class="page-title">Payment transactions<em>.</em></h1>
+        <p class="subtitle">Record and review payments. Entries are admin-recorded; no payment processor is connected.</p>
+      </div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
 
- 
+    {% include "myfit/partials/admin_messages.html" %}
+
+    <section class="panel">
+      <h2 class="panel-title">Record a transaction</h2>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-grid">
+          {% for field in form %}
+          <div class="form-field">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<span class="secondary-text">{{ field.help_text }}</span>{% endif %}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Save transaction</button></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Transaction history</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>DATE</th><th>CLIENT</th><th>AMOUNT</th><th>METHOD</th><th>REFERENCE</th><th>STATUS</th><th>RECORDED BY</th></tr>
+          </thead>
+          <tbody>
+            {% for payment in payments %}
+            <tr>
+              <td>{{ payment.payment_date|date:"d M Y" }}</td>
+              <td>{{ payment.client.user.get_full_name|default:payment.client.user.username }}</td>
+              <td>Rs {{ payment.amount|floatformat:2 }}</td>
+              <td>{{ payment.payment_method|default:"—" }}</td>
+              <td>{{ payment.reference|default:"—" }}</td>
+              <td><span class="status {% if payment.status == 'paid' %}status-active{% elif payment.status == 'pending' %}status-pending{% else %}status-inactive{% endif %}">{{ payment.get_status_display }}</span></td>
+              <td>{{ payment.recorded_by.get_full_name|default:payment.recorded_by.username|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td class="empty" colspan="7">No payment transactions have been recorded.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

@@ -43,11 +43,19 @@
       <article class="stat accent"><div class="stat-label">Open support tickets</div><div class="stat-value" id="stat-support-open">{{ stats.support.open }}</div><div class="stat-foot"><a href="{% url 'myfit:support_manage' %}">Manage tickets →</a></div></article>
     </section>
 
+    <h2 class="section-title">Payments</h2>
+    <section class="stats" aria-label="Payments">
+      <article class="stat"><div class="stat-label">Recorded transactions</div><div class="stat-value" id="stat-payments">{{ stats.payments.transactions }}</div><div class="stat-foot"><a href="{% url 'myfit:manage_payments' %}">View transactions →</a></div></article>
+      <article class="stat"><div class="stat-label">Paid amount</div><div class="stat-value" id="stat-payments-paid">Rs {{ stats.payments.paid_total|floatformat:2 }}</div><div class="stat-foot">Paid transactions only</div></article>
+      <article class="stat accent"><div class="stat-label">Pending payments</div><div class="stat-value" id="stat-payments-pending">{{ stats.payments.pending }}</div><div class="stat-foot"><a href="{% url 'myfit:manage_payments' %}">Review payments →</a></div></article>
+    </section>
+
     <h2 class="section-title">Quick links</h2>
     <section class="panel">
       <div class="quick-links">
         <a class="btn" href="{% url 'myfit:membership_requests' %}">Membership requests</a>
         <a class="btn" href="{% url 'myfit:manage_plans' %}">Membership plans</a>
+        <a class="btn" href="{% url 'myfit:manage_payments' %}">Payment transactions</a>
         <a class="btn" href="{% url 'myfit:manage_bookings' %}">Classes &amp; bookings</a>
         <a class="btn" href="{% url 'myfit:client_manage' %}">Clients</a>
         <a class="btn" href="{% url 'myfit:manage_coaches' %}">Coaches</a>

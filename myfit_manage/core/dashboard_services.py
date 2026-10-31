@@ -4,8 +4,10 @@ Kept in its own module so it does not collide with other members' files.
 Every number is a plain database query against the merged models, so a wrong
 field name or status value fails loudly in the tests instead of showing 0.
 """
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 from .models import (
@@ -15,6 +17,7 @@ from .models import (
     ClassSession,
     ClientMembership,
     MembershipChangeRequest,
+    Payment,
     SupportTicket,
 )
 
@@ -57,6 +60,15 @@ def get_dashboard_stats():
         "bookings": {
             "total": ClassBooking.objects.count(),
             "confirmed": ClassBooking.objects.filter(status="Confirmed").count(),
+        },
+        "payments": {
+            "transactions": Payment.objects.count(),
+            "paid_total": (
+                Payment.objects.filter(status=Payment.Status.PAID)
+                .aggregate(total=Sum("amount"))["total"]
+                or Decimal("0.00")
+            ),
+            "pending": Payment.objects.filter(status=Payment.Status.PENDING).count(),
         },
         "attendance": {"today": AttendanceVisit.objects.filter(check_in__date=today).count()},
         "support": {"open": SupportTicket.objects.exclude(status="resolved").count()},

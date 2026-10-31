@@ -370,6 +370,48 @@ class ClientProfile(models.Model):
     def __str__(self):
         return f"Client: {self.user.username}"
 
+
+class Payment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        PAID = 'paid', 'Paid'
+        FAILED = 'failed', 'Failed'
+        REFUNDED = 'refunded', 'Refunded'
+
+    client = models.ForeignKey(
+        ClientProfile,
+        on_delete=models.PROTECT,
+        related_name='payments',
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+    )
+    payment_date = models.DateField(default=timezone.localdate)
+    status = models.CharField(
+        max_length=12,
+        choices=Status.choices,
+        default=Status.PAID,
+    )
+    payment_method = models.CharField(max_length=30, blank=True)
+    reference = models.CharField(max_length=100, blank=True)
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recorded_payments',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-payment_date', '-created_at']
+
+    def __str__(self):
+        return f"{self.client.user.username} - {self.amount} ({self.get_status_display()})"
+
+
 class CoachProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,

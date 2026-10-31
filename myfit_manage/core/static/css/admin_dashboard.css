@@ -34,6 +34,12 @@ a{color:inherit;text-decoration:none}
 .quick-links{display:flex;flex-wrap:wrap;gap:10px}
 .btn{display:inline-flex;align-items:center;border:1px solid #555;border-radius:9px;padding:10px 14px;font-weight:800}
 .btn:hover{background:var(--yellow);color:var(--black);border-color:var(--yellow)}
+.btn-primary{background:var(--yellow);color:var(--black);border-color:var(--yellow)}
+.btn-secondary{background:transparent;color:var(--white)}
+.btn-danger{background:#311818;border-color:#6d3030;color:#ffb5b5}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+.panel-title{margin:0;font-size:18px}
+.panel-subtitle{margin:5px 0 0;color:var(--muted);font-size:12px}
 .footer-note{color:#777;font-size:11px;margin-top:22px}
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.shell{display:block}.sidebar{width:100%;border-right:0;border-bottom:1px solid var(--line)}.nav-label,.sidebar-note{display:none}.nav-link{display:inline-flex}.user-chip{display:none}}
@@ -67,6 +73,14 @@ tbody tr:hover{background:#ffffff06}
 .form-field{display:flex;flex-direction:column;gap:6px}
 .form-field label{font-size:12px;color:#ddd;font-weight:750}
 .form-field input,.form-field select,.form-field textarea{width:100%;background:#090909;color:#fff;border:1px solid #444;border-radius:9px;padding:11px 12px;font:inherit}
+.form-field input[type=checkbox]{width:auto;accent-color:var(--yellow)}
 .form-field .errorlist{margin:0;padding:0;list-style:none;color:var(--red);font-size:12px}
 .form-actions{display:flex;gap:10px;margin-top:22px}
+.form-field .helptext{color:var(--muted);font-size:11px}
+.form-field .errorlist li{margin-top:4px}
+.status-pending{color:#ffe28a;background:#3a3014}
+.text-btn.danger{color:var(--red)}
+#plan-form[hidden]{display:none!important}
+form .errorlist{color:var(--red);padding-left:18px}
 @media(max-width:680px){.form-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.panel-head{align-items:flex-start;flex-direction:column}}

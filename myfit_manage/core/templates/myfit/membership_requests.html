@@ -1,77 +1,58 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Membership Requests</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #f8f9fa; }
-        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; }
-        .btn-success { background-color: #28a745; }
-        .btn-danger { background-color: #dc3545; }
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.85em; color: white; }
-        .badge-pending { background-color: #ffc107; color: black; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Membership Requests | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
 </head>
 <body>
-    <div class="container">
-        <!-- Developer: Deshrao Saccaram -->
-        <h1>Membership Requests</h1>
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="membership_requests" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Membership management</p>
+        <h1 class="page-title">Membership requests<em>.</em></h1>
+        <p class="subtitle">Review requests to change a current membership plan.</p>
+      </div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
+    {% include "myfit/partials/admin_messages.html" %}
+    <section class="panel">
+      <div class="table-wrap">
         <table>
-            <thead>
-                <tr>
-                    <th>Request ID</th>
-                    <th>Client</th>
-                    <th>Current Membership</th>
-                    <th>Requested Plan</th>
-                    <th>Reason</th>
-                    <th>Requested At</th>
-                    <th>Controls</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for change_request in pending_requests %}
-                    <tr>
-                        <td>#{{ change_request.pk }}</td>
-                        <td>{{ change_request.membership.user.get_full_name|default:change_request.membership.user.username }}</td>
-                        <td>
-                            {{ change_request.membership.plan.name }}
-                            ({{ change_request.membership.start_date|date:"d M Y" }} -
-                            {{ change_request.membership.end_date|date:"d M Y" }})
-                        </td>
-                        <td>{{ change_request.requested_plan.name }}</td>
-                        <td>{{ change_request.reason|default:"—" }}</td>
-                        <td>{{ change_request.requested_at|date:"d M Y H:i" }}</td>
-                        <td>
-                            <form method="post" action="{% url 'myfit:review_membership_change_request' request_id=change_request.pk decision='approve' %}">
-                                {% csrf_token %}
-                                <button class="btn btn-success" type="submit">Approve</button>
-                            </form>
-                            <form method="post" action="{% url 'myfit:review_membership_change_request' request_id=change_request.pk decision='reject' %}">
-                                {% csrf_token %}
-                                <button class="btn btn-danger" type="submit">Reject</button>
-                            </form>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="7">There are no pending membership requests.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
+          <thead>
+            <tr><th>CLIENT</th><th>CURRENT PLAN</th><th>REQUESTED PLAN</th><th>REASON</th><th>REQUESTED</th><th>ACTION</th></tr>
+          </thead>
+          <tbody>
+            {% for change_request in pending_requests %}
+            <tr>
+              <td>{{ change_request.membership.user.get_full_name|default:change_request.membership.user.username }}</td>
+              <td>{{ change_request.membership.plan.name }}<div class="secondary-text">{{ change_request.membership.start_date|date:"d M Y" }} – {{ change_request.membership.end_date|date:"d M Y" }}</div></td>
+              <td>{{ change_request.requested_plan.name }}</td>
+              <td>{{ change_request.reason|default:"—" }}</td>
+              <td>{{ change_request.requested_at|date:"d M Y H:i" }}</td>
+              <td>
+                <div class="row-actions">
+                  <form method="post" action="{% url 'myfit:review_membership_change_request' request_id=change_request.pk decision='approve' %}">
+                    {% csrf_token %}<button class="text-btn" type="submit">Approve</button>
+                  </form>
+                  <form method="post" action="{% url 'myfit:review_membership_change_request' request_id=change_request.pk decision='reject' %}">
+                    {% csrf_token %}<button class="text-btn danger" type="submit">Reject</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td class="empty" colspan="6">There are no pending membership requests.</td></tr>
+            {% endfor %}
+          </tbody>
         </table>
-    </div>
+      </div>
+    </section>
+  </main>
+</div>
 </body>
 </html>

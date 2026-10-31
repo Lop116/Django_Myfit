@@ -1,19 +1,45 @@
-{% extends 'myfit/base.html' %}
-{% block title %}Class Management | MyFit{% endblock %}
-{% block content %}
-<main style="max-width:700px;margin:35px auto;padding:25px;background:#202327;color:#fff;border-radius:14px">
-<h1>{% if session %}Edit class{% else %}Create class{% endif %}</h1>
-<form method="post" enctype="multipart/form-data">
-{% csrf_token %}
-{{ form.non_field_errors }}
-{% for field in form %}
-<div style="margin:15px 0"><label for="{{ field.id_for_label }}">{{ field.label }}</label>
-<div>{{ field }}</div>{{ field.errors }}</div>
-{% endfor %}
-<button type="submit">Save class</button>
-<a style="margin-left:14px" href="{% url 'myfit:manage_classes' %}">Cancel</a>
-</form>
-</main>
-{% endblock %}
-
- 
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if session %}Edit class{% else %}Create class{% endif %} | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="classes" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Class management</p>
+        <h1 class="page-title">{% if session %}Edit class{% else %}Create class{% endif %}<em>.</em></h1>
+        <p class="subtitle">Manage the class schedule, branch, coach and capacity.</p>
+      </div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
+    {% include "myfit/partials/admin_messages.html" %}
+    <section class="panel">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-grid">
+          {% for field in form %}
+          <div class="form-field">
+            {{ field.label_tag }}{{ field }}
+            {% if field.help_text %}<span class="secondary-text">{{ field.help_text }}</span>{% endif %}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Save class</button>
+          <a class="btn" href="{% url 'myfit:manage_classes' %}">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+</body>
+</html>

@@ -21,6 +21,7 @@ from core.models import (
     CoachProfile,
     MembershipChangeRequest,
     MembershipPlan,
+    Payment,
     SupportTicket,
 )
 
@@ -75,6 +76,23 @@ class AdminDashboardAccessTests(TestCase):
     def test_superuser_can_open_dashboard(self):
         self.client.force_login(User.objects.create_superuser("root", "root@example.com", "pass12345"))
         self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_admin_login_redirects_to_admin_dashboard(self):
+        admin = make_user("login_admin", "Admin")
+        response = self.client.post(
+            reverse("myfit:login"),
+            {
+                "username": admin.username,
+                "password": "pass12345",
+                "next": reverse("myfit:home"),
+            },
+        )
+        self.assertRedirects(response, self.url)
+
+    def test_authenticated_admin_visiting_login_is_sent_to_dashboard(self):
+        self.client.force_login(make_user("already_admin", "Admin"))
+        response = self.client.get(reverse("myfit:login"))
+        self.assertRedirects(response, self.url)
 
 
 class DashboardStatsTests(StatsTestCase):
@@ -200,6 +218,62 @@ class DashboardStatsTests(StatsTestCase):
         self.assertEqual(stats["coaches"]["total"] - self.before["coaches"]["total"], 1)
         self.assertContains(response, f'id="stat-clients">{stats["clients"]["total"]}<')
         self.assertContains(response, f'id="stat-mem-active">{stats["memberships"]["active"]}<')
+
+
+class PaymentDashboardTests(TestCase):
+    def setUp(self):
+        self.admin = make_user("payment_admin", "Admin")
+        self.client_user = make_user("payment_client", "Client")
+        self.client_profile = ClientProfile.objects.create(user=self.client_user)
+        self.client.force_login(self.admin)
+
+    def test_dashboard_sums_paid_transactions_and_counts_pending(self):
+        Payment.objects.create(client=self.client_profile, amount="75.00", status=Payment.Status.PAID)
+        Payment.objects.create(client=self.client_profile, amount="20.00", status=Payment.Status.PENDING)
+        Payment.objects.create(client=self.client_profile, amount="10.00", status=Payment.Status.REFUNDED)
+
+        response = self.client.get(reverse("myfit:admin_dashboard"))
+
+        self.assertEqual(response.context["stats"]["payments"]["transactions"], 3)
+        self.assertEqual(response.context["stats"]["payments"]["paid_total"], 75)
+        self.assertEqual(response.context["stats"]["payments"]["pending"], 1)
+        self.assertContains(response, 'id="stat-payments-paid">Rs 75.00')
+
+    def test_admin_can_record_a_payment_transaction(self):
+        response = self.client.post(
+            reverse("myfit:manage_payments"),
+            {
+                "client": self.client_profile.pk,
+                "amount": "125.50",
+                "payment_date": timezone.localdate().isoformat(),
+                "status": Payment.Status.PAID,
+                "payment_method": "Cash",
+                "reference": "receipt-01",
+            },
+        )
+
+        self.assertRedirects(response, reverse("myfit:manage_payments"))
+        payment = Payment.objects.get(reference="receipt-01")
+        self.assertEqual(payment.client, self.client_profile)
+        self.assertEqual(payment.recorded_by, self.admin)
+
+    def test_admin_management_pages_load_shared_styles(self):
+        for page in (
+            "manage_bookings",
+            "manage_payments",
+            "manage_plans",
+            "assign_client_membership",
+            "membership_requests",
+            "attendance_dashboard",
+        ):
+            with self.subTest(page=page):
+                response = self.client.get(reverse(f"myfit:{page}"))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "css/admin_dashboard.css")
+
+        classes_response = self.client.get(reverse("myfit:manage_classes"))
+        self.assertEqual(classes_response.status_code, 200)
+        self.assertContains(classes_response, "css/manage_classes.css")
 
 
 class ClientManagementTests(TestCase):

@@ -1,73 +1,45 @@
-
-<!DOCTYPE html>
+{% load static %}
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Edit Membership Plan - MyFit</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: white;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-        }
-
-        .errorlist {
-            color: #b00020;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit Membership Plan | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
 </head>
-
 <body>
-    <div class="container">
-
-        <!-- START TASK 2 - EDIT MEMBERSHIP PLAN -->
-
-        <h1>Edit Membership Plan: {{ plan.name }}</h1>
-
-        <form method="post">
-            {% csrf_token %}
-
-            {{ form.as_p }}
-
-            <button type="submit" class="btn btn-primary">
-                Save Changes
-            </button>
-        </form>
-
-        <p>
-            <a href="{% url 'myfit:manage_plans' %}">
-                Back to Membership Plans
-            </a>
-        </p>
-
-        <!-- END TASK 2 - EDIT MEMBERSHIP PLAN -->
-
-    </div>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="plans" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Membership management</p>
+        <h1 class="page-title">Edit plan<em>.</em></h1>
+        <p class="subtitle">{{ plan.name }}</p>
+      </div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
+    {% include "myfit/partials/admin_messages.html" %}
+    <section class="panel">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-grid">
+          {% for field in form %}
+          <div class="form-field">
+            {{ field.label_tag }}{{ field }}
+            {% if field.help_text %}<span class="secondary-text">{{ field.help_text }}</span>{% endif %}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Save changes</button>
+          <a class="btn" href="{% url 'myfit:manage_plans' %}">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
 </body>
 </html>

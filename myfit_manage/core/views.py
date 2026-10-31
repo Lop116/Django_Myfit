@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth.models import Group #Loick
 from django.contrib.auth.views import LoginView #Loick
-from .permissions import role_required #Loick
+from .permissions import has_role, role_required #Loick
 from .models import WebsiteImage #Loick
 
 from .notifications import notify, notify_ticket_update
@@ -31,6 +31,7 @@ from .forms import (
     AttendanceCheckInForm,
     ClientMembershipAssignmentForm,
     MembershipChangeRequestForm,
+    PaymentForm,
     SupportTicketReplyForm,
 )
 from .membership_services import (
@@ -53,6 +54,7 @@ from .models import (
     MembershipChangeRequest,
     MembershipPass,
     MembershipPlan,
+    Payment,
     Notification,
     ClientProfile,
     Branch,
@@ -67,9 +69,8 @@ def authorized_membership_staff_required(view_func):
     @login_required(login_url='myfit:login')
     @wraps(view_func)
     def wrapped_view(request, *args, **kwargs):
-        if (
-            not request.user.is_staff
-            or not request.user.has_perm('core.view_membershippass')
+        if not (request.user.is_staff or has_role(request.user, 'Admin')) or not request.user.has_perm(
+            'core.view_membershippass'
         ):
             raise PermissionDenied
         return view_func(request, *args, **kwargs)
@@ -81,9 +82,8 @@ def membership_change_staff_required(view_func):
     @login_required(login_url='myfit:login')
     @wraps(view_func)
     def wrapped_view(request, *args, **kwargs):
-        if (
-            not request.user.is_staff
-            or not request.user.has_perm('core.change_membershipchangerequest')
+        if not (request.user.is_staff or has_role(request.user, 'Admin')) or not request.user.has_perm(
+            'core.change_membershipchangerequest'
         ):
             raise PermissionDenied
         return view_func(request, *args, **kwargs)
@@ -150,10 +150,19 @@ def home(request):
  
 class RoleAwareLoginView(LoginView):
     """Respect a safe ?next= URL; otherwise send members to their role dashboard."""
- 
+    redirect_authenticated_user = True
+
     def get_success_url(self):
         from .permissions import dashboard_name
-        return self.get_redirect_url() or reverse(dashboard_name(self.request.user))
+
+        redirect_url = self.get_redirect_url()
+        if (
+            redirect_url
+            and has_role(self.request.user, "Admin")
+            and urlsplit(redirect_url).path == reverse("myfit:home")
+        ):
+            return reverse("myfit:admin_dashboard")
+        return redirect_url or reverse(dashboard_name(self.request.user))
  
  
 def register(request):
@@ -352,9 +361,8 @@ def membership_scanner(request):
 @login_required(login_url='myfit:login')
 @require_POST
 def membership_qr_check_in(request):
-    if (
-        not request.user.is_staff
-        or not request.user.has_perm('core.add_attendancevisit')
+    if not (request.user.is_staff or has_role(request.user, 'Admin')) or not request.user.has_perm(
+        'core.add_attendancevisit'
     ):
         raise PermissionDenied
 
@@ -601,8 +609,26 @@ def manage_bookings(request):
 
 @role_required('Admin')
 def manage_payments(request):
-    # There is no Payment model: never present fabricated transaction rows.
-    return render(request, 'myfit/manage_payments.html')
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.recorded_by = request.user
+            payment.save()
+            messages.success(request, 'Payment transaction recorded.')
+            return redirect('myfit:manage_payments')
+    else:
+        form = PaymentForm()
+
+    payments = Payment.objects.select_related(
+        'client__user',
+        'recorded_by',
+    )
+    return render(
+        request,
+        'myfit/manage_payments.html',
+        {'form': form, 'payments': payments},
+    )
 
 
 # ==========================================================
@@ -612,9 +638,8 @@ def manage_payments(request):
 
 @login_required(login_url='myfit:login')
 def attendance_dashboard(request):
-    if (
-        not request.user.is_staff
-        or not request.user.has_perm('core.view_attendancevisit')
+    if not (request.user.is_staff or has_role(request.user, 'Admin')) or not request.user.has_perm(
+        'core.view_attendancevisit'
     ):
         raise PermissionDenied
 
@@ -685,9 +710,8 @@ def attendance_check_in(request):
 @login_required(login_url='myfit:login')
 @require_POST
 def attendance_check_out(request, visit_id):
-    if (
-        not request.user.is_staff
-        or not request.user.has_perm('core.change_attendancevisit')
+    if not (request.user.is_staff or has_role(request.user, 'Admin')) or not request.user.has_perm(
+        'core.change_attendancevisit'
     ):
         raise PermissionDenied
 

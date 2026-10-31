@@ -1,44 +1,66 @@
-{% extends 'myfit/base.html' %}
-{% block title %}Manage Bookings | MyFit{% endblock %}
-{% block content %}
-<main style="max-width:980px;margin:40px auto;padding:20px">
-    <h1>Manage bookings</h1>
-    <p>
-        <a href="{% url 'myfit:admin_dashboard' %}">Back to admin dashboard</a>
-    </p>
-    <table border="1" cellpadding="10" style="width:100%">
-        <thead>
-            <tr>
-                <th>Member</th>
-                <th>Class</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Bookings | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="bookings" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Class management</p>
+        <h1 class="page-title">Manage bookings<em>.</em></h1>
+        <p class="subtitle">Review class registrations and cancel confirmed bookings.</p>
+      </div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
+
+    {% include "myfit/partials/admin_messages.html" %}
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Class bookings</h2>
+          <p class="panel-subtitle">Cancelled bookings stay in the record for history.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'myfit:manage_classes' %}">Manage classes</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>CLIENT</th><th>CLASS</th><th>BRANCH</th><th>DATE / TIME</th><th>STATUS</th><th>ACTION</th></tr>
+          </thead>
+          <tbody>
             {% for booking in bookings %}
             <tr>
-                <td>{{ booking.client.user.username }}</td>
-                <td>{{ booking.session.title }}</td>
-                <td>{{ booking.session.date }} {{ booking.session.time }}</td>
-                <td>{{ booking.status }}</td>
-                <td>{% if booking.status == 'Confirmed' %}
-                    <form method="post" action="{% url 'myfit:cancel_booking' booking.pk %}">
-                        {% csrf_token %}
-                        <button type="submit">Cancel</button>
-                    </form>
-                    {% endif %}
-                </td>
+              <td>{{ booking.client.user.get_full_name|default:booking.client.user.username }}</td>
+              <td>{{ booking.session.title }}</td>
+              <td>{{ booking.session.branch.name }}</td>
+              <td>{{ booking.session.date|date:"d M Y" }}<div class="secondary-text">{{ booking.session.time|time:"H:i" }}</div></td>
+              <td><span class="status {% if booking.status == 'Confirmed' %}status-active{% else %}status-inactive{% endif %}">{{ booking.status }}</span></td>
+              <td>
+                {% if booking.status == 'Confirmed' %}
+                <form method="post" action="{% url 'myfit:cancel_booking' booking.pk %}">
+                  {% csrf_token %}
+                  <button class="text-btn" type="submit">Cancel booking</button>
+                </form>
+                {% else %}<span class="secondary-text">—</span>{% endif %}
+              </td>
             </tr>
             {% empty %}
-            <tr>
-                <td colspan="5">There are no recorded class bookings.</td>
-            </tr>
+            <tr><td class="empty" colspan="6">There are no recorded class bookings.</td></tr>
             {% endfor %}
-        </tbody>
-    </table>
-</main>
-{% endblock %}
-
- 
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">{{ bookings|length }} booking{{ bookings|length|pluralize }}</div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

@@ -3,9 +3,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.utils import timezone
 from .models import (
+    ClientProfile,
     ClientMembership,
     MembershipChangeRequest,
     MembershipPlan,
+    Payment,
     SupportTicket, 
     SupportTicketMessage,
     ClassSession,
@@ -119,6 +121,31 @@ class MembershipPlanForm(forms.ModelForm):
             )
 
         return duration
+
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ('client', 'amount', 'payment_date', 'status', 'payment_method', 'reference')
+        widgets = {
+            'amount': forms.NumberInput(attrs={'min': '0.01', 'step': '0.01'}),
+            'payment_date': forms.DateInput(attrs={'type': 'date'}),
+            'payment_method': forms.TextInput(attrs={'placeholder': 'Cash, card, bank transfer…'}),
+            'reference': forms.TextInput(attrs={'placeholder': 'Optional transaction reference'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['client'].queryset = (
+            ClientProfile.objects.filter(
+                user__groups__name='Client',
+                user__is_active=True,
+                user__is_superuser=False,
+            )
+            .select_related('user')
+            .distinct()
+            .order_by('user__username')
+        )
 
 
 # END TASK 2 - MEMBERSHIPS AND ATTENDANCE

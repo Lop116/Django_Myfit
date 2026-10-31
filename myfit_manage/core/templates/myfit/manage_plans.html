@@ -1,90 +1,79 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Manage Plans</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #f8f9fa; }
-        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; }
-        .btn-primary { background-color: #007bff; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Membership Plans | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
 </head>
 <body>
-    <div class="container">
-        <h1>Manage Membership Plans</h1>
-    <!-- START TASK 2 - Membership plan creation -->
-{% if perms.core.add_membershipplan %}
-    <button type="button" class="btn btn-primary"
-            onclick="document.getElementById('plan-form').hidden = !document.getElementById('plan-form').hidden;">
-        + Add New Plan
-    </button>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="plans" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Membership management</p>
+        <h1 class="page-title">Membership plans<em>.</em></h1>
+        <p class="subtitle">Manage plan prices, duration, benefits and availability.</p>
+      </div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
 
-    <div id="plan-form" {% if not form.errors %}hidden{% endif %} style="margin-top: 20px;">
-        <h2>Create Membership Plan</h2>
+    {% include "myfit/partials/admin_messages.html" %}
 
-        <form method="post" action="{% url 'myfit:manage_plans' %}">
-            {% csrf_token %}
-            {{ form.as_p }}
+    {% if perms.core.add_membershipplan %}
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2 class="panel-title">Create a plan</h2><p class="panel-subtitle">Add a membership option for clients.</p></div>
+        <button type="button" class="btn btn-primary" aria-expanded="{% if form.errors %}true{% else %}false{% endif %}"
+                aria-controls="plan-form" onclick="const f=document.getElementById('plan-form');f.hidden=!f.hidden;this.setAttribute('aria-expanded',String(!f.hidden));">
+          Add new plan
+        </button>
+      </div>
+      <form id="plan-form" method="post" {% if not form.errors %}hidden{% endif %}>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-grid">
+          {% for field in form %}
+          <div class="form-field">
+            {{ field.label_tag }}{{ field }}
+            {% if field.help_text %}<span class="secondary-text">{{ field.help_text }}</span>{% endif %}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Save plan</button></div>
+      </form>
+    </section>
+    {% endif %}
 
-            <button type="submit" class="btn btn-primary">
-                Save Plan
-            </button>
-        </form>
-    </div>
-{% endif %}
-
-<!-- END TASK 2 - Membership plan creation -->
-<!-- START TASK 2 - Dynamic membership plans -->
-<table>
-    <tr>
-        <th>Plan Name</th>
-        <th>Price</th>
-        <th>Duration</th>
-        <th>Benefits</th>
-        <th>Status</th>
-        <th>Controls</th>
-    </tr>
-
-    {% for plan in plans %}
-    <tr>
-        <td>{{ plan.name }}</td>
-        <td>Rs {{ plan.price }}</td>
-        <td>{{ plan.duration_days }} days</td>
-        <td>{{ plan.benefits|default:"No benefits specified" }}</td>
-        <td>
-            {% if plan.is_active %}
-                Active
-            {% else %}
-                Inactive
-            {% endif %}
-        </td>
-
-<!-- START TASK 2 - Edit membership plan/deshrao -->
-<td>
-    <a href="{% url 'myfit:edit_membership_plan' plan.id %}"
-       class="btn btn-primary"
-       style="text-decoration: none;">
-        Edit
-    </a>
-</td>
-<!-- END TASK 2 -->
-
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="6">No membership plans have been created yet.</td>
-    </tr>
-    {% endfor %}
-</table>
-
-<!-- END TASK 2 - Dynamic membership plans -->
-
-    </div>
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2 class="panel-title">All membership plans</h2><p class="panel-subtitle">{{ plans|length }} plan{{ plans|length|pluralize }} configured.</p></div>
+        <a class="btn" href="{% url 'myfit:assign_client_membership' %}">Assign membership</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>PLAN</th><th>PRICE</th><th>DURATION</th><th>CLASS ACCESS</th><th>STATUS</th><th>ACTION</th></tr></thead>
+          <tbody>
+            {% for plan in plans %}
+            <tr>
+              <td><strong>{{ plan.name }}</strong><div class="secondary-text">{{ plan.benefits|default:"No benefits specified" }}</div></td>
+              <td>Rs {{ plan.price|floatformat:2 }}</td>
+              <td>{{ plan.duration_days }} days</td>
+              <td>{% if plan.allows_classes %}Included{% else %}Not included{% endif %}</td>
+              <td><span class="status {% if plan.is_active %}status-active{% else %}status-inactive{% endif %}">{% if plan.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+              <td><a class="text-btn" href="{% url 'myfit:edit_membership_plan' plan.id %}">Edit plan</a></td>
+            </tr>
+            {% empty %}
+            <tr><td class="empty" colspan="6">No membership plans have been created yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
 </body>
 </html>
