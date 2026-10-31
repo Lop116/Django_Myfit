@@ -1,5 +1,8 @@
 {% extends 'myfit/base.html' %}
+{% block title %}Book a Class | MyFit{% endblock %}
 {% block content %}
+<main style="max-width:1050px;margin:35px auto;padding:25px;background:#191c20;color:#f8f8f7;border-radius:14px;font-family:Arial,sans-serif">
+<p><a href="{% url 'myfit:home' %}" style="color:#ffc324">MyFit home</a> · <a href="{% url 'myfit:classes' %}" style="color:#ffc324">Classes</a>{% if is_client %} · <a href="{% url 'myfit:client_bookings' %}" style="color:#ffc324">My bookings</a>{% endif %}</p>
 <h1>Available Classes</h1>
 {% if messages %}
     <ul class="messages">
@@ -8,7 +11,14 @@
         {% endfor %}
     </ul>
 {% endif %}
-<table border="1" cellpadding="8">
+{% if not user.is_authenticated %}
+    <p><a href="{% url 'myfit:login' %}?next={{ request.path|urlencode }}" style="color:#ffc324">Log in</a> as a MyFit client to book a class.</p>
+{% elif not is_client %}
+    <p>Class booking is available to client accounts.</p>
+{% elif eligibility_message %}
+    <p role="status">{{ eligibility_message }} <a href="{% url 'myfit:client_membership' %}" style="color:#ffc324">View my membership</a></p>
+{% endif %}
+<table border="1" cellpadding="8" style="width:100%;border-collapse:collapse">
     <tr>
         <th>Class</th>
         <th>Date & Time</th>
@@ -19,16 +29,24 @@
     </tr>
     {% for session in classes %}
     <tr>
-        <td>{{ session.title }}</td>
-        <td>{{ session.date }} at {{ session.time }}</td>
+        <td>{{ session.title }}<br><small>{{ session.category }}</small></td>
+        <td>{{ session.date|date:'D d M Y' }} at {{ session.time|time:'H:i' }}{% if session.end_time %}–{{ session.end_time|time:'H:i' }}{% endif %}</td>
         <td>{{ session.coach.user.get_full_name|default:session.coach.user.username }}</td>
         <td>{{ session.branch.name }}</td>
         <td>{{ session.spaces_left }} / {{ session.capacity }}</td>
         <td>
-            {% if session.spaces_left > 0 %}
+            {% if session.pk in booked_ids %}
+                {% for session_id, booking_id in my_bookings.items %}{% if session_id == session.pk %}
+                <strong>Booked</strong>
+                <form action="{% url 'myfit:cancel_booking' booking_id %}" method="post" style="display:inline" onsubmit="return confirm('Cancel this booking?');">
+                    {% csrf_token %}
+                    <button type="submit">Cancel booking</button>
+                </form>
+                {% endif %}{% endfor %}
+            {% elif session.spaces_left > 0 %}
                 <form action="{% url 'myfit:book_class' session.id %}" method="post">
                     {% csrf_token %}
-                    <button type="submit">Book Now</button>
+                    <button type="submit"{% if is_client and eligibility_message %} disabled title="{{ eligibility_message }}"{% endif %}>Book Now</button>
                 </form>
             {% else %}
                 <span style="color: red;">Full</span>
@@ -39,4 +57,5 @@
     <tr><td colspan="6">No classes scheduled right now.</td></tr>
     {% endfor %}
 </table>
+</main>
 {% endblock %}

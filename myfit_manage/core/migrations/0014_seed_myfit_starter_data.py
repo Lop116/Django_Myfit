@@ -62,6 +62,14 @@ def _store_image(record, field, folder, filename):
     image_path = Path(settings.BASE_DIR) / 'core' / 'static' / 'images' / folder / filename
     if not image_path.is_file():
         return  # Keep record even if a deployed image wasn't packaged.
+     # Reuse an already-copied file instead of writing a new random-suffixed
+    # copy on every fresh database (e.g. each test run) into MEDIA_ROOT.
+    model_field = record._meta.get_field(field)
+    stored_name = model_field.generate_filename(record, filename)
+    if model_field.storage.exists(stored_name):
+        setattr(record, model_field.attname, stored_name)
+        record.save(update_fields=[model_field.attname])
+        return
     with image_path.open('rb') as f:
         getattr(record, field).save(filename, File(f), save=True)
 
