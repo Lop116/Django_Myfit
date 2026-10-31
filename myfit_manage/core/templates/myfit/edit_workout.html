@@ -1,0 +1,10 @@
+{% extends "myfit/base.html" %}
+{% block title %}Edit workout session | MyFit{% endblock %}
+{% block content %}
+<main style="max-width:1050px;margin:35px auto;padding:30px;color:#f8f8f7;background:#191c20;border-radius:14px;font-family:Arial,sans-serif">
+<p><a href="{% url 'myfit:home' %}" style="color:#ffc324">MyFit home</a> · <a href="{% url 'myfit:coaching_trial' %}" style="color:#ffc324">Coaching</a></p>
+<h1>Edit workout session</h1>
+{% if messages %}{% for msg in messages %}<p>{{ msg }}</p>{% endfor %}{% endif %}
+<form method="post">{% csrf_token %}{{ form.as_p }}<button>Save changes</button></form><a href="{% url 'myfit:coaching_workouts' %}">Back to sessions</a>
+</main>
+{% endblock %}

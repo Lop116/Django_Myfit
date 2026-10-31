@@ -1,0 +1,10 @@
+{% extends "myfit/base.html" %}
+{% block title %}Coaching workspace | MyFit{% endblock %}
+{% block content %}
+<main style="max-width:1050px;margin:35px auto;padding:30px;color:#f8f8f7;background:#191c20;border-radius:14px;font-family:Arial,sans-serif">
+<p><a href="{% url 'myfit:home' %}" style="color:#ffc324">MyFit home</a> · <a href="{% url 'myfit:coaching_trial' %}" style="color:#ffc324">Coaching</a></p>
+<h1>Coaching workspace</h1>
+{% if messages %}{% for msg in messages %}<p>{{ msg }}</p>{% endfor %}{% endif %}
+<p>Choose the area allowed by your role.</p><nav><a href="{% url 'myfit:coaching_workouts' %}">My workout log</a> · <a href="{% url 'myfit:coaching_progress' %}">My progress</a> · {% if is_coach %}<a href="{% url 'myfit:coaching_clients' %}">My assigned clients</a>{% endif %} {% if is_admin %}<a href="{% url 'myfit:coaching_assignments' %}">Assign clients</a>{% endif %}</nav>
+</main>
+{% endblock %}

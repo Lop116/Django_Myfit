@@ -1,0 +1,10 @@
+{% extends "myfit/base.html" %}
+{% block title %}Client training records | MyFit{% endblock %}
+{% block content %}
+<main style="max-width:1050px;margin:35px auto;padding:30px;color:#f8f8f7;background:#191c20;border-radius:14px;font-family:Arial,sans-serif">
+<p><a href="{% url 'myfit:home' %}" style="color:#ffc324">MyFit home</a> · <a href="{% url 'myfit:coaching_trial' %}" style="color:#ffc324">Coaching</a></p>
+<h1>Client training records</h1>
+{% if messages %}{% for msg in messages %}<p>{{ msg }}</p>{% endfor %}{% endif %}
+<p>Client: {{ client.user.get_full_name|default:client.user.username }}</p><p>Workouts: {{ stats.workouts|default:0 }} · Minutes: {{ stats.minutes|default:0 }} · Measurements: {{ stats.measurements|default:0 }}</p><h2>Workout history</h2><table><tr><th>Date</th><th>Type</th><th>Minutes</th></tr>{% for log in logs %}<tr><td>{{ log.workout_date }}</td><td>{{ log.get_workout_type_display }}</td><td>{{ log.duration_minutes }}</td></tr>{% empty %}<tr><td colspan="3">No workouts.</td></tr>{% endfor %}</table><h2>Measurements</h2><table><tr><th>Date</th><th>Type</th><th>Value</th></tr>{% for entry in entries %}<tr><td>{{ entry.recorded_on }}</td><td>{{ entry.get_measurement_type_display }}</td><td>{{ entry.value }} {{ entry.unit }}</td></tr>{% empty %}<tr><td colspan="3">No measurements.</td></tr>{% endfor %}</table>
+</main>
+{% endblock %}

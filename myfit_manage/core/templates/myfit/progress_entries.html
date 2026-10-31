@@ -1,0 +1,10 @@
+{% extends "myfit/base.html" %}
+{% block title %}Fitness measurements | MyFit{% endblock %}
+{% block content %}
+<main style="max-width:1050px;margin:35px auto;padding:30px;color:#f8f8f7;background:#191c20;border-radius:14px;font-family:Arial,sans-serif">
+<p><a href="{% url 'myfit:home' %}" style="color:#ffc324">MyFit home</a> · <a href="{% url 'myfit:coaching_trial' %}" style="color:#ffc324">Coaching</a></p>
+<h1>Fitness measurements</h1>
+{% if messages %}{% for msg in messages %}<p>{{ msg }}</p>{% endfor %}{% endif %}
+<form method="post">{% csrf_token %}{{ form.as_p }}<button>Save measurement</button></form><h2>Recorded measurements</h2><table><tr><th>Date</th><th>Type</th><th>Value</th></tr>{% for entry in entries %}<tr><td>{{ entry.recorded_on }}</td><td>{{ entry.get_measurement_type_display }}</td><td>{{ entry.value }} {{ entry.unit }}</td></tr>{% empty %}<tr><td colspan="3">No measurements.</td></tr>{% endfor %}</table><h2>Latest comparisons</h2>{% for c in changes %}<p>{{ c.label }} ({{ c.unit }}): {{ c.latest }} versus {{ c.previous }}; change {{ c.difference }}</p>{% empty %}<p>At least two matching entries are needed for a comparison.</p>{% endfor %}
+</main>
+{% endblock %}
