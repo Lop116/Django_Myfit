@@ -1,61 +1,149 @@
 {% extends 'myfit/base.html' %}
 {% block title %}Book a Class | MyFit{% endblock %}
+{% block body_class %}client-dashboard-body{% endblock %}
 {% block content %}
-<main style="max-width:1050px;margin:35px auto;padding:25px;background:#191c20;color:#f8f8f7;border-radius:14px;font-family:Arial,sans-serif">
-<p><a href="{% url 'myfit:home' %}" style="color:#ffc324">MyFit home</a> · <a href="{% url 'myfit:classes' %}" style="color:#ffc324">Classes</a>{% if is_client %} · <a href="{% url 'myfit:client_bookings' %}" style="color:#ffc324">My bookings</a>{% endif %}</p>
-<h1>Available Classes</h1>
-{% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
+<style>
+  /* Available Classes page only — uses the existing MyFit palette (dark panels, #ffc324 accent). */
+  .cl-page{--bg:#121416;--card:#1d2125;--card-2:#23282d;--yellow:#ffc324;--text:#f8f8f7;--muted:#aeb5bc;--border:#353a40;--green:#9ee6b2;--red:#ff9c9c;
+    max-width:1100px;margin:35px auto;padding:28px;background:#191c20;color:var(--text);border-radius:16px;font-family:Arial,sans-serif;border:1px solid var(--border)}
+  .cl-page a{color:var(--yellow)}
+  .cl-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:22px}
+  .cl-crumbs{margin:0 0 10px;font-size:13px;color:var(--muted)}
+  .cl-crumbs a{text-decoration:none;font-weight:bold}
+  .cl-kicker{margin:0 0 6px;font-size:12px;letter-spacing:.14em;font-weight:bold;color:var(--yellow);text-transform:uppercase}
+  .cl-header h1{margin:0;font-size:34px;line-height:1.1}
+  .cl-header h1 span{color:var(--yellow)}
+  .cl-header-actions{display:flex;flex-wrap:wrap;gap:10px}
+  .cl-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:9px 18px;border-radius:9px;border:1px solid transparent;font:inherit;font-size:14px;font-weight:bold;cursor:pointer;text-decoration:none;transition:filter .15s,background .15s,color .15s;white-space:nowrap}
+  .cl-page a.cl-btn-primary,.cl-btn-primary{background:var(--yellow);color:#111;border-color:var(--yellow)}
+  .cl-btn-primary:hover{filter:brightness(1.08)}
+  .cl-page a.cl-btn-ghost,.cl-btn-ghost{background:transparent;color:var(--text);border-color:#555}
+  .cl-btn-ghost:hover{border-color:var(--yellow);color:var(--yellow)}
+  .cl-btn-danger{background:#311818;color:#ffb5b5;border-color:#6d3030}
+  .cl-btn-danger:hover{background:#4a1f1f}
+  .cl-btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+  .cl-messages{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:8px}
+  .cl-messages li{padding:11px 14px;border-radius:9px;background:#163020;border:1px solid #2c6a43;color:var(--green)}
+  .cl-messages li.error{background:#351b1b;border-color:#6d3030;color:var(--red)}
+  .cl-messages li.warning,.cl-messages li.info{background:#2b2610;border-color:#6b5a1d;color:#ffe08a}
+  .cl-notice{margin:0 0 18px;padding:13px 16px;border-radius:10px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--yellow);color:var(--muted)}
+  .cl-notice a{font-weight:bold}
+  .cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .cl-card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:border-color .15s,transform .15s}
+  .cl-card:hover{border-color:#4a5057;transform:translateY(-2px)}
+  .cl-card.is-booked{border-color:var(--yellow);box-shadow:0 0 0 1px rgba(255,195,36,.25) inset}
+  .cl-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}
+  .cl-card h2{margin:0;font-size:20px;line-height:1.2}
+  .cl-category{display:inline-block;margin-top:6px;font-size:11px;letter-spacing:.1em;font-weight:bold;text-transform:uppercase;color:var(--muted)}
+  .cl-badge{flex:0 0 auto;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase}
+  .cl-badge-booked{background:var(--yellow);color:#111}
+  .cl-badge-full{background:#351b1b;color:var(--red)}
+  .cl-badge-open{background:#163020;color:var(--green)}
+  .cl-details{margin:0 0 16px;display:grid;gap:9px}
+  .cl-details div{display:grid;grid-template-columns:72px 1fr;gap:10px;font-size:14px}
+  .cl-details dt{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding-top:1px}
+  .cl-details dd{margin:0}
+  .cl-capacity{margin:0 0 18px}
+  .cl-capacity-label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .cl-capacity-label strong{color:var(--text)}
+  .cl-bar{height:6px;background:#2c3136;border-radius:99px;overflow:hidden}
+  .cl-bar span{display:block;height:100%;background:var(--yellow);border-radius:99px}
+  .cl-actions{margin-top:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cl-actions form{margin:0;flex:1}
+  .cl-actions .cl-btn{width:100%}
+  .cl-full{flex:1;text-align:center;padding:9px 18px;border-radius:9px;background:#2a1a1a;color:var(--red);font-weight:bold}
+  .cl-empty{padding:40px 20px;text-align:center;color:var(--muted);background:var(--card);border:1px dashed var(--border);border-radius:14px}
+  @media(max-width:640px){
+    .cl-page{margin:0;padding:20px 16px;border-radius:0;border-left:0;border-right:0}
+    .cl-header{align-items:flex-start}
+    .cl-header h1{font-size:27px}
+    .cl-header-actions{width:100%}
+    .cl-header-actions .cl-btn{flex:1}
+    .cl-grid{grid-template-columns:1fr}
+  }
+</style>
+<main class="cl-page">
+  <header class="cl-header">
+    <div>
+      <p class="cl-crumbs"><a href="{% url 'myfit:home' %}">MyFit home</a> · <a href="{% url 'myfit:classes' %}">Classes</a>{% if is_client %} · <a href="{% url 'myfit:client_bookings' %}">My bookings</a>{% endif %}</p>
+      <p class="cl-kicker">Group classes</p>
+      <h1>Available <span>Classes</span></h1>
+    </div>
+    <div class="cl-header-actions">
+      {% if is_client %}
+        <a class="cl-btn cl-btn-primary" href="{% url 'myfit:client_dashboard' %}">&larr; Dashboard</a>
+        <a class="cl-btn cl-btn-ghost" href="{% url 'myfit:client_bookings' %}">My bookings</a>
+      {% else %}
+        <a class="cl-btn cl-btn-primary" href="{% url 'myfit:home' %}">&larr; Home</a>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if messages %}
+    <ul class="cl-messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
     </ul>
-{% endif %}
-{% if not user.is_authenticated %}
-    <p><a href="{% url 'myfit:login' %}?next={{ request.path|urlencode }}" style="color:#ffc324">Log in</a> as a MyFit client to book a class.</p>
-{% elif not is_client %}
-    <p>Class booking is available to client accounts.</p>
-{% elif eligibility_message %}
-    <p role="status">{{ eligibility_message }} <a href="{% url 'myfit:client_membership' %}" style="color:#ffc324">View my membership</a></p>
-{% endif %}
-<table border="1" cellpadding="8" style="width:100%;border-collapse:collapse">
-    <tr>
-        <th>Class</th>
-        <th>Date & Time</th>
-        <th>Coach</th>
-        <th>Branch</th>
-        <th>Spaces Left</th>
-        <th>Action</th>
-    </tr>
+  {% endif %}
+
+  {% if not user.is_authenticated %}
+    <p class="cl-notice"><a href="{% url 'myfit:login' %}?next={{ request.path|urlencode }}">Log in</a> as a MyFit client to book a class.</p>
+  {% elif not is_client %}
+    <p class="cl-notice">Class booking is available to client accounts.</p>
+  {% elif eligibility_message %}
+    <p class="cl-notice" role="status">{{ eligibility_message }} <a href="{% url 'myfit:client_membership' %}">View my membership</a></p>
+  {% endif %}
+
+  <section class="cl-grid" aria-label="Available classes">
     {% for session in classes %}
-    <tr>
-        <td>{{ session.title }}<br><small>{{ session.category }}</small></td>
-        <td>{{ session.date|date:'D d M Y' }} at {{ session.time|time:'H:i' }}{% if session.end_time %}–{{ session.end_time|time:'H:i' }}{% endif %}</td>
-        <td>{{ session.coach.user.get_full_name|default:session.coach.user.username }}</td>
-        <td>{{ session.branch.name }}</td>
-        <td>{{ session.spaces_left }} / {{ session.capacity }}</td>
-        <td>
-            {% if session.pk in booked_ids %}
-                {% for session_id, booking_id in my_bookings.items %}{% if session_id == session.pk %}
-                <strong>Booked</strong>
-                <form action="{% url 'myfit:cancel_booking' booking_id %}" method="post" style="display:inline" onsubmit="return confirm('Cancel this booking?');">
-                    {% csrf_token %}
-                    <button type="submit">Cancel booking</button>
-                </form>
-                {% endif %}{% endfor %}
-            {% elif session.spaces_left > 0 %}
-                <form action="{% url 'myfit:book_class' session.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit"{% if is_client and eligibility_message %} disabled title="{{ eligibility_message }}"{% endif %}>Book Now</button>
-                </form>
-            {% else %}
-                <span style="color: red;">Full</span>
-            {% endif %}
-        </td>
-    </tr>
+    {% with spaces=session.spaces_left %}
+    <article class="cl-card{% if session.pk in booked_ids %} is-booked{% endif %}">
+      <div class="cl-card-top">
+        <div>
+          <h2>{{ session.title }}</h2>
+          <span class="cl-category">{{ session.category }}</span>
+        </div>
+        {% if session.pk in booked_ids %}
+          <span class="cl-badge cl-badge-booked">Booked</span>
+        {% elif spaces > 0 %}
+          <span class="cl-badge cl-badge-open">Open</span>
+        {% else %}
+          <span class="cl-badge cl-badge-full">Full</span>
+        {% endif %}
+      </div>
+      <dl class="cl-details">
+        <div><dt>When</dt><dd>{{ session.date|date:'D d M Y' }} at {{ session.time|time:'H:i' }}{% if session.end_time %}–{{ session.end_time|time:'H:i' }}{% endif %}</dd></div>
+        <div><dt>Coach</dt><dd>{{ session.coach.user.get_full_name|default:session.coach.user.username }}</dd></div>
+        <div><dt>Branch</dt><dd>{{ session.branch.name }}</dd></div>
+      </dl>
+      <div class="cl-capacity">
+        <div class="cl-capacity-label"><span>Spaces left</span><strong>{{ spaces }} / {{ session.capacity }}</strong></div>
+        <div class="cl-bar" aria-hidden="true"><span style="width:{% widthratio spaces session.capacity|default:1 100 %}%"></span></div>
+      </div>
+      <div class="cl-actions">
+        {% if session.pk in booked_ids %}
+          {% for session_id, booking_id in my_bookings.items %}{% if session_id == session.pk %}
+          <form action="{% url 'myfit:cancel_booking' booking_id %}" method="post" onsubmit="return confirm('Cancel your booking for {{ session.title|escapejs }}?');">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="cl-btn cl-btn-danger" type="submit">Unbook</button>
+          </form>
+          {% endif %}{% endfor %}
+        {% elif spaces > 0 %}
+          <form action="{% url 'myfit:book_class' session.id %}" method="post">
+            {% csrf_token %}
+            <button class="cl-btn cl-btn-primary" type="submit"{% if is_client and eligibility_message %} disabled title="{{ eligibility_message }}"{% endif %}>Book Now</button>
+          </form>
+        {% else %}
+          <span class="cl-full">Full</span>
+        {% endif %}
+      </div>
+    </article>
+    {% endwith %}
     {% empty %}
-    <tr><td colspan="6">No classes scheduled right now.</td></tr>
+    <p class="cl-empty">No classes scheduled right now.</p>
     {% endfor %}
-</table>
+  </section>
 </main>
 {% endblock %}

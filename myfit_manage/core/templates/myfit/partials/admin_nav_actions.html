@@ -1,0 +1,20 @@
+{# Admin navigation actions: return to the Admin Dashboard and log out. #}
+{# Included at the bottom of every admin sidebar. Logout uses Django's built-in LogoutView (POST). #}
+<style>
+  .admin-nav-actions{margin-top:auto;padding:16px 0 4px;border-top:1px solid var(--line,#343434);display:grid;gap:8px;position:sticky;bottom:0;background:var(--black-2,#111);z-index:2}
+  .sidebar-note + .admin-nav-actions{margin-top:14px}
+  .admin-nav-actions form{margin:0}
+  .admin-nav-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--yellow,#ffd21f);font:inherit;font-weight:800;cursor:pointer;text-decoration:none;box-sizing:border-box}
+  .admin-nav-btn.home{background:var(--yellow,#ffd21f);color:var(--black,#080808)}
+  .admin-nav-btn.home:hover{filter:brightness(1.08)}
+  .admin-nav-btn.logout{background:transparent;color:var(--white,#fff);border-color:#555}
+  .admin-nav-btn.logout:hover{background:#311818;border-color:#6d3030;color:#ffb5b5}
+  @media(max-width:680px){.admin-nav-actions{grid-template-columns:1fr 1fr;margin-top:10px;position:static}}
+</style>
+<div class="admin-nav-actions">
+  <a class="admin-nav-btn home" href="{% url 'myfit:admin_dashboard' %}">&larr; Dashboard</a>
+  <form method="post" action="{% url 'myfit:logout' %}">
+    {% csrf_token %}
+    <button class="admin-nav-btn logout" type="submit">Log out</button>
+  </form>
+</div>
