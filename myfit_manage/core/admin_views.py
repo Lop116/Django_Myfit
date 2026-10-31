@@ -12,6 +12,7 @@ from .dashboard_services import get_dashboard_stats
 from .forms import AccountDetailsForm, AdminClientCreationForm, ClientProfileForm
 from .models import ClientProfile
 from .permissions import role_required
+from .services import membership_booking_status
 
 User = get_user_model()
 
@@ -44,10 +45,17 @@ def client_manage(request):
             | Q(email__icontains=q)
             | Q(client_profile__phone__icontains=q)
         )
-    if status == "active":
+    
+    if status in ("active", "needs_membership"):
         clients = clients.filter(is_active=True)
     elif status == "inactive":
         clients = clients.filter(is_active=False)
+    # Account status (User.is_active) and membership status are separate; show both.
+    clients = list(clients)
+    for client in clients:
+        client.membership_state, client.membership = membership_booking_status(client)
+    if status == "needs_membership":
+        clients = [c for c in clients if c.membership_state in ("none", "expired")]
     return render(
         request,
         "myfit/client_manage.html",

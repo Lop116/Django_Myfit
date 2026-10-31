@@ -38,15 +38,53 @@ def current_class_membership(user):
     )
 
 
+def membership_booking_status(user):
+    """Return (state, membership) describing the member's class-booking eligibility.
+
+    Account activation (User.is_active) and membership activation are separate:
+    an active account still needs a current membership whose plan includes classes.
+    States: 'ok', 'no_classes', 'scheduled', 'suspended', 'expired', 'none'.
+    """
+    membership = current_class_membership(user)
+    if membership is not None:
+        return ('ok' if membership.plan.allows_classes else 'no_classes'), membership
+    today = timezone.localdate()
+    memberships = ClientMembership.objects.filter(user=user).select_related('plan')
+    upcoming = memberships.filter(
+        status__in=('active', 'scheduled'), start_date__gt=today,
+    ).order_by('start_date').first()
+    if upcoming:
+        return 'scheduled', upcoming
+    suspended = memberships.filter(
+        status='suspended', start_date__lte=today, end_date__gte=today,
+    ).first()
+    if suspended:
+        return 'suspended', suspended
+    latest = memberships.order_by('-end_date').first()
+    if latest:
+        return 'expired', latest
+    return 'none', None
+
+
 def booking_eligibility_error(user):
     """Return a message explaining why `user` cannot book classes, or None."""
-    membership = current_class_membership(user)
-    if membership is None:
-        return 'An active MyFit membership is required to book classes.'
-    if not membership.plan.allows_classes:
+    state, membership = membership_booking_status(user)
+    if state == 'ok':
+        return None
+    if state == 'no_classes':
         return (f'Your {membership.plan.name} plan does not include group classes. '
                 'Request a plan change from your Membership page.')
-    return None
+    reason = {
+        'none': 'Your account is active, but no membership has been assigned to it yet. '
+                'Please contact MyFit staff to activate a membership.',
+        'scheduled': f'Your {membership.plan.name} membership starts on {membership.start_date:%d %b %Y}.'
+                     if membership else '',
+        'suspended': f'Your {membership.plan.name} membership is currently suspended.'
+                     if membership else '',
+        'expired': f'Your {membership.plan.name} membership ended on {membership.end_date:%d %b %Y}.'
+                   if membership else '',
+    }[state]
+    return f'An active MyFit membership is required to book classes. {reason}'
 
 
 @transaction.atomic

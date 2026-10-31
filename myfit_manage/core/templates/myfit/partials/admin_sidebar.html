@@ -1,6 +1,10 @@
 {# Admin sidebar. Include with: {% include "myfit/partials/admin_sidebar.html" with active="dashboard" %} #}
 <aside class="sidebar">
   <a class="brand" href="{% url 'myfit:admin_dashboard' %}"><span class="brand-mark">M</span><span>MY<span>FIT</span></span></a>
+  <div class="admin-home-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 22px">
+  <a class="btn btn-primary" href="{% url 'myfit:admin_dashboard' %}" style="justify-content:center">Home</a>
+  <form method="post" action="{% url 'myfit:logout' %}" style="margin:0">{% csrf_token %}<button class="btn btn-secondary" type="submit" style="width:100%;justify-content:center;font-family:inherit;font-size:inherit;cursor:pointer">Log out</button></form>
+  </div>
   <div class="nav-label">OVERVIEW</div>
   <a class="nav-link {% if active == 'dashboard' %}active{% endif %}" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
   <div class="nav-label">PEOPLE</div>

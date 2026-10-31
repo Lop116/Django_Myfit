@@ -1140,10 +1140,13 @@ def assign_client_membership(request):
                     f'Membership assigned successfully to '
                     f'{membership.user.username}.'
                 )
+                if request.GET.get('from') == 'clients':
+                    return redirect('myfit:client_manage')
                 return redirect('myfit:assign_client_membership')
 
     else:
-        form = ClientMembershipAssignmentForm()
+        # Opened from the client list's "Activate membership" action: preselect that client.
+        form = ClientMembershipAssignmentForm(initial={'user': request.GET.get('user')})
 
     return render(
         request,
@@ -1155,8 +1158,28 @@ def assign_client_membership(request):
 
 def class_list(request):
     today = timezone.localdate()
-    classes = ClassSession.objects.filter(status='Scheduled', date__gte=today).order_by('date', 'time')
-    return render(request, 'myfit/class_list.html', {'classes': classes})
+    classes = ClassSession.objects.filter(
+        status='Scheduled', date__gte=today,
+        # Same rule as book_client_into_class: inactive branches/coaches cannot take bookings.
+        branch__is_active=True, coach__user__is_active=True,
+    ).order_by('date', 'time')
+    # Booking context used by class_list.html to show Book / Unbook per class.
+    is_client = has_role(request.user, 'Client') and hasattr(request.user, 'client_profile')
+    my_bookings = {}
+    eligibility_message = None
+    if is_client:
+        from .services import booking_eligibility_error
+        eligibility_message = booking_eligibility_error(request.user)
+        my_bookings = dict(ClassBooking.objects.filter(
+            client=request.user.client_profile, status='Confirmed', session__in=classes,
+        ).values_list('session_id', 'pk'))
+    return render(request, 'myfit/class_list.html', {
+        'classes': classes,
+        'is_client': is_client,
+        'eligibility_message': eligibility_message,
+        'my_bookings': my_bookings,
+        'booked_ids': set(my_bookings),
+    })
 
 @login_required(login_url='myfit:login')
 @require_POST
@@ -1308,10 +1331,15 @@ def cancel_booking_view(request, booking_id):
         messages.error(request, '; '.join(exc.messages))
     else:
         messages.success(request, 'Booking cancelled.')
+    # Return to the page the cancellation came from (e.g. Available Classes) when it is safe.
+    next_url = request.POST.get('next', '')
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
     if has_role(request.user, 'Admin') or has_role(request.user, 'Coach'):
         return redirect('myfit:manage_classes')
     return redirect('myfit:client_bookings')
-#<----
 
 
 
