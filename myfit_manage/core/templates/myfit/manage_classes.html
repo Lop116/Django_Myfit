@@ -1,40 +1,68 @@
-{% extends 'myfit/base.html' %}
-{% block content %}
-<h1>Manage Classes</h1>
-<table border="1" cellpadding="8">
-    <tr>
-        <th>Class</th>
-        <th>Date & Time</th>
-        <th>Status</th>
-        <th>Bookings</th>
-        <th>Controls</th>
-    </tr>
-    {% for session in classes %}
-    <tr>
-        <td>{{ session.title }}</td>
-        <td>{{ session.date }} at {{ session.time }}</td>
-        <td>{{ session.status }}</td>
-        <td>
-            <ul>
-                {% for booking in session.bookings.all %}
-                    {% if booking.status == 'Confirmed' %}
-                    <li>
-                        {{ booking.client.user.username }}
-                        <form action="{% url 'myfit:cancel_booking' booking.id %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" style="color: red; font-size: 0.8em;">Remove</button>
-                        </form>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-        </td>
-        <td>
-            <a href="/admin/core/classsession/{{ session.id }}/change/">Edit</a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="5">No classes to manage.</td></tr>
-    {% endfor %}
-</table>
-{% endblock %}
+{% load static %}
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manage Classes | MyFit</title>
+<link rel="stylesheet" href="{% static 'css/manage_coaches.css' %}">
+<link rel="stylesheet" href="{% static 'css/manage_classes.css' %}"></head><body>
+<div class="shell">
+  {% include 'myfit/partials/admin_sidebar.html' with active='classes' %}
+  <main class="main">
+    <header class="topbar"><div><p class="eyebrow">MyFit / Class management</p>
+      <h1 class="page-title">Manage classes<span class="page-inline-1">.</span></h1>
+      <p class="subtitle">Publish sessions, review confirmed bookings and retain cancellation history.</p></div>
+      <div class="user-chip"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></div>
+    </header>
+    <section class="stats" aria-label="Class summary">
+      <article class="stat"><div class="stat-label">Total classes</div><div class="stat-value">{{ class_totals.total }}</div><div class="stat-foot">All managed sessions</div></article>
+      <article class="stat"><div class="stat-label">Scheduled classes</div><div class="stat-value">{{ class_totals.scheduled }}</div><div class="stat-foot">Available schedule entries</div></article>
+      <article class="stat"><div class="stat-label">Cancelled classes</div><div class="stat-value">{{ class_totals.cancelled }}</div><div class="stat-foot">Preserved in history</div></article>
+      <article class="stat"><div class="stat-label">Confirmed bookings</div><div class="stat-value">{{ confirmed_bookings_count }}</div><div class="stat-foot">Live attendee registrations</div></article>
+    </section>
+    {% if messages %}{% for message in messages %}<div class="notice show" role="status">{{ message }}</div>{% endfor %}{% endif %}
+    <section class="panel">
+      <div class="panel-head"><div><h2 class="panel-title">Class schedule &amp; attendee directory</h2>
+        <p class="panel-subtitle">Edit class descriptions, category, image, time, capacity, status and coach assignment.</p></div>
+        <a class="btn btn-primary" href="{% url 'myfit:class_session_add' %}">＋ Create class</a></div>
+      <div class="toolbar"><input class="control search" id="classSearch" type="search" placeholder="Search class, coach or branch…" aria-label="Search classes">
+        <select class="control" id="classStatusFilter" aria-label="Filter class status"><option value="">All statuses</option><option>Scheduled</option><option>Cancelled</option><option>Completed</option></select>
+        <button type="button" class="btn btn-secondary" onclick="window.print()">Print schedule</button></div>
+      <div class="table-wrap"><table id="classTable"><thead><tr><th>CLASS</th><th>SCHEDULE</th><th>BRANCH / COACH</th><th>STATUS</th><th>ATTENDEES</th><th>ACTIONS</th></tr></thead><tbody>
+        {% for session in classes %}
+        <tr data-status="{{ session.status }}">
+          <td><div class="coach-cell">{% if session.image %}<img class="coach-thumb" src="{{ session.image.url }}" alt="" loading="lazy">{% endif %}
+            <div><div class="primary-text">{{ session.title }}</div><div class="secondary-text">{{ session.category }} · Capacity {{ session.capacity }}</div></div></div></td>
+          <td>{{ session.date|date:'d M Y' }}<div class="secondary-text">{{ session.time|time:'H:i' }}</div></td>
+          <td>{{ session.branch.name }}<div class="secondary-text">{{ session.coach.user.get_full_name|default:session.coach.user.username }}</div></td>
+          <td><span class="status">{{ session.status }}</span></td>
+          <td><details><summary>View bookings ({{ session.bookings.count }})</summary>
+            <ul class="booking-list">{% for booking in session.bookings.all %}<li>
+              {{ booking.client.user.username }} — {{ booking.status }}
+              {% if booking.status == 'Confirmed' %}
+                <form method="post" action="{% url 'myfit:cancel_booking' booking.pk %}">{% csrf_token %}
+                  <button type="submit" class="text-btn">Remove from class</button></form>
+              {% endif %}
+            </li>{% empty %}<li>No bookings yet.</li>{% endfor %}</ul></details></td>
+          <td><a class="text-btn" href="{% url 'myfit:class_session_edit' session.pk %}">Edit / Cancel</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="6">No class records. Create a class to begin.</td></tr>{% endfor %}
+      </tbody></table></div>
+      <div class="table-footer"><span id="classCount">Showing {{ class_totals.total }} classes</span>
+        <span>Cancelled class and booking records remain for historical reporting.</span></div>
+    </section>
+  </main>
+</div>
+<script>
+(() => {
+  const rows = [...document.querySelectorAll('#classTable tbody tr[data-status]')];
+  const search = document.getElementById('classSearch');
+  const status = document.getElementById('classStatusFilter');
+  function filter() {
+    let shown = 0;
+    rows.forEach(row => { row.hidden = !row.textContent.toLowerCase().includes(search.value.toLowerCase()) ||
+      (!!status.value && row.dataset.status !== status.value); if(!row.hidden) shown++; });
+    document.getElementById('classCount').textContent = `Showing ${shown} of ${rows.length} classes`;
+  }
+  search.addEventListener('input', filter); status.addEventListener('change', filter);
+})();
+</script>
+</body></html>

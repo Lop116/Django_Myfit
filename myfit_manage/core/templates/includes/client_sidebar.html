@@ -1,0 +1,14 @@
+<aside class="client-sidebar">
+    <div class="sidebar-brand"><h2>MyFit Portal</h2></div>
+    <ul class="sidebar-menu">
+        <li class="{% if active_nav == 'overview' %}active{% endif %}">
+            <a href="{% url 'myfit:client_dashboard' %}">Dashboard</a>
+        </li>
+        <li class="{% if active_nav == 'bookings' %}active{% endif %}">
+            <a href="{% url 'myfit:client_bookings' %}">My Bookings</a>
+        </li>
+        <li class="{% if active_nav == 'classes' %}active{% endif %}">
+            <a href="{% url 'myfit:classes_list' %}">Browse Classes</a>
+        </li>
+    </ul>
+</aside>

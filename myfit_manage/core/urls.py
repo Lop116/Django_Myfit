@@ -95,6 +95,7 @@ urlpatterns = [
     path('workouts/', views.workouts, name='workouts'),
     path('progress/', views.progress, name='progress'),
     path('client-bookings/', views.client_bookings, name='client_bookings'),
+    path('client/bookings/', views.client_bookings, name='client_bookings_slash'),
 
     path('membership/', views.client_membership, name='client_membership'),
     

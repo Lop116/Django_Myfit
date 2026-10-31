@@ -1,4 +1,3 @@
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -6,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My Bookings | MyFit Mauritius</title>
-
+ 
 <style>
 :root {
   --bg:#121416;
@@ -207,12 +206,12 @@ footer {
 }
 </style>
 </head>
-
+ 
 <body>
 <div class="topbar">
   MYFIT MAURITIUS · YOUR FITNESS JOURNEY STARTS HERE
 </div>
-
+ 
 <nav>
   <a href="{% url 'myfit:home' %}" class="logo">
     MY<span>FIT</span>
@@ -228,7 +227,7 @@ footer {
     </a>
   </div>
 </nav>
-
+ 
 <main>
   <p class="eyebrow">CLIENT EXPERIENCE / CLASS BOOKINGS</p>
   <h1>My Bookings</h1>
@@ -236,14 +235,13 @@ footer {
     Manage your upcoming classes, view booking history
     and cancel reservations.
   </p>
-
+ 
   {% if messages %}
     {% for message in messages %}
       <div class="message">{{ message }}</div>
     {% endfor %}
   {% endif %}
-
-  <!-- BOOKING STATISTICS -->
+ 
   <section class="stats">
     <div class="stat">
       <strong>{{ upcoming_count }}</strong>
@@ -258,19 +256,17 @@ footer {
       <span>Cancelled Bookings</span>
     </div>
   </section>
-
-  <!-- TABS -->
+ 
   <div class="tabs">
     <button class="tab active" type="button"
             data-tab="upcoming">Upcoming</button>
     <button class="tab" type="button"
             data-tab="past">Past Bookings</button>
   </div>
-
-  <!-- UPCOMING BOOKINGS -->
+ 
   <section id="upcoming-section">
     <h2>Upcoming Classes</h2>
-
+ 
     <div class="booking-list">
       {% for booking in upcoming_bookings %}
       <article class="booking-card">
@@ -278,7 +274,7 @@ footer {
           <h3>{{ booking.class_name }}</h3>
           <span class="badge confirmed">Confirmed</span>
         </div>
-
+ 
         <div class="details">
           <div class="detail">
             <span>Date</span>
@@ -296,26 +292,28 @@ footer {
             <span>Location</span>
             <span>{{ booking.location }}</span>
           </div>
+          {% if booking.duration_minutes %}
           <div class="detail">
             <span>Duration</span>
             <span>{{ booking.duration_minutes }} minutes</span>
           </div>
+          {% endif %}
           <div class="detail">
             <span>Booking Reference</span>
             <span>#{{ booking.id }}</span>
           </div>
         </div>
-
+ 
         <div class="actions">
           <button class="btn btn-danger cancel-btn"
                   type="button"
-                  data-id="{{ booking.id }}"
+                  data-id="{{ booking.id }}" data-source="{{ booking.booking_source }}"
                   data-name="{{ booking.class_name }}">
             Cancel Booking
           </button>
         </div>
       </article>
-
+ 
       {% empty %}
       <div class="empty">
         <h3>No upcoming bookings</h3>
@@ -327,24 +325,23 @@ footer {
       {% endfor %}
     </div>
   </section>
-
-  <!-- PAST BOOKINGS -->
+ 
   <section id="past-section" hidden>
     <h2>Booking History</h2>
-
+ 
     <div class="booking-list">
       {% for booking in past_bookings %}
       <article class="booking-card">
         <div class="booking-head">
           <h3>{{ booking.class_name }}</h3>
-
+ 
           {% if booking.status == 'cancelled' %}
             <span class="badge cancelled">Cancelled</span>
           {% else %}
             <span class="badge completed">Completed</span>
           {% endif %}
         </div>
-
+ 
         <div class="details">
           <div class="detail">
             <span>Date</span>
@@ -368,7 +365,7 @@ footer {
           </div>
         </div>
       </article>
-
+ 
       {% empty %}
       <div class="empty">
         <h3>No booking history</h3>
@@ -378,33 +375,33 @@ footer {
     </div>
   </section>
 </main>
-
-<!-- CANCELLATION CONFIRMATION -->
+ 
 <div class="modal" id="cancel-modal" role="dialog"
      aria-modal="true" aria-labelledby="modal-title">
   <div class="modal-box">
     <h2 id="modal-title">Cancel Booking?</h2>
-
+ 
     <p>
       Are you sure you want to cancel
       <strong id="cancel-class-name"></strong>?
     </p>
-
+ 
     <p>This action cannot be undone.</p>
-
+ 
     <form method="post"
           action="{% url 'myfit:client_bookings' %}">
       {% csrf_token %}
       <input type="hidden" name="action" value="cancel">
+      <input type="hidden" name="booking_source" id="cancel-booking-source">
       <input type="hidden" name="booking_id"
              id="cancel-booking-id">
-
+ 
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary"
                 id="keep-booking">
           Keep Booking
         </button>
-
+ 
         <button type="submit" class="btn btn-danger">
           Yes, Cancel
         </button>
@@ -412,57 +409,58 @@ footer {
     </form>
   </div>
 </div>
-
+ 
 <footer>
   © MyFit Mauritius · Train Stronger, Live Better.
 </footer>
-
+ 
 <script>
 const tabs = document.querySelectorAll('.tab');
 const upcoming = document.getElementById('upcoming-section');
 const past = document.getElementById('past-section');
-
+ 
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
     tabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-
+ 
     upcoming.hidden = tab.dataset.tab !== 'upcoming';
     past.hidden = tab.dataset.tab !== 'past';
   });
 });
-
+ 
 const modal = document.getElementById('cancel-modal');
-
+ 
 document.querySelectorAll('.cancel-btn').forEach(button => {
   button.addEventListener('click', () => {
+    document.getElementById('cancel-booking-source').value = button.dataset.source;
     document.getElementById('cancel-booking-id').value =
       button.dataset.id;
-
+ 
     document.getElementById('cancel-class-name').textContent =
       button.dataset.name;
-
+ 
     modal.classList.add('show');
   });
 });
-
+ 
 document.getElementById('keep-booking')
   .addEventListener('click', () => {
     modal.classList.remove('show');
   });
-
+ 
 modal.addEventListener('click', event => {
   if (event.target === modal) {
     modal.classList.remove('show');
   }
 });
-
+ 
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     modal.classList.remove('show');
   }
 });
 </script>
-
+ 
 </body>
 </html>

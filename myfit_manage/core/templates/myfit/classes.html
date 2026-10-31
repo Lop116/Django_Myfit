@@ -469,9 +469,95 @@
  
     <section class="schedule-section" id="weekly-schedule" aria-labelledby="schedule-title"><div class="container">
       <div class="schedule-head"><div><p class="section-kicker">02 / PLAN YOUR WEEK</p><h2 class="section-title" id="schedule-title">SAMPLE <span>TIMETABLE</span></h2><p style="color:#b6bdc3;line-height:1.7;max-width:670px;margin:0">Preview a typical week using the class filters above. Timings here are demonstration data, not confirmed live sessions.</p></div><a href="/contact/">QUESTIONS ABOUT THE CLASSES? <svg class="icon icon-sm"><use href="#i-arrow"/></svg></a></div>
-      <div class="schedule-table-shell"><table class="schedule-table"><thead><tr><th scope="col">DAY</th><th scope="col">TIME</th><th scope="col">CLASS</th><th scope="col">COACH</th><th scope="col">BRANCH</th><th scope="col">TYPE</th><th scope="col">ACTION</th></tr></thead><tbody id="schedule-rows"><tr class="schedule-row" data-day="monday" data-category="strength" data-branch="caudan" data-search="strength fundamentals adrian morel caudan waterfront"><td><strong>Monday</strong></td><td>07:00</td><td><strong>Strength Fundamentals</strong></td><td>Adrian Morel</td><td>Caudan Waterfront</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="monday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Monday</strong></td><td>09:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Tuesday</strong></td><td>18:00</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="tuesday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Tuesday</strong></td><td>18:30</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="wednesday" data-category="strength" data-branch="trianon" data-search="strength fundamentals daniel chen emerald park · trianon"><td><strong>Wednesday</strong></td><td>17:30</td><td><strong>Strength Fundamentals</strong></td><td>Daniel Chen</td><td>Emerald Park · Trianon</td><td><span class="schedule-type strength">STRENGTH</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="thursday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre"><td><strong>Thursday</strong></td><td>07:30</td><td><strong>HIIT Training</strong></td><td>Ryan Patel</td><td>Riche Terre</td><td><span class="schedule-type hiit">HIIT</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="friday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon"><td><strong>Friday</strong></td><td>17:00</td><td><strong>Yoga &amp; Recovery</strong></td><td>Amina Rahman</td><td>Emerald Park · Trianon</td><td><span class="schedule-type yoga">YOGA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr><tr class="schedule-row" data-day="saturday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre"><td><strong>Saturday</strong></td><td>10:00</td><td><strong>Zumba Fitness</strong></td><td>Maya Naidoo</td><td>Riche Terre</td><td><span class="schedule-type zumba">ZUMBA</span></td><td><a class="schedule-book" href="/login/?next=/client/bookings/">SIGN IN TO BOOK</a></td></tr></tbody></table></div>
-      <div class="schedule-empty" id="schedule-empty" hidden>No sample sessions match the selected filters.</div>
-    </div></section>
+    <div class="schedule-table-shell">
+  <table class="schedule-table">
+    <thead>
+      <tr>
+        <th scope="col">DAY</th>
+        <th scope="col">TIME</th>
+        <th scope="col">CLASS</th>
+        <th scope="col">COACH</th>
+        <th scope="col">BRANCH</th>
+        <th scope="col">TYPE</th>
+        <th scope="col">ACTION</th>
+      </tr>
+    </thead>
+    <tbody id="schedule-rows">
+      <tr class="schedule-row" data-day="monday" data-category="strength" data-branch="caudan" data-search="strength fundamentals adrian morel caudan waterfront">
+        <td><strong>Monday</strong></td>
+        <td>07:00</td>
+        <td><strong>Strength Fundamentals</strong></td>
+        <td>Adrian Morel</td>
+        <td>Caudan Waterfront</td>
+        <td><span class="schedule-type strength">STRENGTH</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=Strength%20Fundamentals&branch=Caudan%20Waterfront&time=07:00:00">SIGN IN TO BOOK</a></td>
+      </tr>
+      <tr class="schedule-row" data-day="monday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon">
+        <td><strong>Monday</strong></td>
+        <td>09:00</td>
+        <td><strong>Yoga &amp; Recovery</strong></td>
+        <td>Amina Rahman</td>
+        <td>Emerald Park · Trianon</td>
+        <td><span class="schedule-type yoga">YOGA</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=Yoga%20&%20Recovery&branch=Emerald%20Park%20%C2%B7%20Trianon&time=09:00:00">SIGN IN TO BOOK</a></td>
+      </tr>
+      <tr class="schedule-row" data-day="tuesday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre">
+        <td><strong>Tuesday</strong></td>
+        <td>18:00</td>
+        <td><strong>HIIT Training</strong></td>
+        <td>Ryan Patel</td>
+        <td>Riche Terre</td>
+        <td><span class="schedule-type hiit">HIIT</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=HIIT%20Training&branch=Riche%20Terre&time=18:00:00">SIGN IN TO BOOK</a></td>
+      </tr>
+      <tr class="schedule-row" data-day="tuesday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre">
+        <td><strong>Tuesday</strong></td>
+        <td>18:30</td>
+        <td><strong>Zumba Fitness</strong></td>
+        <td>Maya Naidoo</td>
+        <td>Riche Terre</td>
+        <td><span class="schedule-type zumba">ZUMBA</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=Zumba%20Fitness&branch=Riche%20Terre&time=18:30:00">SIGN IN TO BOOK</a></td>
+      </tr>
+      <tr class="schedule-row" data-day="wednesday" data-category="strength" data-branch="trianon" data-search="strength fundamentals daniel chen emerald park · trianon">
+        <td><strong>Wednesday</strong></td>
+        <td>17:30</td>
+        <td><strong>Strength Fundamentals</strong></td>
+        <td>Daniel Chen</td>
+        <td>Emerald Park · Trianon</td>
+        <td><span class="schedule-type strength">STRENGTH</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=Strength%20Fundamentals&branch=Emerald%20Park%20%C2%B7%20Trianon&time=17:30:00">SIGN IN TO BOOK</a></td>
+      </tr>
+      <tr class="schedule-row" data-day="thursday" data-category="hiit" data-branch="riche-terre" data-search="hiit training ryan patel riche terre">
+        <td><strong>Thursday</strong></td>
+        <td>07:30</td>
+        <td><strong>HIIT Training</strong></td>
+        <td>Ryan Patel</td>
+        <td>Riche Terre</td>
+        <td><span class="schedule-type hiit">HIIT</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=HIIT%20Training&branch=Riche%20Terre&time=07:30:00">SIGN IN TO BOOK</a></td>
+      </tr>
+      <tr class="schedule-row" data-day="friday" data-category="yoga" data-branch="trianon" data-search="yoga &amp; recovery amina rahman emerald park · trianon">
+        <td><strong>Friday</strong></td>
+        <td>17:00</td>
+        <td><strong>Yoga &amp; Recovery</strong></td>
+        <td>Amina Rahman</td>
+        <td>Emerald Park · Trianon</td>
+        <td><span class="schedule-type yoga">YOGA</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=Yoga%20&%20Recovery&branch=Emerald%20Park%20%C2%B7%20Trianon&time=17:00:00">SIGN IN TO BOOK</a></td>
+      </tr>
+      <tr class="schedule-row" data-day="saturday" data-category="zumba" data-branch="riche-terre" data-search="zumba fitness maya naidoo riche terre">
+        <td><strong>Saturday</strong></td>
+        <td>10:00</td>
+        <td><strong>Zumba Fitness</strong></td>
+        <td>Maya Naidoo</td>
+        <td>Riche Terre</td>
+        <td><span class="schedule-type zumba">ZUMBA</span></td>
+        <td><a class="schedule-book" href="/client/bookings/?book=Zumba%20Fitness&branch=Riche%20Terre&time=10:00:00">SIGN IN TO BOOK</a></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
  
     <section class="class-steps" aria-labelledby="steps-title"><div class="container"><p class="eyebrow">03 / HOW IT WORKS</p><h2 id="steps-title">YOUR NEXT CLASS<br><span>STARTS HERE.</span></h2><div class="steps-grid">
       <div class="step"><span class="step-num">01</span><h3>FIND YOUR FIT</h3><p>Browse the programme styles, review their focus and find a class that suits your goals.</p></div>

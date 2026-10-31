@@ -1,11 +1,97 @@
-{% extends "base.html" %}
+{% extends 'myfit/base.html' %}
+
 {% block title %}My Dashboard | MyFit{% endblock %}
+
 {% block body_class %}client-dashboard-body{% endblock %}
 
 {% block content %}
+<!-- Your dashboard content remains here -->
+<style>
+    body.client-dashboard-body {
+        background-color: #121212; /* Sleek black background */
+        color: #e5e5e5;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .client-dashboard-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    .client-dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    .client-dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #1e1e1e; /* Dark card background */
+        padding: 2rem;
+        border-radius: 12px;
+        border-left: 6px solid #eab308; /* Vibrant yellow accent bar */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+    .client-dashboard-kicker {
+        color: #eab308; /* Yellow kicker text */
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+        font-weight: 700;
+    }
+    .client-dashboard-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        color: #ffffff;
+    }
+    .client-header-date {
+        text-align: right;
+        background: #121212;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        border: 1px solid #333333;
+    }
+    .client-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+    }
+    .client-stat-grid article, 
+    .client-dashboard-container section:not(.client-stat-grid) {
+        background: #1e1e1e;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 1px solid #333333;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        margin-bottom: 1.5rem;
+    }
+    .client-stat-grid article strong {
+        font-size: 2rem;
+        color: #eab308; /* Yellow stat numbers */
+        display: block;
+        margin: 0.5rem 0;
+    }
+    a {
+        color: #eab308; /* Yellow interactive links */
+        text-decoration: none;
+        font-weight: 600;
+    }
+    a:hover {
+        text-decoration: underline;
+        color: #facc15;
+    }
+</style>
+
+
+
+
+
 <section class="client-dashboard-shell">
     <div class="client-dashboard-container">
-        {% include "includes/client_sidebar.html" with active_nav="overview" %}
+        {# {% include "includes/client_sidebar.html" with active_nav="overview" %} #}
 
         <div class="client-dashboard-main">
             <header class="client-dashboard-header">
@@ -41,8 +127,8 @@
                     <span>NEXT CLASS</span>
                     {% if upcoming_bookings %}
                         {% with booking=upcoming_bookings.0 %}
-                            <strong>{{ booking.scheduled_class.start_at|date:"d M" }}</strong>
-                            <p>{{ booking.scheduled_class.activity.name }}</p>
+                            <strong>{{ booking.start_time|date:"d M" }}</strong>
+                            <p>{{ booking.class_name }}</p>
                         {% endwith %}
                     {% else %}
                         <strong>—</strong>
@@ -73,49 +159,46 @@
                             <div><small>EXPIRES</small><strong>{{ membership.end_date|date:"d M Y" }}</strong></div>
                         </div>
                     {% else %}
-                        <p class="client-muted-copy">Your account is ready. Select a membership plan to activate gym access and class bookings.</p>
+                        <p class="client-membership-note">You don't have an active membership plan assigned yet.</p>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'memberships:client' %}">Manage membership →</a>
+                    <a class="client-text-link" href="{% url 'myfit:client_bookings' %}">Manage membership →</a>
                 </article>
 
-                <article class="client-pass-card">
-                    <div class="client-pass-topline">
-                        <div class="client-pass-brand"><span>M</span> MYFIT</div>
-                        <span>{% if current_membership %}ACTIVE PASS{% else %}MEMBER PASS{% endif %}</span>
+                <article class="client-digital-pass">
+                    <div class="client-pass-top">
+                        <div>
+                            <span class="client-label">DIGITAL PASS</span>
+                            <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                        </div>
+                        <span class="client-status-pill {% if current_membership %}active{% endif %}">
+                            {% if current_membership %}ACTIVE PASS{% else %}MEMBER PASS{% endif %}
+                        </span>
                     </div>
-                    <div class="client-pass-name">
-                        <small>MEMBER</small>
-                        <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                    <div class="client-pass-meta">
+                        <div><small>ID NUMBER</small><strong>{{ client.pk|stringformat:"06d" }}</strong></div>
+                        <div><small>BARCODE</small><strong>{{ client.barcode|truncatechars:18 }}</strong></div>
                     </div>
-                    <div class="client-pass-code" aria-label="Membership pass identifier">
-                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-                    </div>
-                    <div class="client-pass-footer">
-                        <div><small>MEMBER ID</small><strong>MF-{{ client.pk|stringformat:"06d" }}</strong></div>
-                        <div class="client-pass-token"><small>PASS ID</small><strong>{{ client.barcode|truncatechars:18 }}</strong></div>
-                    </div>
-                    <a class="client-pass-open" href="{% url 'attendance:pass' %}">Open digital pass →</a>
+                    <a class="client-text-link" href="{% url 'myfit:client_dashboard' %}">Open digital pass →</a>
                 </article>
             </section>
 
             <section class="client-secondary-grid">
-                <article class="client-panel" id="workouts">
+                <article class="client-panel">
                     <div class="client-panel-heading">
                         <div>
-                            <span class="client-label">TRAINING</span>
-                            <h2>Recent workouts</h2>
+                            <span class="client-label">TRAINING LOG</span>
+                            <h2>Recent Workouts <span>({{ recent_workouts|length }})</span></h2>
                         </div>
-                        <span class="client-panel-count">{{ recent_workouts|length }}</span>
                     </div>
                     {% if recent_workouts %}
                         <div class="client-workout-list">
                             {% for workout in recent_workouts %}
                                 <div class="client-workout-row">
-                                    <div class="client-workout-date">
-                                        <strong>{{ workout.performed_at|date:"d" }}</strong>
-                                        <span>{{ workout.performed_at|date:"M"|upper }}</span>
+                                    <div>
+                                        <strong>{{ workout.performed_at|date:"D, d M" }}</strong>
+                                        <span>{{ workout.performed_at|date:"H:i" }}</span>
                                     </div>
-                                    <div class="client-workout-main">
+                                    <div>
                                         <strong>{{ workout.exercise_name }}</strong>
                                         <span>
                                             {% if workout.sets %}{{ workout.sets }} sets{% endif %}
@@ -123,48 +206,30 @@
                                             {% if workout.duration_minutes %} · {{ workout.duration_minutes }} min{% endif %}
                                         </span>
                                     </div>
-                                    {% if workout.weight_kg %}<span class="client-workout-weight">{{ workout.weight_kg }} kg</span>{% endif %}
                                 </div>
                             {% endfor %}
                         </div>
                     {% else %}
                         <div class="client-empty-compact">
-                            <strong>No workouts logged yet.</strong>
-                            <p>Your latest training sessions will appear here.</p>
+                            <strong>No workouts logged.</strong>
+                            <p>Track your sessions to see your training history here.</p>
                         </div>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'clients:workouts' %}">Open workout log →</a>
+                    <a class="client-text-link" href="{% url 'myfit:client_dashboard' %}">Open workout log →</a>
                 </article>
 
                 <article class="client-panel">
                     <div class="client-panel-heading">
                         <div>
-                            <span class="client-label">COACHING</span>
-                            <h2>Your coach</h2>
+                            <span class="client-label">EXPLORE</span>
+                            <h2>Coaches</h2>
                         </div>
                     </div>
-                    {% if coach_assignment %}
-                        <div class="client-coach-card">
-                            <span class="client-coach-avatar">{{ coach_assignment.coach.user.first_name|default:coach_assignment.coach.user.username|first|upper }}</span>
-                            <div>
-                                <strong>{{ coach_assignment.coach.user.get_full_name|default:coach_assignment.coach.user.username }}</strong>
-                                <p>
-                                    {% for specialty in coach_assignment.coach.specializations.all %}
-                                        {{ specialty.name }}{% if not forloop.last %} · {% endif %}
-                                    {% empty %}
-                                        MyFit Coach
-                                    {% endfor %}
-                                </p>
-                            </div>
-                        </div>
-                        <p class="client-muted-copy">{{ coach_assignment.coach.bio|default:"Your assigned coach can review your attendance and training activity."|truncatechars:150 }}</p>
-                    {% else %}
-                        <div class="client-empty-compact">
-                            <strong>No coach assigned.</strong>
-                            <p>Browse MyFit coaches and discover the specialties available at your branch.</p>
-                        </div>
-                    {% endif %}
-                    <a class="client-text-link" href="{% url 'clients:coaches' %}">Browse coaches →</a>
+                    <div class="client-empty-compact">
+                        <strong>Find your trainer.</strong>
+                        <p>Browse available coaches and book 1-on-1 sessions.</p>
+                    </div>
+                    <a class="client-text-link" href="{% url 'myfit:client_dashboard' %}">Browse coaches →</a>
                 </article>
             </section>
 
@@ -173,7 +238,7 @@
                     <div class="client-panel-heading">
                         <div>
                             <span class="client-label">SCHEDULE</span>
-                            <h2>Upcoming bookings</h2>
+                            <h2>Upcoming Bookings</h2>
                         </div>
                     </div>
                     {% if upcoming_bookings %}
@@ -181,12 +246,12 @@
                             {% for booking in upcoming_bookings %}
                                 <div class="client-booking-row">
                                     <div class="client-booking-date">
-                                        <strong>{{ booking.scheduled_class.start_at|date:"d" }}</strong>
-                                        <span>{{ booking.scheduled_class.start_at|date:"M"|upper }}</span>
+                                        <strong>{{ booking.start_time|date:"d" }}</strong>
+                                        <span>{{ booking.start_time|date:"M"|upper }}</span>
                                     </div>
                                     <div>
-                                        <strong>{{ booking.scheduled_class.activity.name }}</strong>
-                                        <span>{{ booking.scheduled_class.start_at|date:"H:i" }} · {{ booking.scheduled_class.branch.name }}</span>
+                                        <strong>{{ booking.class_name }}</strong>
+                                        <span>{{ booking.start_time|date:"H:i" }} · {{ booking.location }}</span>
                                     </div>
                                     <span class="client-status-pill active">BOOKED</span>
                                 </div>
@@ -198,7 +263,7 @@
                             <p>Find a class that fits your training week.</p>
                         </div>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'classes:my_bookings' %}">Manage bookings →</a>
+                    <a class="client-text-link" href="{% url 'myfit:client_bookings' %}">Manage bookings →</a>
                 </article>
 
                 <article class="client-panel" id="progress">
@@ -226,34 +291,8 @@
                             <p>Your confirmed MyFit check-ins will appear here.</p>
                         </div>
                     {% endif %}
-                    <a class="client-text-link" href="{% url 'attendance:history' %}">View attendance →</a>
+                   <a class="client-text-link" href="{% url 'myfit:client_dashboard' %}">View attendance →</a>
                 </article>
-            </section>
-
-            <section class="client-notice-section">
-                <div class="client-panel-heading">
-                    <div>
-                        <span class="client-label">MYFIT UPDATES</span>
-                        <h2>For your attention</h2>
-                    </div>
-                    <a class="client-text-link" href="{% url 'notifications:list' %}">View all →</a>
-                </div>
-                {% if latest_notifications %}
-                    <div class="client-notice-grid">
-                        {% for notification in latest_notifications %}
-                            <article>
-                                <span class="client-notice-index">0{{ forloop.counter }}</span>
-                                <div>
-                                    <strong>{{ notification.title }}</strong>
-                                    <p>{{ notification.message }}</p>
-                                    {% if not notification.is_read %}<small class="client-notice-unread">UNREAD</small>{% endif %}
-                                </div>
-                            </article>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="client-all-clear">Everything is up to date. Your important MyFit updates will appear here.</div>
-                {% endif %}
             </section>
         </div>
     </div>

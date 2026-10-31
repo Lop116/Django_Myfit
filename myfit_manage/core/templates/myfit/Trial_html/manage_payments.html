@@ -1,36 +1,16 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Manage Payments</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #f8f9fa; }
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.85em; color: white; }
-        .badge-active { background-color: #28a745; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Manage Payments</h1>
-        <div style="margin-bottom: 15px;">
-            <input type="text" placeholder="Filter by member name or status..." style="padding: 8px; width: 300px;">
-        </div>
-        <table>
-            <tr><th>Payment ID</th><th>Member</th><th>Date</th><th>Amount</th><th>Status</th></tr>
-            <tr>
-                <td>#P992</td>
-                <td>John Doe</td>
-                <td>2026-10-15</td>
-                <td>$50.00</td>
-                <td><span class="badge badge-active">Completed</span></td>
-            </tr>
-        </table>
-    </div>
-</body>
-</html>
+{% extends 'myfit/base.html' %}
+{% block title %}Payments | MyFit{% endblock %}
+{% block content %}
+<main style="max-width:1050px;margin:40px auto;padding:25px;background:#191c20;color:white;font-family:Arial,sans-serif">
+  <p><a style="color:#ffc324" href="{% url 'myfit:admin_dashboard' %}">← Admin dashboard</a></p>
+  <h1>Payment records</h1>
+  <p><strong>{{ paid_count }}</strong> paid records · Rs <strong>{{ paid_total }}</strong> total recorded paid amount</p>
+  <p>This is a manual administrative ledger, not a payment gateway. Do not mark a payment as paid until it is independently verified.</p>
+  {% if messages %}{% for msg in messages %}<p>{{ msg }}</p>{% endfor %}{% endif %}
+  <section><h2>Add payment record</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Save record</button></form></section>
+  <section style="overflow:auto"><h2>Transactions</h2><table style="width:100%;border-collapse:collapse"><thead><tr><th>Reference</th><th>Client</th><th>Plan</th><th>Amount (Rs)</th><th>Status</th><th>Recorded</th></tr></thead><tbody>
+  {% for row in payments %}<tr><td>{{ row.reference }}</td><td>{{ row.user.username }}</td><td>{{ row.plan.name }}</td><td>{{ row.amount }}</td><td>{{ row.get_status_display }}</td><td>{{ row.recorded_at|date:'d M Y H:i' }}</td></tr>{% empty %}<tr><td colspan="6">No payment records yet.</td></tr>{% endfor %}
+  </tbody></table></section>
+  <p>Correcting transactions and refund status requires a staff action in <a href="{% url 'admin:core_paymentrecord_changelist' %}" style="color:#ffc324">Django Admin</a>.</p>
+</main>
+{% endblock %}
