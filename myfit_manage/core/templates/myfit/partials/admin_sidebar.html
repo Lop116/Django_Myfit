@@ -1,14 +1,21 @@
 {# Admin sidebar. Include with: {% include "myfit/partials/admin_sidebar.html" with active="dashboard" %} #}
 <aside class="sidebar">
   <a class="brand" href="{% url 'myfit:admin_dashboard' %}"><span class="brand-mark">M</span><span>MY<span>FIT</span></span></a>
-  <div class="nav-label">ADMINISTRATION</div>
+  <div class="nav-label">OVERVIEW</div>
   <a class="nav-link {% if active == 'dashboard' %}active{% endif %}" href="{% url 'myfit:admin_dashboard' %}">Dashboard</a>
-  <a class="nav-link" href="{% url 'myfit:membership_requests' %}">Membership requests</a>
-  <a class="nav-link" href="{% url 'myfit:manage_plans' %}">Membership plans</a>
-  <a class="nav-link {% if active == 'classes' %}active{% endif %}" href="{% url 'myfit:manage_classes' %}">Manage classes</a>
-  <a class="nav-link" href="{% url 'myfit:manage_bookings' %}">Classes &amp; bookings</a>
+  <div class="nav-label">PEOPLE</div>
+  <a class="nav-link {% if active == 'clients' %}active{% endif %}" href="{% url 'myfit:client_manage' %}">Clients</a>
   <a class="nav-link {% if active == 'coaches' %}active{% endif %}" href="{% url 'myfit:manage_coaches' %}">Coaches</a>
+  <a class="nav-link" href="{% url 'myfit:coaching_assignments' %}">Coach assignments</a>
+  <div class="nav-label">GYM</div>
   <a class="nav-link {% if active == 'branches' %}active{% endif %}" href="{% url 'myfit:manage_branches' %}">Branches</a>
+  <a class="nav-link" href="{% url 'myfit:specialty_manage' %}">Specialties</a>
+  <a class="nav-link {% if active == 'classes' %}active{% endif %}" href="{% url 'myfit:manage_classes' %}">Manage classes</a>
+  <a class="nav-link" href="{% url 'myfit:manage_bookings' %}">Bookings</a>
+  <a class="nav-link" href="{% url 'myfit:attendance_dashboard' %}">Attendance</a>
+  <div class="nav-label">MEMBERSHIPS &amp; SUPPORT</div>
+  <a class="nav-link" href="{% url 'myfit:manage_plans' %}">Plans</a>
+  <a class="nav-link" href="{% url 'myfit:membership_requests' %}">Membership requests</a>
+  <a class="nav-link" href="{% url 'myfit:support_manage' %}">Support tickets</a>
   {% if request.user.is_staff %}<a class="nav-link" href="{% url 'admin:index' %}">Django Admin</a>{% endif %}
-  <div class="sidebar-note"><strong>MYFIT ADMIN</strong>Manage clients, coaches, memberships, classes and support.</div>
 </aside>

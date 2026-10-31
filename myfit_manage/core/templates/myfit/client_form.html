@@ -1,0 +1,36 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit client | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="clients" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Administration / Clients</p>
+        <h1 class="page-title">Edit {{ client_user.username }}<em>.</em></h1>
+        <p class="subtitle">Username and password are not changed here.</p>
+      </div>
+    </header>
+    <section class="panel">
+      <form method="post">{% csrf_token %}
+        {{ account_form.non_field_errors }}{{ profile_form.non_field_errors }}
+        <div class="form-grid">
+          {% for field in account_form %}<div class="form-field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+          {% for field in profile_form %}<div class="form-field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Save changes</button>
+          <a class="btn" href="{% url 'myfit:client_manage' %}">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+</body>
+</html>
