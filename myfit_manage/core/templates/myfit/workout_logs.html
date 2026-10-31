@@ -1,0 +1,39 @@
+{% extends "myfit/base.html" %}
+{% block title %}Workout log | MyFit{% endblock %}
+{% block content %}
+<main class="myfit-public-panel">
+  <p><a class="myfit-back" href="{% url 'myfit:home' %}">MyFit home</a> · <a class="myfit-back" href="{% url 'myfit:coaching_trial' %}">Coaching</a></p>
+  <h1>Workout log</h1>
+  {% if messages %}{% for message in messages %}<p class="myfit-success">{{ message }}</p>{% endfor %}{% endif %}
+  <section>
+    <h2>Log a workout</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+      <div class="myfit-field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+      {% endfor %}
+      <button class="myfit-save" type="submit">Save workout</button>
+    </form>
+  </section>
+  <section>
+    <h2>Workout history</h2>
+    <p>{{ stats.total|default:0 }} workouts · {{ stats.minutes|default:0 }} minutes</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Duration</th><th>Notes</th></tr></thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>{{ log.workout_date|date:"d M Y" }}</td>
+            <td>{{ log.get_workout_type_display }}</td>
+            <td>{{ log.duration_minutes }} min</td>
+            <td>{{ log.notes|default:"—" }}</td>
+          </tr>
+          {% empty %}<tr><td colspan="4">No workouts recorded.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+{% endblock %}

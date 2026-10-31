@@ -197,6 +197,7 @@
       <h2>+ Add Exercise Record</h2>
     </div>
 
+    {% if form.errors %}<div class="message error" role="alert">{{ form.errors }}</div>{% endif %}
     <form method="post" action="{% url 'myfit:workouts' %}">
       {% csrf_token %}
       <input type="hidden" name="action" value="add">

@@ -172,7 +172,7 @@
               {% else %}<div class="image-not-uploaded">PHOTO COMING SOON</div>{% endif %}
               <span class="branch-index">{{ forloop.counter|stringformat:'02d' }}</span>
             </div>
-            <div class="branch-body"><div><p>{% if branch.status == "soon" %}COMING SOON{% else %}MYFIT BRANCH{% endif %}</p><h3>{{ branch.name|upper }}</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div>
+            <div class="branch-body"><div><p>{% if branch.operational_status == "Coming soon" %}COMING SOON{% else %}MYFIT BRANCH{% endif %}</p><h3>{{ branch.name|upper }}</h3></div><svg class="icon branch-pin"><use href="#i-pin"/></svg></div>
             <div class="branch-bottom">{{ branch.address|truncatechars:34 }} <svg class="icon sm"><use href="#i-arrow"/></svg></div>
           </a>
           {% empty %}<p>No active clubs are listed yet. Check our branches page for news.</p>{% endfor %}

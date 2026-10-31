@@ -29,8 +29,8 @@ from .coaching_permissions import (
 from .permissions import has_role
 
 
-# Shortcut for the HTML template folder.
-TEMPLATE = 'myfit/Trial_html/'
+# Shared app templates live directly in myfit/.
+TEMPLATE = 'myfit/'
 
 
 # ==========================================
@@ -396,7 +396,7 @@ def client_records(request, client_id):
 
     return render(
         request,
-        TEMPLATE + 'client_records.html',
+        'client_records.html',
         {
             'client': client,
             'logs': logs,

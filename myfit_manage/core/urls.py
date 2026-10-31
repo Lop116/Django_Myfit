@@ -2,6 +2,8 @@ from django.urls import path
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
+    PasswordChangeDoneView,
+    PasswordChangeView,
     PasswordResetCompleteView,
     PasswordResetConfirmView,
     PasswordResetDoneView,
@@ -27,6 +29,7 @@ urlpatterns = [
     path('staff/branches/add/', views.branch_edit, name='branch_add'),
     path('staff/branches/<int:branch_id>/edit/', views.branch_edit, name='branch_edit'),
     path('staff/branches/<int:branch_id>/toggle/', views.branch_toggle, name='branch_toggle'),
+    path('staff/branches/<int:branch_id>/delete/', views.branch_delete, name='branch_delete'),
     path('staff/coaches/add/', views.coach_edit, name='coach_add'),
     path('staff/coaches/<int:coach_id>/edit/', views.coach_edit, name='coach_edit'),
     path('staff/coaches/<int:coach_id>/toggle/', views.coach_toggle, name='coach_toggle'),
@@ -37,9 +40,27 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('staff/clients/', admin_views.client_manage, name='client_manage'),
+    path('staff/clients/', admin_views.client_manage, name='manage_members'),
+    path('staff/clients/add/', admin_views.client_add, name='member_add'),
+    path('staff/clients/<int:profile_id>/status/', admin_views.member_toggle, name='member_toggle'),
     path('staff/clients/<int:user_id>/edit/', admin_views.client_edit, name='client_edit'),
     path('staff/clients/<int:user_id>/toggle/', admin_views.client_toggle, name='client_toggle'),
     path('login/', views.RoleAwareLoginView.as_view(template_name='myfit/login.html'), name='login'),
+    path(
+        'password-change/',
+        PasswordChangeView.as_view(
+            template_name='myfit/password_change_form.html',
+            success_url=reverse_lazy('myfit:password_change_done'),
+        ),
+        name='password_change',
+    ),
+    path(
+        'password-change/done/',
+        PasswordChangeDoneView.as_view(
+            template_name='myfit/password_change_done.html',
+        ),
+        name='password_change_done',
+    ),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('myfit:home')), name='logout'),
     path(
         'password-reset/',
@@ -175,6 +196,7 @@ path(
     path('manage-classes/', views.manage_classes, name='manage_classes'),
     path('manage-classes/new/', views.class_session_edit, name='class_session_add'),
     path('manage-classes/<int:session_id>/edit/', views.class_session_edit, name='class_session_edit'),
+    path('manage-classes/<int:session_id>/status/', views.class_session_status, name='class_session_status'),
     path('bookings/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
 
 

@@ -1,6 +1,7 @@
 """Admin-only views (Task 6). Separate file to avoid merge conflicts in views.py."""
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -8,7 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .dashboard_services import get_dashboard_stats
-from .forms import AccountDetailsForm, ClientProfileForm
+from .forms import AccountDetailsForm, AdminClientCreationForm, ClientProfileForm
 from .models import ClientProfile
 from .permissions import role_required
 
@@ -56,6 +57,20 @@ def client_manage(request):
 
 @role_required("Admin")
 @transaction.atomic
+def client_add(request):
+    form = AdminClientCreationForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        group, _ = Group.objects.get_or_create(name="Client")
+        user.groups.add(group)
+        ClientProfile.objects.create(user=user, phone=form.cleaned_data["phone"])
+        messages.success(request, f"{user.get_full_name() or user.username} added.")
+        return redirect("myfit:client_manage")
+    return render(request, "myfit/client_add.html", {"form": form})
+
+
+@role_required("Admin")
+@transaction.atomic
 def client_edit(request, user_id):
     """Edit a client's name, email and profile details."""
     user = get_object_or_404(_client_users(), pk=user_id)
@@ -85,6 +100,23 @@ def client_toggle(request, user_id):
     user = get_object_or_404(_client_users(), pk=user_id)
     user.is_active = not user.is_active
     user.save(update_fields=["is_active"])
+    state = "activated" if user.is_active else "deactivated"
+    messages.success(request, f"{user.username} {state}.")
+    return redirect("myfit:client_manage")
+
+
+@role_required("Admin")
+@require_POST
+def member_toggle(request, profile_id):
+    profile = get_object_or_404(ClientProfile.objects.select_related("user"), pk=profile_id)
+    user = profile.user
+    user.is_active = not user.is_active
+    user.save(update_fields=["is_active"])
+    if not user.is_active:
+        profile.bookings.filter(status="Confirmed").update(
+            status="Cancelled",
+            cancelled_at=timezone.now(),
+        )
     state = "activated" if user.is_active else "deactivated"
     messages.success(request, f"{user.username} {state}.")
     return redirect("myfit:client_manage")

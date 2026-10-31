@@ -79,6 +79,10 @@
                 {% csrf_token %}
                 <button type="submit" class="text-btn">{% if branch.is_active %}Hide{% else %}Show{% endif %}</button>
               </form>
+              <form method="post" action="{% url 'myfit:branch_delete' branch.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="text-btn danger">Delete</button>
+              </form>
             </div></td>
           </tr>
           {% empty %}<tr><td colspan="5">No branches yet. Add your first location.</td></tr>{% endfor %}

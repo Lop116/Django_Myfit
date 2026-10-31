@@ -19,7 +19,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.core import signing
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -33,6 +33,7 @@ from .forms import (
     MembershipChangeRequestForm,
     PaymentForm,
     SupportTicketReplyForm,
+    WorkoutRecordForm,
 )
 from .membership_services import (
     assign_membership,
@@ -183,9 +184,16 @@ def register(request):
     return render(request, 'myfit/register.html', {'form': form})
  
 def classes(request):
+    upcoming_sessions = ClassSession.objects.filter(
+        status='Scheduled',
+        date__gte=timezone.localdate(),
+        branch__is_active=True,
+        coach__user__is_active=True,
+    ).select_related('branch', 'coach__user').order_by('date', 'time')
     return render(request, 'myfit/classes.html', {
         'site_images': website_images(),
-        'upcoming_sessions': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate(), branch__is_active=True, coach__user__is_active=True).select_related('branch','coach__user').order_by('date','time'),
+        'upcoming_sessions': upcoming_sessions,
+        'open_branch_count': Branch.objects.filter(is_active=True, operational_status='Open').count(),
         'filter_branches': Branch.objects.filter(is_active=True, operational_status='Open'),
         'filter_categories': ClassSession.objects.filter(status='Scheduled', date__gte=timezone.localdate()).values_list('category', flat=True).distinct(),
     })
@@ -414,7 +422,51 @@ def membership_qr_check_in(request):
 
 
 def workouts(request):
-    return render(request, 'myfit/workouts.html')
+    if not has_role(request.user, 'Client'):
+        raise PermissionDenied
+    workouts = WorkoutRecord.objects.filter(user=request.user)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'delete':
+            workout = get_object_or_404(
+                WorkoutRecord,
+                pk=request.POST.get('workout_id'),
+                user=request.user,
+            )
+            workout.delete()
+            messages.success(request, 'Workout deleted.')
+            return redirect('myfit:workouts')
+        if action not in ('add', 'update'):
+            raise Http404('Unknown workout action.')
+        instance = None
+        if action == 'update':
+            instance = get_object_or_404(
+                workouts,
+                pk=request.POST.get('workout_id'),
+            )
+        form_data = request.POST.copy()
+        form_data['weight_kg'] = form_data.get('weight', '')
+        form = WorkoutRecordForm(form_data, instance=instance)
+        if form.is_valid():
+            workout = form.save(commit=False)
+            workout.user = request.user
+            workout.save()
+            messages.success(request, 'Workout saved.')
+            return redirect('myfit:workouts')
+    else:
+        form = WorkoutRecordForm()
+    workouts = workouts.order_by('-workout_date', '-pk')
+    return render(request, 'myfit/workouts.html', {
+        'workouts': workouts,
+        'form': form,
+        'today': timezone.localdate(),
+        'total_records': workouts.count(),
+        'total_sets': sum(workout.sets for workout in workouts),
+        'total_volume': sum(
+            workout.sets * workout.reps * workout.weight_kg
+            for workout in workouts
+        ),
+    })
 
 @role_required('Client')
 def client_dashboard(request):
@@ -1021,12 +1073,17 @@ def coach_dashboard(request):
     visits = sum(row['visits_this_week'] for row in clients)
     coach = CoachProfile.objects.filter(user=request.user).first()
     sessions = ClassSession.objects.filter(coach=coach) if coach else ClassSession.objects.none()
+    upcoming_classes = sessions.filter(
+        status='Scheduled',
+        date__gte=today,
+    ).order_by('date', 'time')[:5]
     return render(request, 'myfit/coach_dashboard.html', {
         'active_client_count': len(clients),
         'sessions_this_week': sessions.filter(date__range=(week_start, week_end)).count(),
         'avg_visits_per_week': round(visits / len(clients), 1) if clients else 0,
         'classes_this_month': sessions.filter(date__gte=today.replace(day=1), date__lt=month_end).count(),
         'clients': clients,
+        'upcoming_classes': upcoming_classes,
     })
 
 
@@ -1189,7 +1246,8 @@ def class_session_edit(request, session_id=None):
                     )
             if is_admin:
                 notify(
-                    obj.coach.user, 'Class schedule updated',
+                    obj.coach.user,
+                    'Class assigned' if original_coach is None else 'Class schedule updated',
                     f'Your assigned class {obj.title} on {obj.date:%d %b %Y} is {obj.status.lower()}.',
                     reverse('myfit:manage_classes'),
                 )
@@ -1204,6 +1262,40 @@ def class_session_edit(request, session_id=None):
     return render(request, 'myfit/class_session_form.html', {
         'form': form, 'session': session,
     })
+
+
+@login_required(login_url='myfit:login')
+@require_POST
+def class_session_status(request, session_id):
+    session = get_object_or_404(
+        ClassSession.objects.select_related('coach__user'),
+        pk=session_id,
+    )
+    is_admin = has_role(request.user, 'Admin')
+    is_own_coach = (
+        has_role(request.user, 'Coach')
+        and hasattr(request.user, 'coach_profile')
+        and session.coach_id == request.user.coach_profile.pk
+    )
+    if not (is_admin or is_own_coach):
+        raise PermissionDenied('You may only change classes you manage.')
+
+    action = request.POST.get('action')
+    if action == 'publish' and session.status == 'Draft':
+        session.status = 'Scheduled'
+        session.save(update_fields=['status'])
+        messages.success(request, 'Class published.')
+    elif action == 'cancel' and session.status not in ('Cancelled', 'Completed'):
+        from .services import cancel_session_bookings
+
+        session.status = 'Cancelled'
+        session.save(update_fields=['status'])
+        cancel_session_bookings(session)
+        messages.success(request, 'Class cancelled.')
+    else:
+        messages.error(request, 'That class status change is not available.')
+    return redirect('myfit:manage_classes')
+
 
 @login_required(login_url='myfit:login')
 @require_POST
@@ -1232,8 +1324,13 @@ from .forms import BranchForm, CoachAccountForm, AccountDetailsForm, ContactSubm
  
 def branches(request):
     # Exclude inactive branches so the Admin toggle controls public visibility.
+    branches = Branch.objects.filter(is_active=True)
     return render(request, 'myfit/branches.html', {
-        'branches': Branch.objects.filter(is_active=True),
+        'branches': branches,
+        'open_branch_count': Branch.objects.filter(
+            is_active=True, operational_status='Open'
+        ).count(),
+        'coming_soon_count': branches.filter(operational_status='Coming soon').count(),
         'site_images': website_images(),
         # Branch operational status is a database field; no hardcoded Plaisance exception.
     })
@@ -1289,6 +1386,19 @@ def manage_branches(request):
         'active_branch_count': Branch.objects.filter(is_active=True, operational_status='Open').count(),
         'attention_branch_count': Branch.objects.exclude(is_active=True, operational_status='Open').count(),
     })
+
+
+@role_required('Admin')
+@require_POST
+def branch_delete(request, branch_id):
+    branch = get_object_or_404(Branch, pk=branch_id)
+    if branch.classes.exists() or branch.coaches.exists():
+        messages.error(request, 'This branch has linked classes or coaches. Hide it instead to preserve history.')
+    else:
+        name = branch.name
+        branch.delete()
+        messages.success(request, f'{name} deleted.')
+    return redirect('myfit:manage_branches')
  
  
 @role_required('Admin')
@@ -1315,7 +1425,9 @@ def branch_toggle(request, branch_id):
 @role_required('Admin')
 def manage_coaches(request):
     return render(request, 'myfit/manage_coaches.html', {
-        'coaches': CoachProfile.objects.select_related('user','branch').prefetch_related('specialties').order_by('user__first_name'),
+        'coaches': CoachProfile.objects.select_related('user','branch').prefetch_related('specialties').annotate(
+            assigned_class_count=Count('classes')
+        ).order_by('user__first_name'),
         'total_coach_count': CoachProfile.objects.count(),
         'active_coach_count': CoachProfile.objects.filter(user__is_active=True).count(),
         'specialty_count': CoachSpecialty.objects.filter(coaches__isnull=False).distinct().count(),

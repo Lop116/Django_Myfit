@@ -130,6 +130,15 @@
             <section class="coach-secondary-grid" id="coach-activity">
                 <article class="coach-panel">
                     <div class="coach-panel-heading">
+                        <div><span class="coach-label">UPCOMING CLASSES</span><h2>Your schedule</h2></div>
+                        <a class="coach-text-link" href="{% url 'myfit:manage_classes' %}">Manage →</a>
+                    </div>
+                    {% for session in upcoming_classes %}
+                    <p>{{ session.date|date:"d M Y" }} · {{ session.time|time:"H:i" }} · {{ session.title }}</p>
+                    {% empty %}<p>No upcoming classes assigned.</p>{% endfor %}
+                </article>
+                <article class="coach-panel">
+                    <div class="coach-panel-heading">
                         <div><span class="coach-label">WEEKLY ACTIVITY</span><h2>Session summary</h2><p>A simple view of the training activity recorded this week.</p></div>
                     </div>
                     <div class="coach-highlight-number"><strong>{{ sessions_this_week }}</strong><span>sessions this week</span></div>

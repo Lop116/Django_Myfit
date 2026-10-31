@@ -11,6 +11,7 @@ from .models import (
     SupportTicket, 
     SupportTicketMessage,
     ClassSession,
+    WorkoutRecord,
 )
 
 class RegistrationForm(UserCreationForm):
@@ -307,7 +308,7 @@ class ClientProfileForm(forms.ModelForm):
         model = ClientProfile
 
         # Fields that the client can edit.
-        fields = ("date_of_birth", "gender", "phone")
+        fields = ("phone",)
 
         # Display date_of_birth using an HTML date picker.
         widgets = {
@@ -324,7 +325,7 @@ class CoachProfileForm(forms.ModelForm):
         model = CoachProfile
 
         # Fields that the coach can edit.
-        fields = ("date_of_birth", "gender", "phone", "bio")
+        fields = ("phone",)
 
         # Display date_of_birth using an HTML date picker.
         widgets = {
@@ -349,8 +350,29 @@ class AccountDetailsForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email']
- 
- 
+
+
+class AdminClientCreationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+    phone = forms.CharField(max_length=20, required=False)
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email')
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        validate_password(password, user=self.instance)
+        return password
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
+
+
 class CoachAccountForm(forms.Form):
     username = forms.CharField(max_length=150)
     first_name = forms.CharField(max_length=150)
@@ -456,10 +478,22 @@ class ClassSessionForm(forms.ModelForm):
     """Class form for the existing ClassSession schema."""
     class Meta:
         model = ClassSession
-        fields = ('title', 'category', 'description', 'branch', 'coach', 'date', 'time', 'capacity', 'status', 'image')
+        fields = ('title', 'category', 'description', 'branch', 'coach', 'date', 'time', 'end_time', 'capacity', 'status', 'image')
         widgets = {'description': forms.Textarea(attrs={'rows': 3}),
                    'date': forms.DateInput(attrs={'type': 'date'}),
-                   'time': forms.TimeInput(attrs={'type': 'time'})}
+                   'time': forms.TimeInput(attrs={'type': 'time'}),
+                   'end_time': forms.TimeInput(attrs={'type': 'time'})}
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_time = cleaned_data.get('time')
+        end_time = cleaned_data.get('end_time')
+        if start_time and end_time and end_time <= start_time:
+            self.add_error('end_time', 'End time must be after the start time.')
+        class_date = cleaned_data.get('date')
+        if class_date and class_date < timezone.localdate():
+            self.add_error('date', 'Class date cannot be in the past.')
+        return cleaned_data
 
     def clean_capacity(self):
         capacity = self.cleaned_data['capacity']
@@ -470,5 +504,27 @@ class ClassSessionForm(forms.ModelForm):
             if capacity < confirmed:
                 raise forms.ValidationError('Capacity cannot be below confirmed bookings.')
         return capacity
+
+
+class WorkoutRecordForm(forms.ModelForm):
+    class Meta:
+        model = WorkoutRecord
+        fields = ('exercise', 'workout_date', 'sets', 'reps', 'weight_kg', 'notes')
+        widgets = {
+            'workout_date': forms.DateInput(attrs={'type': 'date'}),
+            'weight_kg': forms.NumberInput(attrs={'min': '0', 'step': '0.1'}),
+        }
+
+    def clean_sets(self):
+        sets = self.cleaned_data['sets']
+        if not 1 <= sets <= 100:
+            raise forms.ValidationError('Sets must be between 1 and 100.')
+        return sets
+
+    def clean_reps(self):
+        reps = self.cleaned_data['reps']
+        if not 1 <= reps <= 1000:
+            raise forms.ValidationError('Reps must be between 1 and 1000.')
+        return reps
 
  

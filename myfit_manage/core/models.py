@@ -439,7 +439,12 @@ class CoachProfile(models.Model):
 #<----
 #jush===============
 class ClassSession(models.Model):
-    STATUS_CHOICES = [('Scheduled', 'Scheduled'), ('Cancelled', 'Cancelled'), ('Completed', 'Completed')]
+    STATUS_CHOICES = [
+        ('Draft', 'Draft'),
+        ('Scheduled', 'Scheduled'),
+        ('Cancelled', 'Cancelled'),
+        ('Completed', 'Completed'),
+    ]
     title = models.CharField(max_length=100)
     category = models.CharField(max_length=30, choices=[
         ('Strength', 'Strength'), ('HIIT', 'HIIT'), ('Yoga', 'Yoga'),
@@ -471,6 +476,7 @@ class ClassBooking(models.Model):
     client = models.ForeignKey('ClientProfile', on_delete=models.CASCADE, related_name='bookings')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
     booked_at = models.DateTimeField(auto_now_add=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [

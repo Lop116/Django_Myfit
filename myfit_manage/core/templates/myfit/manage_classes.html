@@ -25,7 +25,7 @@
         <p class="panel-subtitle">Edit class descriptions, category, image, time, capacity, status and coach assignment.</p></div>
         <a class="btn btn-primary" href="{% url 'myfit:class_session_add' %}">＋ Create class</a></div>
       <div class="toolbar"><input class="control search" id="classSearch" type="search" placeholder="Search class, coach or branch…" aria-label="Search classes">
-        <select class="control" id="classStatusFilter" aria-label="Filter class status"><option value="">All statuses</option><option>Scheduled</option><option>Cancelled</option><option>Completed</option></select>
+        <select class="control" id="classStatusFilter" aria-label="Filter class status"><option value="">All statuses</option><option>Draft</option><option>Scheduled</option><option>Cancelled</option><option>Completed</option></select>
         <button type="button" class="btn btn-secondary" onclick="window.print()">Print schedule</button></div>
       <div class="table-wrap"><table id="classTable"><thead><tr><th>CLASS</th><th>SCHEDULE</th><th>BRANCH / COACH</th><th>STATUS</th><th>ATTENDEES</th><th>ACTIONS</th></tr></thead><tbody>
         {# CHANGED: real ClassSession + ClassBooking objects, no demo content. #}
@@ -44,7 +44,18 @@
                   <button type="submit" class="text-btn">Remove from class</button></form>
               {% endif %}
             </li>{% empty %}<li>No bookings yet.</li>{% endfor %}</ul></details></td>
-          <td><a class="text-btn" href="{% url 'myfit:class_session_edit' session.pk %}">Edit / Cancel</a></td>
+          <td><div class="row-actions">
+            <a class="text-btn" href="{% url 'myfit:class_session_edit' session.pk %}">Edit</a>
+            {% if session.status == 'Draft' %}
+            <form method="post" action="{% url 'myfit:class_session_status' session.pk %}">{% csrf_token %}
+              <input type="hidden" name="action" value="publish"><button class="text-btn" type="submit">Publish</button>
+            </form>
+            {% elif session.status == 'Scheduled' %}
+            <form method="post" action="{% url 'myfit:class_session_status' session.pk %}">{% csrf_token %}
+              <input type="hidden" name="action" value="cancel"><button class="text-btn danger" type="submit">Cancel class</button>
+            </form>
+            {% endif %}
+          </div></td>
         </tr>
         {% empty %}<tr><td colspan="6">No class records. Create a class to begin.</td></tr>{% endfor %}
       </tbody></table></div>

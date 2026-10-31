@@ -1,0 +1,44 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Client | MyFit</title>
+  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+<div class="shell">
+  {% include "myfit/partials/admin_sidebar.html" with active="clients" %}
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MyFit / Administration / Clients</p>
+        <h1 class="page-title">Add client<em>.</em></h1>
+        <p class="subtitle">Create an account and client profile.</p>
+      </div>
+    </header>
+    {% include "myfit/partials/admin_messages.html" %}
+    <section class="panel">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-grid">
+          {% for field in form %}
+          <div class="form-field">
+            {{ field.label_tag }}{{ field }}
+            {% if field.help_text %}<span class="secondary-text">{{ field.help_text }}</span>{% endif %}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Create client</button>
+          <a class="btn" href="{% url 'myfit:client_manage' %}">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+</body>
+</html>
